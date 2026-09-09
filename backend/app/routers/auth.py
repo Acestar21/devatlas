@@ -25,7 +25,7 @@ _pending_states: set[str] = set()
 
 @router.get("/login")
 @limiter.limit("10/minute")
-def github_login():
+def github_login(request: Request):
     state = secrets.token_urlsafe(32)
     _pending_states.add(state)
 
@@ -42,6 +42,7 @@ def github_login():
 @router.post("/internal/exchange")
 @limiter.limit("20/minute")
 async def github_internal_exchange(
+    request: Request,
     code: str,
     state: str,
     x_internal_secret: str = Header(...),

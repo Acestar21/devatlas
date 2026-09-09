@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session, select
 from app.rate_limit import limiter
 from app.database import get_session
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 @router.get("/{username}")
 @limiter.limit("30/minute")
 async def get_profile(
+    request: Request,
     username: str,
     db: Session = Depends(get_session),
     viewer: User | None = Depends(get_current_user_optional),
