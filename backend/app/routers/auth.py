@@ -3,7 +3,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, Header
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session, select
-
+from app.rate_limit import limiter
 from app.config import settings
 from app.database import get_session
 from app.models.user import User
@@ -24,6 +24,7 @@ _pending_states: set[str] = set()
 
 
 @router.get("/login")
+@limiter.limit("10/minute")
 def github_login():
     state = secrets.token_urlsafe(32)
     _pending_states.add(state)
@@ -39,6 +40,7 @@ def github_login():
 
 
 @router.post("/internal/exchange")
+@limiter.limit("20/minute")
 async def github_internal_exchange(
     code: str,
     state: str,

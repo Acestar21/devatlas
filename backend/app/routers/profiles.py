@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-
+from app.rate_limit import limiter
 from app.database import get_session
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache
@@ -12,6 +12,7 @@ from app.services.github import is_stale, fetch_and_cache_stats, GithubTokenInva
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 @router.get("/{username}")
+@limiter.limit("30/minute")
 async def get_profile(
     username: str,
     db: Session = Depends(get_session),

@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlmodel import Session, select
-
+from app.rate_limit import limiter
 from app.database import get_session
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache
@@ -30,6 +30,7 @@ def generate_badge_svg(username: str, stats: GithubStatsCache | None) -> str:
     </svg>'''
 
 @router.get("/{username}")
+@limiter.limit("5/minute")
 def get_badge(
     username: str,
     db: Session = Depends(get_session),
