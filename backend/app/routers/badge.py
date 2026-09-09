@@ -30,7 +30,7 @@ def generate_badge_svg(username: str, stats: GithubStatsCache | None) -> str:
     </svg>'''
 
 @router.get("/{username}")
-@limiter.limit("5/minute")
+@limiter.limit("60/minute")
 def get_badge(
     request: Request,
     username: str,
