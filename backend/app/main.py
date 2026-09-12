@@ -7,6 +7,7 @@ from app.routers import auth
 from app.config import settings
 from app.routers import profiles
 from app.routers import badge
+from app.routers import admin
 
 app = FastAPI(title="DevCard")
 app.state.limiter = limiter
@@ -29,3 +30,4 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(profiles.router)
 app.include_router(badge.router)
+app.include_router(admin.router)

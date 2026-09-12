@@ -1,4 +1,5 @@
 import secrets
+from datetime import datetime, timezone
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, Header
 from fastapi.responses import RedirectResponse
@@ -15,6 +16,11 @@ router = APIRouter(prefix="/auth/github", tags=["auth"])
 GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_USER_API_URL = "https://api.github.com/user"
+
+# Anti-bot / anti-alt-account measure: reject signup (not login) if the
+# GitHub account is younger than this. Only applies to brand-new DevAtlas
+# users — existing users are never re-checked or locked out retroactively.
+MIN_ACCOUNT_AGE_DAYS = 30
 
 # Simple in-memory state store for CSRF protection on the OAuth callback.
 # Fine for a single-process dev setup. If you ever run multiple backend
@@ -91,6 +97,25 @@ async def github_internal_exchange(
 
     # Upsert: does this GitHub user already have a DevCard account?
     existing = session.exec(select(User).where(User.github_id == github_id)).first()
+
+    # Anti-bot check — only for brand-new signups, never for existing users
+    # logging back in. GitHub's user API returns created_at as an ISO 8601
+    # string, e.g. "2019-05-14T12:34:56Z".
+    if existing is None:
+        account_created_at = datetime.strptime(
+            gh_user["created_at"], "%Y-%m-%dT%H:%M:%SZ"
+        ).replace(tzinfo=timezone.utc)
+        account_age_days = (datetime.now(timezone.utc) - account_created_at).days
+
+        if account_age_days < MIN_ACCOUNT_AGE_DAYS:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"GitHub accounts must be at least {MIN_ACCOUNT_AGE_DAYS} days "
+                    "old to sign up for DevAtlas. This helps keep the directory "
+                    "free of bots and throwaway accounts."
+                ),
+            )
 
     encrypted = encrypt_token(access_token)
 
