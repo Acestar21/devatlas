@@ -8,6 +8,9 @@ from alembic import context
 from app.config import settings
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache
+from app.models.tag import Tag
+from app.models.profile import Profile
+from app.models.tags_relations import StackTag, UserGame, UserInterest, UserProject
 from sqlmodel import SQLModel
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
