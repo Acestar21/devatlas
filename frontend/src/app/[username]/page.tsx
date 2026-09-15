@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import Image from "next/image";
+import Link from "next/link";
 import { Profile } from "@/types";
 import styles from "./page.module.css";
 
@@ -25,32 +26,34 @@ async function fetchProfile(
 			},
 		);
 
-		if (res.status === 404) {
+		if (res.status === 404)
 			return { data: null, error: "NOT_FOUND", message: null };
-		}
-
-		if (!res.ok) {
+		if (!res.ok)
 			return {
 				data: null,
 				error: "FETCH_ERROR",
-				message: `Server responded with ${res.status}: ${res.statusText}`,
+				message: `Server responded with ${res.status}`,
 			};
-		}
 
 		const data: Profile = await res.json();
-    
 		return { data, error: null, message: null };
 	} catch (e) {
 		return {
 			data: null,
 			error: "NETWORK_ERROR",
 			message:
-				e instanceof Error
-					? e.message
-					: "A network error occurred while fetching the profile.",
+				e instanceof Error ? e.message : "A network error occurred.",
 		};
 	}
 }
+
+const PLATFORM_LABEL: Record<string, string> = {
+	steam: "Steam",
+	riot: "Riot",
+	psn: "PlayStation",
+	xbox: "Xbox",
+	other: "Profile",
+};
 
 export default async function ProfilePage({
 	params,
@@ -60,16 +63,13 @@ export default async function ProfilePage({
 	const { username } = await params;
 	const { data: profile, error, message } = await fetchProfile(username);
 
-	if (error === "NOT_FOUND") {
-		notFound();
-	}
+	if (error === "NOT_FOUND") notFound();
 
 	if (error) {
 		return (
 			<div className={styles.errorPage}>
 				<p className={styles.errorMessage}>
-					{message ||
-						"An unexpected error occurred while loading the profile."}
+					{message || "Something went wrong."}
 				</p>
 			</div>
 		);
@@ -77,100 +77,212 @@ export default async function ProfilePage({
 
 	if (!profile) return null;
 
+	const hasGithub = profile.stats !== null;
+	const hasGames = profile.games !== null && profile.games.length > 0;
+	const hasInterests =
+		profile.interests !== null && profile.interests.length > 0;
+	const hasContentLinks = profile.content_links.length > 0;
+
 	return (
-		<main className={styles.container}>
-			<div className={styles.profileCard}>
+		<main className={styles.page}>
+			<div className={styles.card}>
 				{/* Header */}
 				<header className={styles.header}>
 					<Image
-						src={profile.avatar_url || ""}
-						alt={profile.display_name || "Profile Picture"}
-						width={96}
-						height={96}
+						src={profile.avatar_url || "/default-avatar.png"}
+						alt={profile.display_name || profile.username}
+						width={88}
+						height={88}
 						className={styles.avatar}
 					/>
-					<div className={styles.nameContainer}>
+					<div className={styles.identity}>
 						<h1 className={styles.displayName}>
 							{profile.display_name || profile.username}
 						</h1>
 						<p className={styles.username}>@{profile.username}</p>
+						{profile.bio && (
+							<p className={styles.bio}>{profile.bio}</p>
+						)}
 					</div>
+					{profile.is_owner && (
+						<Link href="/settings" className={styles.editButton}>
+							Edit profile
+						</Link>
+					)}
 				</header>
 
-				{/* Bio */}
-				{profile.bio && <p className={styles.bio}>{profile.bio}</p>}
-
-				{/* GitHub Stats */}
-				<section className={styles.section}>
-					<h2 className={styles.sectionTitle}>GitHub Stats</h2>
-					<div className={styles.statsGrid}>
-						<div className={styles.statBlock}>
-							<p className={styles.statLabel}>Contributions</p>
-							<p className={styles.statValue}>
-								{profile.stats.total_contributions}
-							</p>
+				{/* Stack tags */}
+				{profile.stack_tags.length > 0 && (
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Stack</h2>
+						<div className={styles.tagRow}>
+							{profile.stack_tags.map((t) => (
+								<span key={t.id} className={styles.tag}>
+									{t.name}
+								</span>
+							))}
 						</div>
-						<div className={styles.statBlock}>
-							<p className={styles.statLabel}>Top Languages</p>
-							<div className={styles.langList}>
-								{profile.stats.top_languages.map((lang) => (
-									<span key={lang} className={styles.langTag}>
-										{lang}
-									</span>
-								))}
+					</section>
+				)}
+
+				{/* GitHub */}
+				{hasGithub && profile.stats?.available && (
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>GitHub activity</h2>
+						<div className={styles.statsGrid}>
+							<div className={styles.statBlock}>
+								<p className={styles.statValue}>
+									{profile.stats.total_contributions}
+								</p>
+								<p className={styles.statLabel}>
+									contributions
+								</p>
+							</div>
+							<div className={styles.langBlock}>
+								<p className={styles.statLabel}>
+									Top languages
+								</p>
+								<div className={styles.tagRow}>
+									{profile.stats.top_languages?.map(
+										(lang) => (
+											<span
+												key={lang}
+												className={styles.langTag}
+											>
+												{lang}
+											</span>
+										),
+									)}
+								</div>
 							</div>
 						</div>
-						<div className={styles.statBlock}>
-							<p className={styles.statLabel}>Pinned Repos</p>
-							<p className={styles.statValue}>
-								{profile.stats.pinned_repos.length}
-							</p>
-						</div>
-					</div>
 
-					<div className={styles.repoGrid}>
-						{profile.stats.pinned_repos.map((repo) => (
-							<a
-								key={repo.name}
-								href={repo.url}
-								target="_blank"
-								className={styles.repoCard}
-							>
-								<span className={styles.repoName}>
-									{repo.name}
+						{profile.stats.pinned_repos &&
+							profile.stats.pinned_repos.length > 0 && (
+								<div className={styles.repoGrid}>
+									{profile.stats.pinned_repos.map((repo) => (
+										<a
+											key={repo.name}
+											href={repo.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className={styles.repoCard}
+										>
+											<span className={styles.repoName}>
+												{repo.name}
+											</span>
+											<p className={styles.repoDesc}>
+												{repo.description ||
+													"No description provided."}
+											</p>
+											<span className={styles.repoStars}>
+												★ {repo.stars}
+											</span>
+										</a>
+									))}
+								</div>
+							)}
+					</section>
+				)}
+
+				{hasGithub && !profile.stats?.available && (
+					<section className={styles.section}>
+						<p className={styles.unavailableNote}>
+							{profile.stats?.reason ||
+								"GitHub stats are temporarily unavailable."}
+						</p>
+					</section>
+				)}
+
+				{/* Games */}
+				{hasGames && (
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Also plays</h2>
+						<div className={styles.gameGrid}>
+							{profile.games!.map((g) => (
+								<a
+									key={g.tag_id}
+									href={g.profile_url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className={styles.gameCard}
+								>
+									<span className={styles.gameName}>
+										{g.name}
+									</span>
+									<span className={styles.gamePlatform}>
+										{PLATFORM_LABEL[g.platform] ||
+											g.platform}
+										{g.rank_or_hours
+											? ` · ${g.rank_or_hours}`
+											: ""}
+									</span>
+								</a>
+							))}
+						</div>
+					</section>
+				)}
+
+				{/* Interests */}
+				{hasInterests && (
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Into</h2>
+						<div className={styles.tagRow}>
+							{profile.interests!.map((i) => (
+								<span key={i.id} className={styles.interestTag}>
+									{i.name}
 								</span>
-								<p className={styles.repoDesc}>
-									{repo.description ||
-										"No description provided."}
-								</p>
-								<span className={styles.repoStars}>
-									⭐ {repo.stars}
-								</span>
-							</a>
-						))}
-					</div>
-				</section>
+							))}
+						</div>
+					</section>
+				)}
+
+				{/* Content links */}
+				{hasContentLinks && (
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Links</h2>
+						<p className={styles.linkDisclaimer}>
+							External links — DevAtlas has not verified these
+							destinations.
+						</p>
+						<div className={styles.linkRow}>
+							{profile.content_links.map((link, i) => (
+								<a
+									key={i}
+									href={link.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className={styles.contentLink}
+								>
+									{link.label} ↗
+								</a>
+							))}
+						</div>
+					</section>
+				)}
+
+				{/* Badge, owner only */}
 				{profile.is_owner && (
 					<section className={styles.section}>
-						<h2 className={styles.sectionTitle}>Your Badge</h2>
+						<h2 className={styles.sectionLabel}>Your badge</h2>
 						<img
 							src={`${process.env.NEXT_PUBLIC_API_URL}/badge/${profile.username}`}
-							alt="DevCard badge"
+							alt="DevAtlas badge"
 							className={styles.badgePreview}
 						/>
-						<p className={styles.badgeInstructions}>
-							Copy this into your README:
-						</p>
 						<code className={styles.badgeCode}>
-							{`![DevCard](${process.env.NEXT_PUBLIC_API_URL}/badge/${profile.username})`}
+							{`![DevAtlas](${process.env.NEXT_PUBLIC_API_URL}/badge/${profile.username})`}
 						</code>
-						<a
-							href={`/api/auth/logout`}
-							className={styles.logoutButton}
-						>
-							Log out
-						</a>
 					</section>
+				)}
+
+				{profile.is_owner && (
+					<a
+						href={`${process.env.NEXT_PUBLIC_API_URL}/auth/github/logout`}
+						className={styles.logoutButton}
+					>
+						Log out
+					</a>
 				)}
 			</div>
 		</main>

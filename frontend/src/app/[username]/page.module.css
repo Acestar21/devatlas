@@ -1,217 +1,304 @@
-.container {
+.page {
   min-height: 100vh;
-  padding: 2rem;
-  background-color: #f8fafc;
-  color: #1e293b;
+  background: #f6f7f8;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1.5rem;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-.profileCard {
-  max-width: 48rem;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+.card {
+  width: 100%;
+  max-width: 720px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e8e9eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 2.5rem;
 }
 
 .header {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
 }
 
 .avatar {
-  width: 96px;
-  height: 96px;
   border-radius: 50%;
-  border: 4px solid white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 1px #e8e9eb;
+  flex-shrink: 0;
 }
 
-.nameContainer {
-  display: flex;
-  flex-direction: column;
+.identity {
+  flex: 1;
 }
 
 .displayName {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-}
-
-.username {
-  color: #64748b;
-  font-size: 1rem;
-  margin: 0;
-}
-
-.bio {
-  font-size: 1.125rem;
-  line-height: 1.6;
-  color: #334155;
-}
-
-.section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.sectionTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.statBlock {
-  padding: 1rem;
-  background-color: #f1f5f9;
-  border-radius: 0.75rem;
-}
-
-.statLabel {
-  font-size: 0.875rem;
-  color: #64748b;
-  text-transform: uppercase;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.statValue {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+  color: #16181d;
 }
 
-.langList {
+.username {
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0.15rem 0 0.75rem 0;
+}
+
+.bio {
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.editButton {
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #374151;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.editButton:hover {
+  background: #f3f4f6;
+}
+
+.section {
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #eef0f2;
+}
+
+.sectionLabel {
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin: 0 0 0.85rem 0;
+}
+
+.tagRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: 0.25rem;
+  gap: 0.5rem;
+}
+
+.tag {
+  padding: 0.3rem 0.75rem;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .langTag {
-  padding: 0.125rem 0.5rem;
-  background-color: #dbeafe;
-  color: #1d4ed8;
+  padding: 0.25rem 0.6rem;
+  background: #f3f4f6;
+  color: #4b5563;
+  border-radius: 6px;
+  font-family: 'SF Mono', Consolas, monospace;
   font-size: 0.75rem;
-  border-radius: 9999px;
+}
+
+.interestTag {
+  padding: 0.3rem 0.75rem;
+  background: #fef3f2;
+  color: #b91c1c;
+  border-radius: 999px;
+  font-size: 0.8rem;
   font-weight: 500;
+}
+
+.statsGrid {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.statBlock {
+  flex-shrink: 0;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #16181d;
+  margin: 0;
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0.15rem 0 0.5rem 0;
+}
+
+.langBlock {
+  flex: 1;
 }
 
 .repoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
 }
 
 .repoCard {
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  transition: background-color 0.2s;
+  display: block;
+  padding: 0.9rem;
+  border: 1px solid #eef0f2;
+  border-radius: 10px;
   text-decoration: none;
-  color: inherit;
 }
 
 .repoCard:hover {
-  background-color: #f8fafc;
+  border-color: #d1d5db;
 }
 
 .repoName {
+  font-family: 'SF Mono', Consolas, monospace;
   font-weight: 600;
-  color: #2563eb;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  color: #4338ca;
 }
 
 .repoDesc {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0;
-  display: -webkit-box;
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 0.35rem 0;
+  line-height: 1.4;
 }
 
 .repoStars {
   font-size: 0.75rem;
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  color: #9ca3af;
 }
 
-.socialLinks {
-  display: flex;
-  flex-wrap: wrap;
+.unavailableNote {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+}
+
+.gameGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
 }
 
-.socialLink {
-  padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #475569;
-  text-decoration: none;
-  transition: background-color 0.2s;
-}
-
-.socialLink:hover {
-  background-color: #f1f5f9;
-}
-
-.errorPage {
+.gameCard {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  text-align: center;
-  padding: 2rem;
+  padding: 0.75rem 0.9rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  text-decoration: none;
 }
 
-.errorMessage {
-  color: #ef4444;
-  font-size: 1.25rem;
-  font-weight: 500;
+.gameName {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #16181d;
+}
+
+.gamePlatform {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+.linkDisclaimer {
+  font-size: 0.72rem;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  margin: 0 0 0.75rem 0;
+}
+
+.linkRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.contentLink {
+  padding: 0.4rem 0.85rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #374151;
+  text-decoration: none;
+}
+
+.contentLink:hover {
+  background: #e5e7eb;
+}
+
+.badgePreview {
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  max-width: 100%;
+}
+
+.badgeCode {
+  display: block;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #4b5563;
+  word-break: break-all;
 }
 
 .logoutButton {
   display: inline-block;
-  margin-top: 1rem;
-  padding: 0.5rem 1.25rem;
-  background-color: transparent;
-  color: #6b7280;
+  margin-top: 1.5rem;
+  padding: 0.5rem 1.1rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  color: #6b7280;
   text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: 0.85rem;
 }
 
 .logoutButton:hover {
-  background-color: #f3f4f6;
-  color: #374151;
+  background: #f3f4f6;
+}
+
+.errorPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.errorMessage {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 600px) {
+  .repoGrid,
+  .gameGrid {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    flex-direction: column;
+  }
 }
