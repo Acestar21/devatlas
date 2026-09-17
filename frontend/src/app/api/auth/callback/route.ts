@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 		return NextResponse.redirect(new URL("/", request.url));
 	}
 
-	const { session_token, github_username } = await exchangeRes.json();
+	const { session_token } = await exchangeRes.json();
 
 	const response = NextResponse.redirect(
 		new URL(`/directory`, request.url),

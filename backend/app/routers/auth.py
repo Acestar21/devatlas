@@ -38,7 +38,7 @@ def github_login(request: Request):
     params = {
         "client_id": settings.github_client_id,
         "redirect_uri": settings.github_oauth_callback_url,
-        "scope": "read:user",  # public profile data only — no repo write access needed
+        "scope": "read:user",   # read-only GitHub profile access; no repository access
         "state": state,
     }
     query = "&".join(f"{k}={v}" for k, v in params.items())
