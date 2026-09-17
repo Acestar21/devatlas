@@ -1,17 +1,24 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #ffffff;
-    --foreground: #ededed;
-  }
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card-bg: #1e293b;
+  --foreground-muted: #94a3b8;
+  --foreground-dimmed: #64748b;
+  --border: #334155;
+  --border-muted: #1e293b;
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --primary: #009cc4;
+  --primary-foreground: #ffffff;
+  --secondary-bg: #334155;
+  --secondary-fg: #e2e8f0;
+  --accent-bg: #451a03;
+  --accent-fg: #fed7aa;
 }
 
 html {
   height: 100%;
+  color-scheme: dark;
 }
 
 html,
@@ -43,16 +50,15 @@ a {
 }
 
 .freeTierBanner {
-  background-color: #fffbeb;
-  color: #92400e;
+  background-color: #451a03;
+  color: #fed7aa;
   text-align: center;
   font-size: 0.75rem;
   padding: 0.25rem 1rem;
-  border-bottom: 1px solid #fef3c7;
+  border-bottom: 1px solid #78350f;
 }
-
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
-  }
+    }
 }

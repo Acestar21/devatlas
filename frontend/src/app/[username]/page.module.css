@@ -1,33 +1,49 @@
 .page {
   min-height: 100vh;
-  background: #f6f7f8;
+  background: var(--background);
   display: flex;
   justify-content: center;
   padding: 3rem 1.5rem;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-.card {
+.container {
   width: 100%;
   max-width: 720px;
-  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.backLink {
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.backLink:hover {
+  color: var(--foreground);
+}
+
+.card {
+  background: var(--card-bg);
   border-radius: 16px;
-  border: 1px solid #e8e9eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  padding: 2.5rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
 }
 
 .header {
   display: flex;
   align-items: flex-start;
   gap: 1.25rem;
-  margin-bottom: 2rem;
 }
 
 .avatar {
   border-radius: 50%;
-  border: 3px solid #ffffff;
-  box-shadow: 0 0 0 1px #e8e9eb;
+  border: 3px solid var(--card-bg);
+  box-shadow: 0 0 0 1px var(--border);
   flex-shrink: 0;
 }
 
@@ -39,19 +55,19 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  color: #16181d;
+  color: var(--foreground);
 }
 
 .username {
   font-family: 'SF Mono', Consolas, monospace;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--foreground-muted);
   margin: 0.15rem 0 0.75rem 0;
 }
 
 .bio {
   font-size: 0.95rem;
-  color: #374151;
+  color: var(--foreground-muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -59,22 +75,28 @@
 .editButton {
   align-self: flex-start;
   padding: 0.4rem 0.9rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.85rem;
-  color: #374151;
+  color: var(--foreground);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .editButton:hover {
-  background: #f3f4f6;
+  background: var(--secondary-bg);
 }
 
 .section {
-  padding-top: 1.5rem;
-  margin-top: 1.5rem;
-  border-top: 1px solid #eef0f2;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-muted);
+}
+
+.section:first-child {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
 }
 
 .sectionLabel {
@@ -83,7 +105,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #9ca3af;
+  color: var(--foreground-dimmed);
   margin: 0 0 0.85rem 0;
 }
 
@@ -95,8 +117,8 @@
 
 .tag {
   padding: 0.3rem 0.75rem;
-  background: #eef2ff;
-  color: #4338ca;
+  background: var(--secondary-bg);
+  color: var(--primary);
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -104,8 +126,8 @@
 
 .langTag {
   padding: 0.25rem 0.6rem;
-  background: #f3f4f6;
-  color: #4b5563;
+  background: var(--border-muted);
+  color: var(--foreground-muted);
   border-radius: 6px;
   font-family: 'SF Mono', Consolas, monospace;
   font-size: 0.75rem;
@@ -113,8 +135,8 @@
 
 .interestTag {
   padding: 0.3rem 0.75rem;
-  background: #fef3f2;
-  color: #b91c1c;
+  background: #450a0a;
+  color: #fca5a5;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 500;
@@ -134,14 +156,14 @@
 .statValue {
   font-size: 2rem;
   font-weight: 700;
-  color: #16181d;
+  color: var(--foreground);
   margin: 0;
   font-family: 'SF Mono', Consolas, monospace;
 }
 
 .statLabel {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--foreground-dimmed);
   margin: 0.15rem 0 0.5rem 0;
 }
 
@@ -158,37 +180,37 @@
 .repoCard {
   display: block;
   padding: 0.9rem;
-  border: 1px solid #eef0f2;
+  border: 1px solid var(--border-muted);
   border-radius: 10px;
   text-decoration: none;
 }
 
 .repoCard:hover {
-  border-color: #d1d5db;
+  border-color: var(--border);
 }
 
 .repoName {
   font-family: 'SF Mono', Consolas, monospace;
   font-weight: 600;
   font-size: 0.85rem;
-  color: #4338ca;
+  color: var(--primary);
 }
 
 .repoDesc {
   font-size: 0.78rem;
-  color: #6b7280;
+  color: var(--foreground-muted);
   margin: 0.35rem 0;
   line-height: 1.4;
 }
 
 .repoStars {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--foreground-dimmed);
 }
 
 .unavailableNote {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--foreground-dimmed);
   font-style: italic;
   margin: 0;
 }
@@ -203,7 +225,7 @@
   display: flex;
   flex-direction: column;
   padding: 0.75rem 0.9rem;
-  background: #f9fafb;
+  background: var(--secondary-bg);
   border-radius: 10px;
   text-decoration: none;
 }
@@ -211,21 +233,21 @@
 .gameName {
   font-weight: 600;
   font-size: 0.85rem;
-  color: #16181d;
+  color: var(--foreground);
 }
 
 .gamePlatform {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--foreground-muted);
   margin-top: 0.15rem;
   font-family: 'SF Mono', Consolas, monospace;
 }
 
 .linkDisclaimer {
   font-size: 0.72rem;
-  color: #b45309;
-  background: #fffbeb;
-  border: 1px solid #fef3c7;
+  color: var(--accent-fg);
+  background: var(--accent-bg);
+  border: 1px solid #78350f;
   padding: 0.4rem 0.7rem;
   border-radius: 6px;
   margin: 0 0 0.75rem 0;
@@ -239,15 +261,15 @@
 
 .contentLink {
   padding: 0.4rem 0.85rem;
-  background: #f3f4f6;
+  background: var(--secondary-bg);
   border-radius: 8px;
   font-size: 0.82rem;
-  color: #374151;
+  color: var(--foreground-muted);
   text-decoration: none;
 }
 
 .contentLink:hover {
-  background: #e5e7eb;
+  background: var(--border);
 }
 
 .badgePreview {
@@ -259,10 +281,10 @@
 .badgeCode {
   display: block;
   padding: 0.75rem;
-  background: #f3f4f6;
+  background: var(--secondary-bg);
   border-radius: 8px;
   font-size: 0.75rem;
-  color: #4b5563;
+  color: var(--foreground-muted);
   word-break: break-all;
 }
 
@@ -270,15 +292,15 @@
   display: inline-block;
   margin-top: 1.5rem;
   padding: 0.5rem 1.1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #6b7280;
+  color: var(--foreground-muted);
   text-decoration: none;
   font-size: 0.85rem;
 }
 
 .logoutButton:hover {
-  background: #f3f4f6;
+  background: var(--secondary-bg);
 }
 
 .errorPage {
@@ -289,7 +311,7 @@
 }
 
 .errorMessage {
-  color: #6b7280;
+  color: var(--foreground-muted);
   font-size: 0.95rem;
 }
 

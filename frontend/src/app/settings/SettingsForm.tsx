@@ -232,228 +232,244 @@ export default function SettingsForm({
 
 	return (
 		<main className={styles.page}>
-			<div className={styles.card}>
-				<div className={styles.topBar}>
-					<h1 className={styles.title}>Settings</h1>
-					<a
-						href={`/${initialProfile.username}`}
-						className={styles.backLink}
-					>
-						← Back to profile
-					</a>
+			<div className={styles.container}>
+				<div className={styles.card}>
+					<div className={styles.topBar}>
+						<h1 className={styles.title}>Settings</h1>
+						<a
+							href={`/${initialProfile.username}`}
+							className={styles.backLink}
+						>
+							← Back to profile
+						</a>
+					</div>
 				</div>
 
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Bio</h2>
-					<textarea
-						className={styles.textarea}
-						value={bio}
-						onChange={(e) => setBio(e.target.value)}
-						placeholder="Tell people about yourself"
-						rows={3}
-					/>
-				</section>
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Bio</h2>
+						<textarea
+							className={styles.textarea}
+							value={bio}
+							onChange={(e) => setBio(e.target.value)}
+							placeholder="Tell people about yourself"
+							rows={3}
+						/>
+					</section>
+				</div>
 
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Theme</h2>
-					<div className={styles.themeRow}>
-						{THEMES.map((t) => (
-							<button
-								key={t}
-								className={`${styles.themeOption} ${theme === t ? styles.themeSelected : ""}`}
-								onClick={() => setTheme(t)}
-							>
-								{t}
-							</button>
-						))}
-					</div>
-				</section>
-
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Stack</h2>
-					<div className={styles.tagRow}>
-						{stackTags.map((t) => (
-							<span key={t.id} className={styles.tagChip}>
-								{t.name}
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Theme</h2>
+						<div className={styles.themeRow}>
+							{THEMES.map((t) => (
 								<button
-									onClick={() => removeStackTag(t.id)}
-									className={styles.removeX}
+									key={t}
+									className={`${styles.themeOption} ${theme === t ? styles.themeSelected : ""}`}
+									onClick={() => setTheme(t)}
 								>
-									×
+									{t}
 								</button>
-							</span>
-						))}
-					</div>
-					<TagPicker
-						category="stack"
-						label="a technology"
-						onAttach={addStackTag}
-					/>
-				</section>
+							))}
+						</div>
+					</section>
+				</div>
 
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Interests</h2>
-					<div className={styles.tagRow}>
-						{interests.map((t) => (
-							<span key={t.id} className={styles.tagChip}>
-								{t.name}
-								<button
-									onClick={() => removeInterest(t.id)}
-									className={styles.removeX}
-								>
-									×
-								</button>
-							</span>
-						))}
-					</div>
-					<TagPicker
-						category="interest"
-						label="an interest"
-						onAttach={addInterest}
-					/>
-				</section>
-
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Games</h2>
-					<div className={styles.gameList}>
-						{games.map((g) => (
-							<div key={g.tag_id} className={styles.gameRow}>
-								<span>
-									{g.name} — {g.platform}
-									{g.rank_or_hours
-										? ` (${g.rank_or_hours})`
-										: ""}
-								</span>
-								<button
-									onClick={() => removeGame(g.tag_id)}
-									className={styles.removeX}
-								>
-									×
-								</button>
-							</div>
-						))}
-					</div>
-
-					<div className={styles.gameForm}>
-						{!newGameTag ? (
-							<TagPicker
-								category="game"
-								label="a game"
-								onAttach={(tag) => setNewGameTag(tag)}
-							/>
-						) : (
-							<div className={styles.gameFormFields}>
-								<span className={styles.gameFormSelected}>
-									{newGameTag.name}{" "}
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Stack</h2>
+						<div className={styles.tagRow}>
+							{stackTags.map((t) => (
+								<span key={t.id} className={styles.tagChip}>
+									{t.name}
 									<button
-										onClick={() => setNewGameTag(null)}
+										onClick={() => removeStackTag(t.id)}
 										className={styles.removeX}
 									>
 										×
 									</button>
 								</span>
-								<select
-									className={styles.inputSmall}
-									value={newGamePlatform}
-									onChange={(e) =>
-										setNewGamePlatform(e.target.value)
-									}
-								>
-									{PLATFORMS.map((p) => (
-										<option key={p} value={p}>
-											{p}
-										</option>
-									))}
-								</select>
-								<input
-									className={styles.inputSmall}
-									placeholder="Profile URL"
-									value={newGameUrl}
-									onChange={(e) =>
-										setNewGameUrl(e.target.value)
-									}
-								/>
-								<input
-									className={styles.inputSmall}
-									placeholder="Rank / hours (optional)"
-									value={newGameRank}
-									onChange={(e) =>
-										setNewGameRank(e.target.value)
-									}
-								/>
-								<button
-									onClick={addGame}
-									className={styles.addButton}
-								>
-									Add
-								</button>
-							</div>
-						)}
-					</div>
-				</section>
+							))}
+						</div>
+						<TagPicker
+							category="stack"
+							label="a technology"
+							onAttach={addStackTag}
+						/>
+					</section>
+				</div>
 
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Links</h2>
-					<div className={styles.linkList}>
-						{contentLinks.map((link, i) => (
-							<div key={i} className={styles.linkRow}>
-								<span>
-									{link.label}: {link.url}
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Interests</h2>
+						<div className={styles.tagRow}>
+							{interests.map((t) => (
+								<span key={t.id} className={styles.tagChip}>
+									{t.name}
+									<button
+										onClick={() => removeInterest(t.id)}
+										className={styles.removeX}
+									>
+										×
+									</button>
 								</span>
-								<button
-									onClick={() => removeContentLink(i)}
-									className={styles.removeX}
-								>
-									×
-								</button>
-							</div>
-						))}
-					</div>
-					<div className={styles.linkForm}>
-						<input
-							className={styles.inputSmall}
-							placeholder="Label (e.g. Blog)"
-							value={newLinkLabel}
-							onChange={(e) => setNewLinkLabel(e.target.value)}
+							))}
+						</div>
+						<TagPicker
+							category="interest"
+							label="an interest"
+							onAttach={addInterest}
 						/>
-						<input
-							className={styles.inputSmall}
-							placeholder="https://..."
-							value={newLinkUrl}
-							onChange={(e) => setNewLinkUrl(e.target.value)}
-						/>
-						<button
-							onClick={addContentLink}
-							className={styles.addButton}
-						>
-							Add
-						</button>
-					</div>
-				</section>
+					</section>
+				</div>
 
-				<section className={styles.section}>
-					<h2 className={styles.sectionLabel}>Visibility</h2>
-					<p className={styles.hint}>
-						Hidden sections are invisible to everyone but you.
-					</p>
-					{(
-						["github", "leetcode", "games", "interests"] as const
-					).map((key) => (
-						<label key={key} className={styles.checkboxRow}>
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Games</h2>
+						<div className={styles.gameList}>
+							{games.map((g) => (
+								<div key={g.tag_id} className={styles.gameRow}>
+									<span>
+										{g.name} — {g.platform}
+										{g.rank_or_hours
+											? ` (${g.rank_or_hours})`
+											: ""}
+									</span>
+									<button
+										onClick={() => removeGame(g.tag_id)}
+										className={styles.removeX}
+									>
+										×
+									</button>
+								</div>
+							))}
+						</div>
+
+						<div className={styles.gameForm}>
+							{!newGameTag ? (
+								<TagPicker
+									category="game"
+									label="a game"
+									onAttach={(tag) => setNewGameTag(tag)}
+								/>
+							) : (
+								<div className={styles.gameFormFields}>
+									<span className={styles.gameFormSelected}>
+										{newGameTag.name}{" "}
+										<button
+											onClick={() => setNewGameTag(null)}
+											className={styles.removeX}
+										>
+											×
+										</button>
+									</span>
+									<select
+										className={styles.inputSmall}
+										value={newGamePlatform}
+										onChange={(e) =>
+											setNewGamePlatform(e.target.value)
+										}
+									>
+										{PLATFORMS.map((p) => (
+											<option key={p} value={p}>
+												{p}
+											</option>
+										))}
+									</select>
+									<input
+										className={styles.inputSmall}
+										placeholder="Profile URL"
+										value={newGameUrl}
+										onChange={(e) =>
+											setNewGameUrl(e.target.value)
+										}
+									/>
+									<input
+										className={styles.inputSmall}
+										placeholder="Rank / hours (optional)"
+										value={newGameRank}
+										onChange={(e) =>
+											setNewGameRank(e.target.value)
+										}
+									/>
+									<button
+										onClick={addGame}
+										className={styles.addButton}
+									>
+										Add
+									</button>
+								</div>
+							)}
+						</div>
+					</section>
+				</div>
+
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Links</h2>
+						<div className={styles.linkList}>
+							{contentLinks.map((link, i) => (
+								<div key={i} className={styles.linkRow}>
+									<span>
+										{link.label}: {link.url}
+									</span>
+									<button
+										onClick={() => removeContentLink(i)}
+										className={styles.removeX}
+									>
+										×
+									</button>
+								</div>
+							))}
+						</div>
+						<div className={styles.linkForm}>
 							<input
-								type="checkbox"
-								checked={visibility[key]}
-								onChange={(e) =>
-									setVisibility((prev) => ({
-										...prev,
-										[key]: e.target.checked,
-									}))
-								}
+								className={styles.inputSmall}
+								placeholder="Label (e.g. Blog)"
+								value={newLinkLabel}
+								onChange={(e) => setNewLinkLabel(e.target.value)}
 							/>
-							{key}
-						</label>
-					))}
-				</section>
+							<input
+								className={styles.inputSmall}
+								placeholder="https://..."
+								value={newLinkUrl}
+								onChange={(e) => setNewLinkUrl(e.target.value)}
+							/>
+							<button
+								onClick={addContentLink}
+								className={styles.addButton}
+							>
+								Add
+							</button>
+						</div>
+					</section>
+				</div>
+
+				<div className={styles.card}>
+					<section className={styles.section}>
+						<h2 className={styles.sectionLabel}>Visibility</h2>
+						<p className={styles.hint}>
+							Hidden sections are invisible to everyone but you.
+						</p>
+						{(
+							["github", "leetcode", "games", "interests"] as const
+						).map((key) => (
+							<label key={key} className={styles.checkboxRow}>
+								<input
+									type="checkbox"
+									checked={visibility[key]}
+									onChange={(e) =>
+										setVisibility((prev) => ({
+											...prev,
+											[key]: e.target.checked,
+										}))
+									}
+								/>
+								{key}
+							</label>
+						))}
+					</section>
+				</div>
 
 				<button
 					onClick={saveProfile}

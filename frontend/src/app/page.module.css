@@ -13,28 +13,54 @@
   font-size: 3.5rem;
   font-weight: 800;
   margin-bottom: 1rem;
-  color: #1a1a1a;
+  color: var(--foreground);
 }
 
 .subtitle {
   font-size: 1.25rem;
-  color: #666;
+  color: var(--foreground-muted);
   margin-bottom: 2.5rem;
   max-width: 600px;
   line-height: 1.5;
 }
 
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
 .loginButton {
   padding: 0.75rem 1.5rem;
-  background-color: #000;
-  color: #fff;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   text-decoration: none;
   border-radius: 8px;
   font-weight: 500;
   font-size: 1rem;
   transition: background-color 0.2s ease;
+  min-width: 200px;
 }
 
 .loginButton:hover {
-  background-color: #333;
+  background-color: #2563eb;
+}
+
+.directoryButton {
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.directoryButton:hover {
+  background-color: var(--secondary-bg);
+  color: var(--foreground);
 }

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 	const { session_token, github_username } = await exchangeRes.json();
 
 	const response = NextResponse.redirect(
-		new URL(`/${github_username}`, request.url),
+		new URL(`/directory`, request.url),
 	);
 
 	response.cookies.set(SESSION_COOKIE_NAME, session_token, {

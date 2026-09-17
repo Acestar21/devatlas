@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.rate_limit import limiter
-from app.routers import auth, admin, profiles, profile_tags, badge, tags
+from app.routers import auth, admin, profiles, profile_tags, badge, tags, directory
 from app.config import settings
 
 app = FastAPI(title="DevCard")
@@ -30,3 +30,4 @@ app.include_router(badge.router)
 app.include_router(admin.router)
 app.include_router(tags.router)
 app.include_router(profile_tags.router)
+app.include_router(directory.router)
