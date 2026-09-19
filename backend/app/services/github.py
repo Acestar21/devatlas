@@ -21,6 +21,16 @@ query($login: String!) {
         totalContributions
       }
     }
+    pinnedItems(first: 6, types: REPOSITORY) {
+      nodes {
+        ... on Repository {
+          name
+          stargazerCount
+          url
+          description
+        }
+      }
+    }
     repositories(first: 10, orderBy: {field: PUSHED_AT, direction: DESC}, ownerAffiliations: OWNER) {
       nodes {
         name
@@ -93,7 +103,7 @@ async def fetch_and_cache_stats(user: User, db: Session) -> GithubStatsCache:
             "stars": r["stargazerCount"],
             "url": r["url"],
         }
-        for r in repos[:6]
+        for r in gh_user.get("pinnedItems", {}).get("nodes", [])
     ]
 
     import json
