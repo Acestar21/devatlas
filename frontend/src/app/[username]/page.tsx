@@ -32,8 +32,10 @@ async function fetchViewer() {
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
 	const { username } = await params;
-	const profile = await fetchProfile(username);
-	const viewer = await fetchViewer();
+	const [profile, viewer] = await Promise.all([
+	fetchProfile(username),
+	fetchViewer(),
+	]);
 	const themeCookie = await getThemeCookie();
 	if (!profile) return <div className={styles.errorPage}>Coming Soon</div>;
 	const visibility = profile.section_visibility || { github: true, leetcode: true, games: true, interests: true };

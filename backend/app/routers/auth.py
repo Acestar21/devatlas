@@ -149,11 +149,3 @@ async def github_internal_exchange(
         "session_token": session_token,
         "github_username": user.github_username,
     }
-
-
-@router.get("/logout")
-def logout():
-    # Kept for backward compatibility / direct testing only.
-    # The real logout flow now happens via Vercel's own API route,
-    # since that's where the session cookie actually lives.
-    return {"message": "This endpoint is no longer used by the frontend. Logout happens via /api/auth/logout on the frontend domain."}

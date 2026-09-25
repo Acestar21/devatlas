@@ -43,8 +43,10 @@ async function forward(request: NextRequest, path: string[]) {
 	}
 
 	const data = await res.json().catch(() => ({ detail: "Invalid backend response" }));
-
-	return NextResponse.json(data, { status: res.status });
+	const response = NextResponse.json(data, { status: res.status });
+	const setCookie = res.headers.get("set-cookie");
+	if (setCookie) response.headers.set("set-cookie", setCookie);
+	return response;
 }
 
 export async function GET(
