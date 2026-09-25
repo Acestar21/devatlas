@@ -10,20 +10,10 @@ import {
 	InterestTag,
 } from "@/types";
 import styles from "./page.module.css";
+import { proxyFetch } from "@/lib/api-client";
 
-const THEMES = ["default", "dark", "ocean", "forest"];
+const THEMES = ["terminal", "coffee", "forest"];
 const PLATFORMS = ["steam", "riot", "psn", "xbox", "other"];
-
-async function proxyFetch(path: string, options: RequestInit = {}) {
-	const res = await fetch(`/api/proxy/${path}`, {
-		...options,
-		headers: {
-			"Content-Type": "application/json",
-			...(options.headers || {}),
-		},
-	});
-	return res.json();
-}
 
 function TagPicker({
 	category,
@@ -36,37 +26,46 @@ function TagPicker({
 }) {
 	const [search, setSearch] = useState("");
 	const [results, setResults] = useState<{ id: number; name: string }[]>([]);
+	const [unmatchedTokens, setUnmatchedTokens] = useState<string[]>([]);
 	const [submitting, setSubmitting] = useState(false);
 
 	const runSearch = async (value: string) => {
 		setSearch(value);
 		if (value.length < 1) {
 			setResults([]);
+			setUnmatchedTokens([]);
 			return;
 		}
-		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_API_URL}/tags?category=${category}&search=${encodeURIComponent(value)}`,
-		);
-		const data = await res.json();
-		setResults(data);
+		const tokens = value.split(",").map((token) => token.trim()).filter(Boolean);
+		const responses = await Promise.all(tokens.map(async (token) => ({ token, response: await fetch(
+			`${process.env.NEXT_PUBLIC_API_URL}/tags?category=${category}&search=${encodeURIComponent(token)}`,
+		) })));
+		const tokenResults = await Promise.all(responses.map(async ({ token, response }) => ({ token, tags: response.ok ? await response.json() : [] })));
+		const unique = new Map<number, { id: number; name: string }>();
+		tokenResults.flatMap(({ tags }) => tags).forEach((tag) => unique.set(tag.id, tag));
+		setResults([...unique.values()]);
+		setUnmatchedTokens(tokenResults.filter(({ tags }) => tags.length === 0).map(({ token }) => token));
 	};
 
 	const submitNew = async () => {
 		setSubmitting(true);
-		const result = await proxyFetch(
-			`tags?name=${encodeURIComponent(search)}&category=${category}`,
-			{
-				method: "POST",
-			},
-		);
+		const names = unmatchedTokens.length > 0 ? unmatchedTokens : search.split(",").map((token) => token.trim()).filter(Boolean);
+		const results = await Promise.all(names.map((name) => proxyFetch<{ status?: string; name?: string }>(
+			`tags?name=${encodeURIComponent(name)}&category=${category}`, { method: "POST" },
+		)));
 		setSubmitting(false);
-		if (result.status === "pending") {
-			alert(
-				`"${result.name}" submitted for review. It'll be selectable once approved.`,
-			);
-		}
+		const pending = results.filter((result) => result.status === "pending").map((result) => result.name).join(", ");
+		if (pending) alert(`Submitted for review: ${pending}. They'll be selectable once approved.`);
 		setSearch("");
 		setResults([]);
+		setUnmatchedTokens([]);
+	};
+
+	const addAllMatches = () => {
+		results.forEach((tag) => onAttach(tag));
+		setSearch("");
+		setResults([]);
+		setUnmatchedTokens([]);
 	};
 
 	return (
@@ -79,6 +78,7 @@ function TagPicker({
 			/>
 			{results.length > 0 && (
 				<div className={styles.pickerResults}>
+					{search.includes(",") && <button className={styles.addMatchesButton} onClick={addAllMatches}>Add all matching tags</button>}
 					{results.map((r) => (
 						<button
 							key={r.id}
@@ -94,7 +94,7 @@ function TagPicker({
 					))}
 				</div>
 			)}
-			{search.length > 1 && results.length === 0 && (
+			{unmatchedTokens.length > 0 && (
 				<button
 					className={styles.submitNewButton}
 					onClick={submitNew}
@@ -147,22 +147,24 @@ export default function SettingsForm({
 
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
 
 	const saveProfile = async () => {
 		setSaving(true);
 		setSaved(false);
-		await proxyFetch("profiles/me", {
-			method: "PATCH",
-			body: JSON.stringify({
-				bio,
-				theme,
-				content_links: contentLinks,
-				section_visibility: visibility,
-			}),
-		});
-		setSaving(false);
-		setSaved(true);
-		router.refresh();
+		setSaveError(null);
+		try {
+			await proxyFetch("profiles/me", {
+				method: "PATCH",
+				body: JSON.stringify({ bio, theme, content_links: contentLinks, section_visibility: visibility }),
+			});
+			setSaved(true);
+			router.refresh();
+		} catch (caughtError) {
+			setSaveError(caughtError instanceof Error ? caughtError.message : "Unable to save changes.");
+		} finally {
+			setSaving(false);
+		}
 	};
 
 	const addStackTag = async (tag: { id: number; name: string }) => {
@@ -471,6 +473,7 @@ export default function SettingsForm({
 					</section>
 				</div>
 
+				{saveError && <p className={styles.error} role="alert">{saveError}</p>}
 				<button
 					onClick={saveProfile}
 					className={styles.saveButton}

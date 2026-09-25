@@ -26,11 +26,11 @@ Developers' professional footprints are fragmented. GitHub activity, LeetCode pr
 
 ### Frontend
 - **Framework:** [Next.js](https://nextjs.org/) (SSR for optimal SEO and shareable link previews)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Styling:** CSS Modules and shared CSS variables
 
 ### Infrastructure
-- **Hosting:** [Render](https://render.com/) (Managed PostgreSQL and Web Services)
-- **CI/CD:** Automated deployments via Render's native Git integration.
+- **Hosting:** [Vercel](https://vercel.com/) for the Next.js frontend and [Render](https://render.com/) for the FastAPI backend and PostgreSQL
+- **CI/CD:** GitHub pushes trigger Vercel and Render deployments; GitHub Actions validates changes before merge.
 
 ##  Architecture & Design Decisions
 DevCard was built with a focus on **defensible engineering**—choosing the right tool for the job rather than chasing resume keywords.
@@ -70,11 +70,15 @@ Create a `.env` file in the `backend` directory:
 DATABASE_URL=postgresql://user:password@localhost/devcard
 GITHUB_CLIENT_ID=your_client_id
 GITHUB_CLIENT_SECRET=your_client_secret
-GITHUB_OAUTH_CALLBACK_URL=http://localhost:8000/auth/callback
+GITHUB_OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/callback
 SECRET_KEY=your_secret_key
 FERNET_KEY=your_fernet_key
 FRONTEND_URL=http://localhost:3000
 INTERNAL_API_SECRET=your_internal_secret
+CORS_ORIGINS=http://localhost:3000
+ADMIN_GITHUB_ID=your_github_numeric_id
+# Required only when running the approved-tag seed script.
+SEED_SYSTEM_USER_ID=your_user_id
 ```
 Initialize the database:
 ```bash
@@ -90,6 +94,8 @@ npm install
 Create a `.env.local` file in the `frontend` directory:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+INTERNAL_API_SECRET=your_internal_secret
 ```
 Run the development server:
 ```bash

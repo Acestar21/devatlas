@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { Profile } from "@/types";
 import SettingsForm from "./SettingsForm";
+import { getSessionCookieValue, sessionHeaders } from "@/lib/server-context";
 
 export default async function SettingsPage() {
-	const cookieStore = await cookies();
-	const sessionCookie = cookieStore.get("devcard_session");
+	const sessionCookie = await getSessionCookieValue();
 
 	if (!sessionCookie) {
 		redirect("/");
@@ -13,7 +12,7 @@ export default async function SettingsPage() {
 
 	const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/me`, {
 		cache: "no-store",
-		headers: { Cookie: `devcard_session=${sessionCookie.value}` },
+		headers: sessionHeaders(sessionCookie),
 	});
 
 	if (!res.ok) {

@@ -5,6 +5,7 @@ Safe to re-run — skips any tag that already exists by (name, category).
 """
 from sqlmodel import Session, select
 from app.database import engine
+from app.config import settings
 from app.models.user import User
 from app.models.tag import Tag
 
@@ -12,7 +13,7 @@ STARTER_TAGS = {
     "stack": [
         "Python", "JavaScript", "TypeScript", "Go", "Rust", "Java", "C++", "C#",
         "React", "Next.js", "Vue", "FastAPI", "Django", "Node.js", "PostgreSQL",
-        "MongoDB", "Docker", "AWS", "Tailwind", "GraphQL",
+        "MongoDB", "Docker", "AWS", "Tailwind", "GraphQL",  "Frontend"
     ],
     "game": [
         "Valorant", "League of Legends", "Counter-Strike 2", "Overwatch 2",
@@ -25,13 +26,14 @@ STARTER_TAGS = {
     ],
 }
 
-# submitted_by_user_id is required by the model. Set this to your own real
-# user.id before running — check via: SELECT id FROM "user" WHERE github_username = 'Acestar21';
-SYSTEM_USER_ID = 1
-
-
 def seed():
+    if settings.seed_system_user_id is None:
+        raise RuntimeError("SEED_SYSTEM_USER_ID must be set explicitly before seeding tags.")
+
     with Session(engine) as session:
+        if session.get(User, settings.seed_system_user_id) is None:
+            raise RuntimeError(f"No user exists for SEED_SYSTEM_USER_ID={settings.seed_system_user_id}.")
+
         for category, names in STARTER_TAGS.items():
             for name in names:
                 existing = session.exec(
@@ -43,7 +45,7 @@ def seed():
                     name=name,
                     category=category,
                     status="approved",
-                    submitted_by_user_id=SYSTEM_USER_ID,
+                    submitted_by_user_id=settings.seed_system_user_id,
                 )
                 session.add(tag)
         session.commit()

@@ -10,6 +10,22 @@ router = APIRouter(prefix="/tags", tags=["tags"])
 
 VALID_CATEGORIES = {"stack", "game", "interest"}
 
+TAG_ALIASES = {
+    "stack": {
+        "golang": "go",
+        "cpp": "c++",
+        "c plus plus": "c++",
+        "ts": "typescript",
+        "typescipt": "typescript",
+        "typescript": "typescript",
+    },
+}
+
+
+def _canonical_search(category: str, value: str) -> str:
+    normalized = " ".join(value.strip().casefold().split())
+    return TAG_ALIASES.get(category, {}).get(normalized, normalized)
+
 
 @router.get("")
 def search_tags(
@@ -22,7 +38,8 @@ def search_tags(
 
     query = select(Tag).where(Tag.category == category, Tag.status == "approved")
     if search:
-        query = query.where(Tag.name.ilike(f"%{search}%"))
+        canonical = _canonical_search(category, search)
+        query = query.where(Tag.name.ilike(f"%{canonical}%"))
 
     results = db.exec(query.limit(20)).all()
     return [{"id": t.id, "name": t.name} for t in results]
@@ -42,10 +59,12 @@ def submit_tag(
     if not name:
         raise HTTPException(status_code=400, detail="Tag name cannot be empty")
 
+    canonical = _canonical_search(category, name)
+
     # Case-insensitive check against ALL tags (approved or pending) to avoid
     # duplicate submissions of the same tag under different casing.
     existing = db.exec(
-        select(Tag).where(Tag.category == category, Tag.name.ilike(name))
+        select(Tag).where(Tag.category == category, Tag.name.ilike(canonical))
     ).first()
 
     if existing:

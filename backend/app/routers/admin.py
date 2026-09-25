@@ -5,14 +5,12 @@ from app.database import get_session
 from app.models.user import User
 from app.models.tag import Tag
 from app.auth.dependencies import require_current_user
+from app.config import settings
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-YOUR_GITHUB_ID = 180747617  
-
-
 def require_admin(current_user: User = Depends(require_current_user)) -> User:
-    if current_user.github_id != YOUR_GITHUB_ID:
+    if current_user.github_id != settings.admin_github_id:
         raise HTTPException(status_code=403, detail="Forbidden")
     return current_user
 

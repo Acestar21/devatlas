@@ -15,7 +15,7 @@ VALID_PLATFORMS = {"steam", "riot", "psn", "xbox", "other"}
 
 def _get_tag_or_404(tag_id: int, expected_category: str, db: Session) -> Tag:
     tag = db.get(Tag, tag_id)
-    if not tag or tag.category != expected_category:
+    if not tag or tag.category != expected_category or tag.status != "approved":
         raise HTTPException(status_code=404, detail="Tag not found")
     return tag
 

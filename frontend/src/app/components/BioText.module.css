@@ -1,0 +1,5 @@
+.wrapper { min-width: 0; }
+.text { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; color: var(--foreground-muted); line-height: 1.45; }
+.expanded { display: block; overflow: visible; }
+.toggle { margin-top: .35rem; padding: 0; border: 0; background: none; color: var(--primary); cursor: pointer; font: .7rem var(--font-mono, monospace); }
+.toggle:hover { text-decoration: underline; }

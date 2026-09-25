@@ -14,7 +14,11 @@ class Settings(BaseSettings):
     fernet_key: str  # used to encrypt stored GitHub OAuth tokens at rest
 
     frontend_url: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000"
     internal_api_secret: str  # shared secret between Render and Vercel's API route
+    # Defaults to no admin locally until explicitly configured.
+    admin_github_id: int = 0
+    seed_system_user_id: int | None = None
 
 
 settings = Settings()

@@ -163,7 +163,7 @@
 	border: 1px solid var(--border);
 	border-radius: 8px;
 	margin-top: 0.25rem;
-	max-height: 180px;
+	max-height: 12rem;
 	overflow-y: auto;
 	z-index: 10;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -183,6 +183,18 @@
 
 .pickerResult:hover {
 	background: var(--secondary-bg);
+}
+
+.addMatchesButton {
+	display: block;
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border: 0;
+	border-bottom: 1px solid var(--border);
+	background: var(--secondary-bg);
+	color: var(--primary);
+	text-align: left;
+	cursor: pointer;
 }
 
 .submitNewButton {
@@ -253,6 +265,12 @@
 	text-transform: capitalize;
 	padding: 0.35rem 0;
 	color: var(--foreground);
+}
+
+.error {
+	margin-top: 1rem;
+	color: #b34d4d;
+	font-size: 0.78rem;
 }
 
 .saveButton {

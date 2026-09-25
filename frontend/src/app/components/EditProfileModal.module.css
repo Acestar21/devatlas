@@ -1,0 +1,32 @@
+.backdrop { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 1rem; background: rgba(0, 0, 0, .7); isolation: isolate; }
+.modal { position: relative; z-index: 1; width: min(100%, 620px); max-height: calc(100vh - 2rem); overflow-y: auto; padding: 1.4rem; background: var(--card-bg); border: 1px solid var(--border); color: var(--foreground); box-shadow: 0 1rem 3rem rgba(0, 0, 0, .6); }
+.header { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+.header h2 { margin-top: .2rem; font-size: 1.2rem; }
+.eyebrow { color: var(--primary); font: .65rem var(--font-mono, monospace); text-transform: uppercase; letter-spacing: .1em; }
+.close { border: 0; background: none; color: var(--foreground-muted); font-size: 1.4rem; cursor: pointer; }
+.field { display: grid; gap: .4rem; margin-top: .9rem; color: var(--foreground); font-size: .76rem; }
+.field input { width: 100%; padding: .55rem .65rem; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--foreground); font: .78rem var(--font-body, sans-serif); }
+.field textarea { width: 100%; padding: .55rem .65rem; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--foreground); font: .78rem var(--font-body, sans-serif); resize: vertical; }
+.help { margin-top: .35rem; color: var(--foreground-dimmed); font-size: .68rem; line-height: 1.4; }
+.error { margin-top: 1rem; color: #b34d4d; font-size: .72rem; }
+.placeholder { margin-top: 1rem; padding: 1.25rem; border: 1px dashed var(--border); color: var(--foreground-muted); font-size: .78rem; }
+.submitNewButton { margin-top: .4rem; border: 0; background: none; color: var(--primary); cursor: pointer; font-size: .72rem; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.tagRow { display: flex; flex-wrap: wrap; gap: .4rem; }
+.tag { display: inline-flex; gap: .35rem; padding: .3rem .45rem; border: 1px solid var(--border); color: var(--primary); font-size: .7rem; }
+.tag button { border: 0; padding: 0; background: none; color: inherit; cursor: pointer; }
+.linkList { display: grid; gap: .4rem; margin-top: .9rem; }
+.linkEditor { display: flex; justify-content: space-between; gap: .75rem; padding: .5rem .6rem; border: 1px solid var(--border); font-size: .72rem; }
+.linkEditor span { display: grid; gap: .2rem; }
+.linkEditor small { color: var(--foreground-muted); overflow-wrap: anywhere; }
+.linkEditor button { border: 0; background: none; color: var(--foreground-muted); cursor: pointer; }
+.addLink { align-self: end; padding: .55rem .7rem; border: 1px solid var(--border); background: var(--secondary-bg); color: var(--foreground); cursor: pointer; font-size: .72rem; }
+.results { display: grid; max-height: 12rem; overflow-y: auto; border: 1px solid var(--border); }
+.results button { padding: .45rem; border: 0; border-bottom: 1px solid var(--border); background: var(--card-bg); color: var(--foreground); text-align: left; cursor: pointer; }
+.visibility { display: grid; gap: .45rem; margin-top: 1rem; color: var(--foreground); font-size: .76rem; }
+.visibility label { display: flex; gap: .45rem; align-items: center; text-transform: capitalize; }
+.actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.3rem; }
+.cancel, .save { padding: .5rem .75rem; border: 1px solid var(--border); cursor: pointer; font-size: .72rem; }
+.cancel { background: transparent; color: var(--foreground-muted); }
+.save { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }

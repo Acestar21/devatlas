@@ -9,7 +9,7 @@ from app.models.profile import Profile
 from app.models.tag import Tag
 from app.models.tags_relations import StackTag, UserGame, UserInterest
 from app.auth.dependencies import get_current_user_optional, require_current_user
-from app.schemas.profile import ProfileUpdate
+from app.schemas.profile import ProfileResponse, ProfileUpdate, ProfileUpdateResponse
 from app.services.github import is_stale, fetch_and_cache_stats, GithubTokenInvalid
 
 
@@ -99,7 +99,7 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
         "games": games,
         "interests": interests,
         "is_owner": is_owner,
-        "section_visibility": visibility if is_owner else None,
+        "section_visibility": visibility,
     }
 
 
@@ -107,7 +107,7 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
 # FastAPI matches routes in registration order, and /{username} is a
 # catch-all path param that would otherwise swallow "/me" as if it were
 # a literal username.
-@router.get("/me")
+@router.get("/me", response_model=ProfileResponse)
 async def get_my_profile(
     current_user: User = Depends(require_current_user),
     db: Session = Depends(get_session),
@@ -125,7 +125,7 @@ async def get_my_profile(
     return _build_profile_payload(current_user, current_user, db, cache)
 
 
-@router.get("/{username}")
+@router.get("/{username}", response_model=ProfileResponse)
 @limiter.limit("30/minute")
 async def get_profile(
     request: Request,
@@ -150,7 +150,7 @@ async def get_profile(
     return _build_profile_payload(user, viewer, db, cache)
 
 
-@router.patch("/me")
+@router.patch("/me", response_model=ProfileUpdateResponse)
 def update_profile(
     update: ProfileUpdate,
     current_user: User = Depends(require_current_user),
@@ -162,6 +162,10 @@ def update_profile(
 
     if profile is None:
         profile = Profile(user_id=current_user.id)
+
+    if update.display_name is not None:
+        current_user.display_name = update.display_name.strip() or None
+        db.add(current_user)
 
     if update.bio is not None:
         profile.bio = update.bio
@@ -182,6 +186,7 @@ def update_profile(
     db.refresh(profile)
 
     return {
+        "display_name": current_user.display_name,
         "bio": profile.bio,
         "theme": profile.theme,
         "content_links": json.loads(profile.content_links_json),

@@ -14,16 +14,22 @@ export async function GET(request: NextRequest) {
 
 	const backendUrl = process.env.NEXT_PUBLIC_API_URL;
 	const internalSecret = process.env.INTERNAL_API_SECRET; // no NEXT_PUBLIC_ prefix — server-only, never exposed to the browser
+	if (!backendUrl || !internalSecret) {
+		return NextResponse.redirect(new URL("/?auth_error=configuration", request.url));
+	}
 
-	const exchangeRes = await fetch(
-		`${backendUrl}/auth/github/internal/exchange?code=${code}&state=${state}`,
-		{
-			method: "POST",
-			headers: {
-				"X-Internal-Secret": internalSecret || "",
+	let exchangeRes: Response;
+	try {
+		exchangeRes = await fetch(
+			`${backendUrl}/auth/github/internal/exchange?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+			{
+				method: "POST",
+				headers: { "X-Internal-Secret": internalSecret },
 			},
-		},
-	);
+		);
+	} catch {
+		return NextResponse.redirect(new URL("/?auth_error=backend", request.url));
+	}
 
 	if (!exchangeRes.ok) {
 		// Exchange failed (bad state, GitHub error, etc.) — send back to homepage
@@ -38,7 +44,7 @@ export async function GET(request: NextRequest) {
 
 	response.cookies.set(SESSION_COOKIE_NAME, session_token, {
 		httpOnly: true,
-		secure: true, // Vercel is always HTTPS, safe to hardcode true here
+		secure: process.env.NODE_ENV === "production",
 		sameSite: "lax",
 		maxAge: SESSION_MAX_AGE_SECONDS,
 		path: "/",

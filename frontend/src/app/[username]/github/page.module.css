@@ -1,0 +1,239 @@
+.page {
+	min-height: 100vh;
+	padding-bottom: 4rem;
+	background: var(--background);
+	color: var(--foreground);
+}
+.topBar {
+	height: 72px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 6.5vw;
+	border-bottom: 1px solid var(--border);
+	background: var(--card-bg);
+}
+.brand {
+	color: var(--foreground);
+	font: 700 1.7rem var(--font-display, sans-serif);
+}
+.brand span {
+	color: var(--primary);
+}
+.topActions {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+}
+.topLink {
+	padding: 0.35rem 0.65rem;
+	border: 1px solid var(--border);
+	color: var(--foreground-muted);
+	font-size: 0.7rem;
+}
+.viewerAvatar {
+	width: 40px;
+	height: 40px;
+	border: 1px solid var(--border);
+	border-radius: 50%;
+	background: var(--secondary-bg);
+	object-fit: cover;
+}
+.layout {
+	display: flex;
+	align-items: flex-start;
+	gap: 1.25rem;
+	width: min(100%, 1050px);
+	margin: 0 auto;
+	padding: 1.75rem 1.25rem 0;
+}
+.container {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+.profileHeader,
+.panel {
+	background: var(--card-bg);
+	border: 1px solid var(--border);
+}
+.profileHeader {
+	padding: 1.5rem 2rem;
+}
+.identity {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+.avatar {
+	width: 82px;
+	height: 82px;
+	border: 2px solid var(--primary);
+	border-radius: 50%;
+	object-fit: cover;
+}
+.displayName {
+	color: var(--foreground);
+	font-size: 1.35rem;
+}
+.username {
+	color: var(--foreground-muted);
+	margin-top: 0.2rem;
+	font: 0.82rem var(--font-mono, monospace);
+}
+.headerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+.redirect {
+	padding: 0.45rem 0.7rem;
+	border: 1px solid var(--border);
+	color: var(--foreground-muted);
+	font-size: 0.68rem;
+	white-space: nowrap;
+}
+.tagRow {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-top: 1rem;
+}
+.tag {
+	padding: 0.28rem 0.6rem;
+	border: 1px solid var(--border);
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
+	font-size: 0.7rem;
+}
+.panel {
+	padding: 1.25rem 1.5rem;
+}
+.eyebrow,
+.sectionLabel {
+	color: var(--primary);
+	font: 0.68rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.graphBox {
+	min-height: 150px;
+	display: grid;
+	place-items: center;
+	margin-top: 0.8rem;
+	border: 1px dashed var(--border);
+	color: var(--foreground-muted);
+	font-size: 0.75rem;
+}
+.repoScroller {
+	display: flex;
+	gap: 0.75rem;
+	overflow-x: auto;
+	margin-top: 0.9rem;
+	padding-bottom: 0.35rem;
+}
+.repoCard {
+	flex: 0 0 calc((100% - 1.5rem) / 3);
+	min-height: 145px;
+	padding: 0.9rem;
+	border: 1px solid var(--border);
+	color: var(--foreground-muted);
+}
+.repoCard:hover {
+	border-color: var(--primary);
+}
+.repoName {
+	display: block;
+	color: var(--foreground);
+	font-size: 0.82rem;
+}
+.repoDesc {
+	margin: 0.6rem 0;
+	font-size: 0.72rem;
+	line-height: 1.4;
+}
+.repoStars {
+	color: var(--primary);
+	font-size: 0.7rem;
+}
+.twoColumn {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.25rem;
+}
+.languageList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.45rem;
+	margin-top: 0.9rem;
+}
+.language {
+	padding: 0.3rem 0.55rem;
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
+	font-size: 0.72rem;
+}
+.statValue {
+	margin-top: 0.8rem;
+	color: var(--foreground);
+	font: 700 2rem var(--font-mono, monospace);
+}
+.muted {
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+}
+.footer {
+	width: min(100%, 1050px);
+	margin: 2.5rem auto 0;
+	padding: 0 1.25rem 1.5rem;
+	color: var(--foreground-dimmed);
+	font-size: 0.7rem;
+}
+.divider {
+	height: 1px;
+	margin-bottom: 0.8rem;
+	background: var(--border-muted);
+}
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1rem;
+	margin-bottom: 0.7rem;
+}
+.links a {
+	color: var(--foreground-muted);
+}
+.links a:hover {
+	color: var(--primary);
+}
+.disclaimer {
+	max-width: 760px;
+	line-height: 1.5;
+}
+.meta {
+	margin-top: 0.55rem;
+	color: var(--foreground-dimmed);
+}
+@media (max-width: 720px) {
+	.topBar {
+		padding: 0 1rem;
+	}
+	.topActions .topLink {
+		display: none;
+	}
+	.layout {
+		padding: 1.25rem 0.85rem 0;
+	}
+	.profileHeader {
+		padding: 1.25rem;
+	}
+	.twoColumn {
+		grid-template-columns: 1fr;
+	}
+	.repoCard {
+		flex-basis: 78%;
+	}
+}

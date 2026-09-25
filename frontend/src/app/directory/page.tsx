@@ -1,21 +1,24 @@
 import { DirectoryResponse } from "@/types-directory";
+import Link from "next/link";
+import Image from "next/image";
 import DirectoryControls from "./DirectoryControls";
+import LoginModal from "@/app/components/LoginModal";
+import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 import styles from "./page.module.css";
+import { getSessionCookieValue, getThemeCookie, sessionHeaders } from "@/lib/server-context";
 
-async function getCurrentUser(): Promise<{ username: string } | null> {
+async function getCurrentUser(): Promise<{ username: string; avatar_url: string | null } | null> {
 	try {
-		const { cookies } = await import("next/headers");
-		const cookieStore = await cookies();
-		const sessionCookie = cookieStore.get("devcard_session");
+		const sessionCookie = await getSessionCookieValue();
 		if (!sessionCookie) return null;
 
 		const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/me`, {
 			cache: "no-store",
-			headers: { Cookie: `devcard_session=${sessionCookie.value}` },
+			headers: sessionHeaders(sessionCookie),
 		});
 		if (!res.ok) return null;
 		const data = await res.json();
-		return { username: data.username };
+		return { username: data.username, avatar_url: data.avatar_url };
 	} catch {
 		return null;
 	}
@@ -26,6 +29,7 @@ async function fetchDirectory(params: {
 	stack?: string;
 	sort?: string;
 	page?: string;
+	login?: string;
 }): Promise<DirectoryResponse> {
 	const qs = new URLSearchParams();
 	if (params.search) qs.set("search", params.search);
@@ -47,6 +51,13 @@ const HINT_PREFIX: Record<string, string> = {
 	interest: "Into",
 };
 
+function bioPreview(value: string, limit = 112): string {
+	if (value.length <= limit) return value;
+	const shortened = value.slice(0, limit - 3).trimEnd();
+	const lastSpace = shortened.lastIndexOf(" ");
+	return `${shortened.slice(0, lastSpace > 60 ? lastSpace : shortened.length)}...`;
+}
+
 export default async function DirectoryPage({
 	searchParams,
 }: {
@@ -55,25 +66,21 @@ export default async function DirectoryPage({
 		stack?: string;
 		sort?: string;
 		page?: string;
+		login?: string;
 	}>;
 }) {
 	const params = await searchParams;
 	const data = await fetchDirectory(params);
 	const user = await getCurrentUser();
+	const themeCookie = await getThemeCookie();
 
 	return (
 		<main className={styles.page}>
+			<div className={styles.topBar}>
+				<div className={styles.topBarInner}><div><Link href="/" className={styles.brand}>DevAtlas</Link></div>
+				<div className={styles.topActions}><ThemeSwitcher initialTheme={themeCookie || "terminal"} /><Link href="/directory" className={styles.topLink}>/Directory</Link>{user ? <Link href={`/${user.username}`} aria-label="Open your profile"><Image src={user.avatar_url || "/default-avatar.png"} alt="Your profile" width={40} height={40} loading="eager" className={styles.headerAvatar} /></Link> : <Link href="/directory?login=1" className={styles.topLink}>/login</Link>}</div></div>
+			</div>
 			<div className={styles.container}>
-				<div className={styles.topBar}>
-					<div>
-						<h1 className={styles.title}>Directory</h1>
-						<p className={styles.subtitle}>People worth knowing.</p>
-					</div>
-					<a href={user ? `/${user.username}` : "/"} className={styles.cornerLink}>
-						{user ? "Go to your profile" : "Log in"}
-					</a>
-				</div>
-
 				<DirectoryControls
 					initialSearch={params.search || ""}
 					initialStack={params.stack || ""}
@@ -91,13 +98,12 @@ export default async function DirectoryPage({
 								className={styles.card}
 							>
 								<div className={styles.cardHeader}>
-									<img
-										src={
-											card.avatar_url ||
-											"/default-avatar.png"
-										}
+									<Image
+										src={card.avatar_url || "/default-avatar.png"}
 										alt={card.username}
-										className={styles.avatar}
+										width="46"
+										height="46"
+										className={styles.cardAvatar}
 									/>
 									<div>
 										<p className={styles.displayName}>
@@ -110,7 +116,7 @@ export default async function DirectoryPage({
 								</div>
 
 								{card.bio && (
-									<p className={styles.bio}>{card.bio}</p>
+									<p className={styles.bio}>{bioPreview(card.bio)}</p>
 								)}
 
 								{card.stack_tags.length > 0 && (
@@ -163,6 +169,7 @@ export default async function DirectoryPage({
 					</div>
 				)}
 			</div>
+			{params.login === "1" && <LoginModal />}
 		</main>
 	);
 }

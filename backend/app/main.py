@@ -11,8 +11,9 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 origins = [
-    "http://localhost:3000",
-    "https://devatlas-cyan.vercel.app"
+    origin.strip()
+    for origin in settings.cors_origins.split(",")
+    if origin.strip()
 ]
 
 

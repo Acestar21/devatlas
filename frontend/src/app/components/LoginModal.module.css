@@ -1,0 +1,7 @@
+.backdrop { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 1.5rem; background: rgba(23, 27, 22, .52); }
+.modal { position: relative; width: min(100%, 420px); padding: 2rem; background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 18px 60px rgba(27, 35, 24, .24); color: var(--foreground); }
+.close { position: absolute; top: .7rem; right: .8rem; border: 0; background: transparent; color: var(--foreground-muted); font-size: 1.5rem; cursor: pointer; }
+.eyebrow { color: var(--primary); font: .7rem var(--font-mono, monospace); text-transform: uppercase; letter-spacing: .12em; }
+.modal h2 { margin: .5rem 0 .75rem; font-size: 1.7rem; }
+.modal p:not(.eyebrow) { color: var(--foreground-muted); line-height: 1.55; margin-bottom: 1.5rem; }
+.loginButton { display: inline-block; padding: .7rem 1rem; background: var(--primary); color: var(--primary-foreground); font-size: .8rem; }

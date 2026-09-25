@@ -8,6 +8,12 @@ async function forward(request: NextRequest, path: string[]) {
 	const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
 
 	const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+	if (!backendUrl) {
+		return NextResponse.json(
+			{ detail: "Backend API is not configured" },
+			{ status: 500 },
+		);
+	}
 	const targetPath = path.join("/");
 	const search = request.nextUrl.search; // preserves query params like ?profile_url=...&platform=...
 
@@ -26,8 +32,17 @@ async function forward(request: NextRequest, path: string[]) {
 		if (body) init.body = body;
 	}
 
-	const res = await fetch(`${backendUrl}/${targetPath}${search}`, init);
-	const data = await res.json().catch(() => null);
+	let res: Response;
+	try {
+		res = await fetch(`${backendUrl}/${targetPath}${search}`, init);
+	} catch {
+		return NextResponse.json(
+			{ detail: "Backend API is unavailable" },
+			{ status: 502 },
+		);
+	}
+
+	const data = await res.json().catch(() => ({ detail: "Invalid backend response" }));
 
 	return NextResponse.json(data, { status: res.status });
 }
