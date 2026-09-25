@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const SESSION_COOKIE_NAME = 'devcard_session';
+const SESSION_COOKIE_NAME = "devcard_session";
 
-export async function GET(request: NextRequest) {
-    const response = NextResponse.redirect(new URL('/', request.url));
+export async function POST() {
+    const response = NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_APP_URL));
     response.cookies.delete(SESSION_COOKIE_NAME);
     return response;
 }
