@@ -1,0 +1,31 @@
+.card {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: 0.9rem 1rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	color: var(--foreground);
+}
+a.card:hover {
+	border-color: var(--primary);
+}
+.name {
+	font-size: 0.9rem;
+	overflow-wrap: anywhere;
+}
+.detail {
+	color: var(--foreground-muted);
+	font: 0.68rem var(--font-mono, monospace);
+}
+.link {
+	margin-top: 0.35rem;
+	color: var(--primary);
+	font-size: 0.65rem;
+}
+.compact {
+	padding: 0.6rem 0.75rem;
+}

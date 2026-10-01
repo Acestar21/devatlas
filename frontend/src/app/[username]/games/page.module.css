@@ -1,0 +1,51 @@
+.card {
+	padding: 1.25rem 1.5rem;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius);
+	background: var(--card-bg);
+}
+.muted {
+	opacity: 0.48;
+	filter: saturate(0.45);
+}
+.label {
+	color: var(--primary);
+	font: 0.68rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.empty {
+	margin-top: 0.6rem;
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+}
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	gap: 0.7rem;
+	margin-top: 0.9rem;
+}
+.handles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.9rem;
+}
+.handles span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	color: var(--foreground);
+	font: 0.74rem var(--font-mono, monospace);
+}
+.handles em {
+	color: var(--foreground-muted);
+	font-style: normal;
+	font-size: 0.65rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}

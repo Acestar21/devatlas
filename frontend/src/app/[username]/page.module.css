@@ -328,6 +328,14 @@
 .splitRow > .twoColumn {
 	grid-template-rows: 1fr;
 }
+.viewAll {
+	margin-bottom: 0.7rem;
+	color: var(--primary);
+	font: 0.68rem var(--font-mono, monospace);
+}
+.viewAll:hover {
+	text-decoration: underline;
+}
 @media (max-width: 720px) {
 	.topBar {
 		padding: 0 1rem;

@@ -5,12 +5,15 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
 	ContentLink,
+	GameEntry,
+	GamingHandle,
 	Post,
 	Profile,
 	SectionVisibility,
 	StackTag,
 } from "@/types";
 import { proxyFetch } from "@/lib/api-client";
+import TagEditor from "./TagEditor";
 import styles from "./EditProfileModal.module.css";
 
 const DEFAULT_VISIBILITY: SectionVisibility = {
@@ -29,7 +32,18 @@ const CARD_LABELS: Record<string, Record<string, string>> = {
 		activity: "Recent activity",
 	},
 	activity: { leetcode: "LeetCode stats", posts: "Writing / blog posts" },
+	games: { handles: "Gaming handles" },
 };
+
+const HANDLE_PLATFORMS: [string, string][] = [
+	["steam", "Steam"],
+	["riot", "Riot ID"],
+	["psn", "PSN"],
+	["xbox", "Xbox"],
+	["epic", "Epic"],
+	["discord", "Discord"],
+	["other", "Other"],
+];
 
 export default function EditProfileModal({
 	profile,
@@ -46,9 +60,12 @@ export default function EditProfileModal({
 	const isGithub = section === "github";
 	const isActivity = section === "activity";
 	const isLeetcode = section === "leetcode";
+	const isGames = section === "games";
+	const isInterests = section === "interests";
 	const canEditLinks = isProfileSettings || isLinksSettings;
-	const canSave = canEditLinks || isGithub || isActivity || isLeetcode;
-	const page = isActivity ? "activity" : "github";
+	const canSave =
+		canEditLinks || isGithub || isActivity || isLeetcode || isGames;
+	const page = isActivity ? "activity" : isGames ? "games" : "github";
 
 	const github = profile.content_links.find(
 		(link) => link.label.toLowerCase() === "github",
@@ -89,12 +106,25 @@ export default function EditProfileModal({
 	const [posts, setPosts] = useState<Post[]>(profile.posts ?? []);
 	const [postTitle, setPostTitle] = useState("");
 	const [postUrl, setPostUrl] = useState("");
+	const [postDesc, setPostDesc] = useState("");
+	const [postDate, setPostDate] = useState("");
+	const [postMinutes, setPostMinutes] = useState("");
+	const [postTags, setPostTags] = useState("");
 	const [lcUser, setLcUser] = useState(profile.leetcode?.username ?? "");
 	const [lcEasy, setLcEasy] = useState(String(profile.leetcode?.easy ?? 0));
 	const [lcMedium, setLcMedium] = useState(
 		String(profile.leetcode?.medium ?? 0),
 	);
 	const [lcHard, setLcHard] = useState(String(profile.leetcode?.hard ?? 0));
+	const [games, setGames] = useState<GameEntry[]>(profile.games ?? []);
+	const [gName, setGName] = useState("");
+	const [gDetail, setGDetail] = useState("");
+	const [gUrl, setGUrl] = useState("");
+	const [handles, setHandles] = useState<GamingHandle[]>(
+		profile.gaming_handles ?? [],
+	);
+	const [hPlatform, setHPlatform] = useState("steam");
+	const [hHandle, setHHandle] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -186,6 +216,56 @@ export default function EditProfileModal({
 		setUnmatchedTokens([]);
 	};
 
+	const addPost = () => {
+		if (!postTitle.trim() || !postUrl.trim()) return;
+		const minutes = Number(postMinutes);
+		setPosts((current) => [
+			...current,
+			{
+				title: postTitle.trim(),
+				url: postUrl.trim(),
+				description: postDesc.trim() || null,
+				date: postDate || null,
+				read_minutes: minutes > 0 ? minutes : null,
+				tags: postTags
+					.split(",")
+					.map((tag) => tag.trim())
+					.filter(Boolean)
+					.slice(0, 3),
+			},
+		]);
+		setPostTitle("");
+		setPostUrl("");
+		setPostDesc("");
+		setPostDate("");
+		setPostMinutes("");
+		setPostTags("");
+	};
+
+	const addGame = () => {
+		if (!gName.trim()) return;
+		setGames((current) => [
+			...current,
+			{
+				name: gName.trim(),
+				detail: gDetail.trim() || null,
+				url: gUrl.trim() || null,
+			},
+		]);
+		setGName("");
+		setGDetail("");
+		setGUrl("");
+	};
+
+	const addHandle = () => {
+		if (!hHandle.trim()) return;
+		setHandles((current) => [
+			...current,
+			{ platform: hPlatform, handle: hHandle.trim() },
+		]);
+		setHHandle("");
+	};
+
 	const saveLeetcode = () =>
 		proxyFetch("profiles/me/leetcode", {
 			method: "POST",
@@ -207,13 +287,14 @@ export default function EditProfileModal({
 				onClose();
 				return;
 			}
-			if (isGithub || isActivity) {
+			if (isGithub || isActivity || isGames) {
 				if (isActivity && lcUser.trim()) await saveLeetcode();
 				await proxyFetch("profiles/me", {
 					method: "PATCH",
 					body: JSON.stringify({
 						card_visibility: { [page]: cards },
 						...(isActivity ? { posts } : {}),
+						...(isGames ? { games, gaming_handles: handles } : {}),
 					}),
 				});
 				router.refresh();
@@ -302,7 +383,7 @@ export default function EditProfileModal({
 					</button>
 				</div>
 
-				{(isGithub || isActivity) && (
+				{(isGithub || isActivity || isGames) && (
 					<div className={styles.visibility}>
 						<span>
 							Visible cards — hidden ones are muted for you and
@@ -391,7 +472,11 @@ export default function EditProfileModal({
 								>
 									<span>
 										{post.title}
-										<small>{post.url}</small>
+										<small>
+											{[post.date, post.url]
+												.filter(Boolean)
+												.join(" · ")}
+										</small>
 									</span>
 									<button
 										onClick={() =>
@@ -408,51 +493,249 @@ export default function EditProfileModal({
 							))}
 						</div>
 						{posts.length < 10 && (
-							<div className={styles.grid}>
+							<>
+								<div className={styles.grid}>
+									<label className={styles.field}>
+										Post title
+										<input
+											maxLength={120}
+											value={postTitle}
+											onChange={(event) =>
+												setPostTitle(event.target.value)
+											}
+										/>
+									</label>
+									<label className={styles.field}>
+										Post URL
+										<input
+											placeholder="https://..."
+											value={postUrl}
+											onChange={(event) =>
+												setPostUrl(event.target.value)
+											}
+										/>
+									</label>
+								</div>
 								<label className={styles.field}>
-									Post title
-									<input
-										value={postTitle}
+									Excerpt (max 280 characters)
+									<textarea
+										rows={3}
+										maxLength={280}
+										value={postDesc}
 										onChange={(event) =>
-											setPostTitle(event.target.value)
+											setPostDesc(event.target.value)
 										}
 									/>
 								</label>
+								<div className={styles.grid}>
+									<label className={styles.field}>
+										Date
+										<input
+											type="date"
+											value={postDate}
+											onChange={(event) =>
+												setPostDate(event.target.value)
+											}
+										/>
+									</label>
+									<label className={styles.field}>
+										Read time (minutes)
+										<input
+											type="number"
+											min={1}
+											max={120}
+											value={postMinutes}
+											onChange={(event) =>
+												setPostMinutes(
+													event.target.value,
+												)
+											}
+										/>
+									</label>
+								</div>
 								<label className={styles.field}>
-									Post URL
+									Tags (comma separated, max 3)
 									<input
-										placeholder="https://..."
-										value={postUrl}
+										placeholder="Next.js, MDX, Web Development"
+										value={postTags}
 										onChange={(event) =>
-											setPostUrl(event.target.value)
+											setPostTags(event.target.value)
 										}
 									/>
 								</label>
 								<button
 									className={styles.addLink}
-									onClick={() => {
-										if (
-											postTitle.trim() &&
-											postUrl.trim()
-										) {
-											setPosts((current) => [
-												...current,
-												{
-													title: postTitle.trim(),
-													url: postUrl.trim(),
-												},
-											]);
-											setPostTitle("");
-											setPostUrl("");
-										}
-									}}
+									onClick={addPost}
 								>
 									Add post
+								</button>
+							</>
+						)}
+						<p className={styles.help}>
+							Up to 10 posts, newest first. Posts link out to your
+							site. Saved when you click Save.
+						</p>
+					</>
+				)}
+
+				{isGames && (
+					<>
+						<div className={styles.linkList}>
+							{games.map((game, index) => (
+								<div
+									className={styles.linkEditor}
+									key={`${game.name}-${index}`}
+								>
+									<span>
+										{game.name}
+										<small>
+											{[game.detail, game.url]
+												.filter(Boolean)
+												.join(" · ")}
+										</small>
+									</span>
+									<button
+										onClick={() =>
+											setGames((current) =>
+												current.filter(
+													(_, i) => i !== index,
+												),
+											)
+										}
+									>
+										×
+									</button>
+								</div>
+							))}
+						</div>
+						{games.length < 12 && (
+							<>
+								<div className={styles.grid}>
+									<label className={styles.field}>
+										Game
+										<input
+											maxLength={60}
+											value={gName}
+											onChange={(event) =>
+												setGName(event.target.value)
+											}
+										/>
+									</label>
+									<label className={styles.field}>
+										Rank / hours (optional)
+										<input
+											maxLength={40}
+											value={gDetail}
+											onChange={(event) =>
+												setGDetail(event.target.value)
+											}
+										/>
+									</label>
+								</div>
+								<div className={styles.grid}>
+									<label className={styles.field}>
+										Link (optional)
+										<input
+											placeholder="https://..."
+											value={gUrl}
+											onChange={(event) =>
+												setGUrl(event.target.value)
+											}
+										/>
+									</label>
+									<button
+										className={styles.addLink}
+										onClick={addGame}
+									>
+										Add game
+									</button>
+								</div>
+							</>
+						)}
+						<p className={styles.help}>
+							Any game works, no platform needed. Up to 12. Saved
+							when you click Save.
+						</p>
+
+						<div className={styles.linkList}>
+							{handles.map((h, index) => (
+								<div
+									className={styles.linkEditor}
+									key={`${h.platform}-${index}`}
+								>
+									<span>
+										{HANDLE_PLATFORMS.find(
+											([key]) => key === h.platform,
+										)?.[1] ?? h.platform}
+										<small>{h.handle}</small>
+									</span>
+									<button
+										onClick={() =>
+											setHandles((current) =>
+												current.filter(
+													(_, i) => i !== index,
+												),
+											)
+										}
+									>
+										×
+									</button>
+								</div>
+							))}
+						</div>
+						{handles.length < 8 && (
+							<div className={styles.grid}>
+								<label className={styles.field}>
+									Platform
+									<select
+										value={hPlatform}
+										onChange={(event) =>
+											setHPlatform(event.target.value)
+										}
+									>
+										{HANDLE_PLATFORMS.map(
+											([key, label]) => (
+												<option key={key} value={key}>
+													{label}
+												</option>
+											),
+										)}
+									</select>
+								</label>
+								<label className={styles.field}>
+									Username / ID
+									<input
+										maxLength={40}
+										value={hHandle}
+										onChange={(event) =>
+											setHHandle(event.target.value)
+										}
+									/>
+								</label>
+								<button
+									className={styles.addLink}
+									onClick={addHandle}
+								>
+									Add handle
 								</button>
 							</div>
 						)}
 						<p className={styles.help}>
-							Up to 10 posts. Saved when you click Save.
+							Shown as plain text so people can find you. Up to 8.
+						</p>
+					</>
+				)}
+
+				{isInterests && (
+					<>
+						<TagEditor
+							category="interest"
+							label="Interests"
+							initial={profile.interests ?? []}
+							basePath="profiles/me/interests"
+						/>
+						<p className={styles.help}>
+							Changes here apply immediately.
 						</p>
 					</>
 				)}
@@ -624,7 +907,7 @@ export default function EditProfileModal({
 					</>
 				)}
 
-				{!canSave && (
+				{!canSave && !isInterests && (
 					<div className={styles.placeholder}>
 						Settings for {section} are coming soon.
 					</div>

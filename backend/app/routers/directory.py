@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.profile import Profile
 from app.models.github_stats import GithubStatsCache
 from app.models.tag import Tag
-from app.models.tags_relations import StackTag, UserGame, UserInterest
+from app.models.tags_relations import StackTag, UserInterest
 
 router = APIRouter(prefix="/directory", tags=["directory"])
 
@@ -29,21 +29,16 @@ def _stack_tags_for(user_id: int, db: Session) -> list[str]:
     return list(rows)
 
 
-def _one_hint(user_id: int, visibility: dict, db: Session) -> Optional[dict]:
+def _one_hint(profile: Optional[Profile], user_id: int, visibility: dict, db: Session) -> Optional[dict]:
     """A single lightweight personal-layer hint for the directory card —
     one game or interest, whichever exists and is visible. Never both,
     keeps the card lightweight. Respects visibility same as the full
     profile page — a hidden section never leaks a hint either.
     """
-    if visibility.get("games", True):
-        game = db.exec(
-            select(Tag.name)
-            .join(UserGame, UserGame.tag_id == Tag.id)
-            .where(UserGame.user_id == user_id)
-            .limit(1)
-        ).first()
-        if game:
-            return {"type": "game", "name": game}
+    if visibility.get("games", True) and profile:
+        games = json.loads(profile.games_json)
+        if games:
+            return {"type": "game", "name": games[0]["name"]}
 
     if visibility.get("interests", True):
         interest = db.exec(
@@ -113,7 +108,7 @@ def browse_directory(
                 "bio": profile.bio if profile else None,
                 "stack_tags": _stack_tags_for(user.id, db),
                 "contributions": contributions,
-                "hint": _one_hint(user.id, visibility, db),
+                "hint": _one_hint(profile, user.id, visibility, db),
             }
         )
 

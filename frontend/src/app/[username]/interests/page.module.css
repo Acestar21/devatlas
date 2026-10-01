@@ -19,8 +19,17 @@
 	color: var(--foreground-muted);
 	font-size: 0.78rem;
 }
-.postList {
-	display: grid;
-	gap: 0.8rem;
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.55rem;
 	margin-top: 0.9rem;
+}
+.chips span {
+	padding: 0.45rem 0.8rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
+	font-size: 0.8rem;
 }

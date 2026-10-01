@@ -8,7 +8,7 @@ from app.models.github_stats import GithubStatsCache
 from app.models.profile import Profile
 from app.models.leetcode import LeetcodeStats
 from app.models.tag import Tag
-from app.models.tags_relations import StackTag, UserGame, UserInterest
+from app.models.tags_relations import StackTag, UserInterest
 from app.auth.dependencies import get_current_user_optional, require_current_user
 from app.schemas.profile import ProfileResponse, ProfileUpdate, ProfileUpdateResponse
 from app.services.github import is_stale, fetch_and_cache_stats, GithubTokenInvalid
@@ -21,6 +21,7 @@ DEFAULT_VISIBILITY = {"github": True, "leetcode": True, "games": True, "interest
 DEFAULT_CARD_VISIBILITY = {
     "github": {"graph": True, "stats": True, "pinned": True, "languages": True, "activity": True},
     "activity": {"leetcode": True, "posts": True},
+    "games": {"handles": True},
 }
 
 # which keys of the stats block each GitHub-page card owns
@@ -31,6 +32,10 @@ CARD_STATS_KEYS = {
     "languages": ["top_languages"],
     "activity": ["activity"],
 }
+
+MAX_GAMES = 12
+MAX_HANDLES = 8
+MAX_POSTS = 10
 
 
 def _card_visibility(profile: Profile | None) -> dict:
@@ -57,24 +62,6 @@ def _get_interests(user_id: int, db: Session) -> list[dict]:
         .where(UserInterest.user_id == user_id)
     ).all()
     return [{"id": r[0], "name": r[1]} for r in rows]
-
-
-def _get_games(user_id: int, db: Session) -> list[dict]:
-    rows = db.exec(
-        select(Tag.name, UserGame.tag_id, UserGame.rank_or_hours, UserGame.profile_url, UserGame.platform)
-        .join(UserGame, UserGame.tag_id == Tag.id)
-        .where(UserGame.user_id == user_id)
-    ).all()
-    return [
-        {
-            "tag_id": r[1],
-            "name": r[0],
-            "rank_or_hours": r[2],
-            "profile_url": r[3],
-            "platform": r[4],
-        }
-        for r in rows
-    ]
 
 
 def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) -> dict:
@@ -113,8 +100,11 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
     stack_tags = _get_stack_tags(user.id, db)
 
     games = None
+    gaming_handles = None
     if is_owner or visibility.get("games", True):
-        games = _get_games(user.id, db)
+        games = json.loads(profile.games_json) if profile else []
+        if is_owner or card_vis["games"]["handles"]:
+            gaming_handles = json.loads(profile.gaming_handles_json) if profile else []
 
     interests = None
     if is_owner or visibility.get("interests", True):
@@ -146,6 +136,7 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
         "stack_tags": stack_tags,
         "stats": stats_block,
         "games": games,
+        "gaming_handles": gaming_handles,
         "interests": interests,
         "leetcode": leetcode,
         "posts": posts,
@@ -240,9 +231,19 @@ def update_profile(
         profile.card_visibility_json = json.dumps(merged)
 
     if update.posts is not None:
-        if len(update.posts) > 10:
-            raise HTTPException(status_code=400, detail="Up to 10 posts allowed.")
+        if len(update.posts) > MAX_POSTS:
+            raise HTTPException(status_code=400, detail=f"Up to {MAX_POSTS} posts allowed.")
         profile.posts_json = json.dumps([p.model_dump() for p in update.posts])
+
+    if update.games is not None:
+        if len(update.games) > MAX_GAMES:
+            raise HTTPException(status_code=400, detail=f"Up to {MAX_GAMES} games allowed.")
+        profile.games_json = json.dumps([g.model_dump() for g in update.games])
+
+    if update.gaming_handles is not None:
+        if len(update.gaming_handles) > MAX_HANDLES:
+            raise HTTPException(status_code=400, detail=f"Up to {MAX_HANDLES} handles allowed.")
+        profile.gaming_handles_json = json.dumps([h.model_dump() for h in update.gaming_handles])
 
     db.add(profile)
     db.commit()

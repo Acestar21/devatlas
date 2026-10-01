@@ -5,6 +5,7 @@ import { Profile } from "@/types";
 import ProfileNav from "@/app/components/ProfileNav";
 import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
+import GameCard from "@/app/components/GameCard";
 import BadgeEmbed from "@/app/components/BadgeEmbed";
 import BioText from "@/app/components/BioText";
 import ContributionGraph from "@/app/components/ContributionGraph";
@@ -30,14 +31,6 @@ async function fetchProfile(username: string): Promise<Profile | null> {
 	if (!response.ok) return null;
 	return response.json();
 }
-
-const PLATFORM_LABEL: Record<string, string> = {
-	steam: "Steam",
-	riot: "Riot",
-	psn: "PlayStation",
-	xbox: "Xbox",
-	other: "Profile",
-};
 
 async function fetchViewer() {
 	const sessionCookie = await getSessionCookieValue();
@@ -323,44 +316,38 @@ export default async function ProfilePage({
 										<section
 											className={`${styles.panel} ${!visibility.games ? styles.hiddenSection : ""}`}
 										>
-											<p className={styles.sectionLabel}>
-												Games
-											</p>
+											<div
+												className={
+													styles.sectionHeading
+												}
+											>
+												<p
+													className={
+														styles.sectionLabel
+													}
+												>
+													Games
+												</p>
+												<Link
+													href={`/${profile.username}/games`}
+													className={styles.viewAll}
+												>
+													View all
+												</Link>
+											</div>
 											{profile.games?.length ? (
 												<div
 													className={styles.gameList}
 												>
-													{profile.games.map(
-														(game) => (
-															<a
-																key={
-																	game.tag_id
-																}
-																href={
-																	game.profile_url
-																}
-																target="_blank"
-																rel="noreferrer"
-																className={
-																	styles.gameCard
-																}
-															>
-																<strong>
-																	{game.name}
-																</strong>
-																<span>
-																	{PLATFORM_LABEL[
-																		game
-																			.platform
-																	] ||
-																		game.platform}
-																	{game.rank_or_hours
-																		? ` · ${game.rank_or_hours}`
-																		: ""}
-																</span>
-															</a>
-														),
-													)}
+													{profile.games
+														.slice(0, 4)
+														.map((game, i) => (
+															<GameCard
+																key={`${game.name}-${i}`}
+																game={game}
+																compact
+															/>
+														))}
 												</div>
 											) : (
 												<p className={styles.muted}>
@@ -373,13 +360,30 @@ export default async function ProfilePage({
 										<section
 											className={`${styles.panel} ${!visibility.interests ? styles.hiddenSection : ""}`}
 										>
-											<p className={styles.sectionLabel}>
-												Interests
-											</p>
+											<div
+												className={
+													styles.sectionHeading
+												}
+											>
+												<p
+													className={
+														styles.sectionLabel
+													}
+												>
+													Interests
+												</p>
+												<Link
+													href={`/${profile.username}/interests`}
+													className={styles.viewAll}
+												>
+													View all
+												</Link>
+											</div>
 											{profile.interests?.length ? (
 												<div className={styles.tagRow}>
-													{profile.interests.map(
-														(interest) => (
+													{profile.interests
+														.slice(0, 8)
+														.map((interest) => (
 															<span
 																key={
 																	interest.id
@@ -390,8 +394,7 @@ export default async function ProfilePage({
 															>
 																{interest.name}
 															</span>
-														),
-													)}
+														))}
 												</div>
 											) : (
 												<p className={styles.muted}>

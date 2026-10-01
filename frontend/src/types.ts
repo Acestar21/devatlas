@@ -9,11 +9,14 @@ export interface StackTag {
 }
 
 export interface GameEntry {
-  tag_id: number;
   name: string;
-  rank_or_hours: string | null;
-  profile_url: string;
+  detail: string | null;
+  url: string | null;
+}
+
+export interface GamingHandle {
   platform: string;
+  handle: string;
 }
 
 export interface InterestTag {
@@ -85,6 +88,11 @@ export interface LeetcodeStats {
 export interface Post {
   title: string;
   url: string;
+  description?: string | null;
+  date?: string | null;
+  read_minutes?: number | null;
+  tags?: string[];
+  image_url?: string | null; // reserved, not used yet
 }
 
 export interface Profile {
@@ -97,6 +105,7 @@ export interface Profile {
   stack_tags: StackTag[];
   stats: GithubStats | null;
   games: GameEntry[] | null;
+  gaming_handles: GamingHandle[] | null;
   interests: InterestTag[] | null;
   leetcode: LeetcodeStats | null;
   posts: Post[] | null;

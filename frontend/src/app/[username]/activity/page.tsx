@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { Profile } from "@/types";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import LeetcodeCard from "@/app/components/LeetcodeCard";
+import PostCard from "@/app/components/PostCard";
 import styles from "./page.module.css";
 
 export default async function ActivityPage({
@@ -32,6 +33,9 @@ export default async function ActivityPage({
 		profile.section_visibility?.leetcode === false;
 	const showPosts = Boolean(profile.posts?.length) || profile.is_owner;
 	const postsMuted = (cv.posts ?? true) === false;
+	const sortedPosts = [...(profile.posts ?? [])].sort((a, b) =>
+		(b.date ?? "").localeCompare(a.date ?? ""),
+	);
 
 	return (
 		<SectionPlaceholder profile={profile} title="Activity">
@@ -54,20 +58,15 @@ export default async function ActivityPage({
 					className={`${styles.card}${postsMuted ? ` ${styles.muted}` : ""}`}
 				>
 					<p className={styles.label}>Writing</p>
-					{profile.posts?.length ? (
-						<ul className={styles.posts}>
-							{profile.posts.map((post, i) => (
-								<li key={i}>
-									<a
-										href={post.url}
-										target="_blank"
-										rel="noreferrer"
-									>
-										{post.title} ↗
-									</a>
-								</li>
+					{sortedPosts.length ? (
+						<div className={styles.postList}>
+							{sortedPosts.map((post, i) => (
+								<PostCard
+									key={`${post.url}-${i}`}
+									post={post}
+								/>
 							))}
-						</ul>
+						</div>
 					) : (
 						<p className={styles.empty}>No posts added yet.</p>
 					)}
