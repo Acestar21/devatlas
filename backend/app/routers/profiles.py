@@ -6,6 +6,7 @@ from app.database import get_session
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache
 from app.models.profile import Profile
+from app.models.leetcode import LeetcodeStats
 from app.models.tag import Tag
 from app.models.tags_relations import StackTag, UserGame, UserInterest
 from app.auth.dependencies import get_current_user_optional, require_current_user
@@ -16,6 +17,28 @@ from app.services.github import is_stale, fetch_and_cache_stats, GithubTokenInva
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 DEFAULT_VISIBILITY = {"github": True, "leetcode": True, "games": True, "interests": True}
+
+DEFAULT_CARD_VISIBILITY = {
+    "github": {"graph": True, "stats": True, "pinned": True, "languages": True, "activity": True},
+    "activity": {"leetcode": True, "posts": True},
+}
+
+# which keys of the stats block each GitHub-page card owns
+CARD_STATS_KEYS = {
+    "graph": ["calendar"],
+    "stats": ["extra"],
+    "pinned": ["pinned_repos"],
+    "languages": ["top_languages"],
+    "activity": ["activity"],
+}
+
+
+def _card_visibility(profile: Profile | None) -> dict:
+    stored = json.loads(profile.card_visibility_json) if profile else {}
+    return {
+        page: {**cards, **stored.get(page, {})}
+        for page, cards in DEFAULT_CARD_VISIBILITY.items()
+    }
 
 
 def _get_stack_tags(user_id: int, db: Session) -> list[dict]:
@@ -65,6 +88,7 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
     visibility = (
         json.loads(profile.section_visibility_json) if profile else DEFAULT_VISIBILITY
     )
+    card_vis = _card_visibility(profile)
 
     stats_block = None
     if cache and (is_owner or visibility.get("github", True)):
@@ -73,7 +97,16 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
             "total_contributions": cache.total_contributions,
             "top_languages": json.loads(cache.top_languages_json),
             "pinned_repos": json.loads(cache.pinned_repos_json),
+            "calendar": json.loads(cache.calendar_json),
+            "extra": json.loads(cache.extra_stats_json) or None,
+            "activity": json.loads(cache.activity_json),
         }
+        # Hidden cards never leave the server for non-owners.
+        if not is_owner:
+            for card, keys in CARD_STATS_KEYS.items():
+                if not card_vis["github"][card]:
+                    for k in keys:
+                        stats_block.pop(k, None)
     elif not cache:
         stats_block = {"available": False, "reason": "GitHub stats are temporarily unavailable."}
 
@@ -87,6 +120,22 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
     if is_owner or visibility.get("interests", True):
         interests = _get_interests(user.id, db)
 
+    leetcode = None
+    lc = db.exec(select(LeetcodeStats).where(LeetcodeStats.user_id == user.id)).first()
+    if lc and (is_owner or (visibility.get("leetcode", True) and card_vis["activity"]["leetcode"])):
+        leetcode = {
+            "username": lc.username,
+            "url": f"https://leetcode.com/u/{lc.username}/",  # built server-side, never user-supplied
+            "easy": lc.easy,
+            "medium": lc.medium,
+            "hard": lc.hard,
+            "total": lc.easy + lc.medium + lc.hard,
+        }
+
+    posts = None
+    if is_owner or card_vis["activity"]["posts"]:
+        posts = json.loads(profile.posts_json) if profile else []
+
     return {
         "username": user.github_username,
         "display_name": user.display_name,
@@ -98,8 +147,11 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
         "stats": stats_block,
         "games": games,
         "interests": interests,
+        "leetcode": leetcode,
+        "posts": posts,
         "is_owner": is_owner,
         "section_visibility": visibility,
+        "card_visibility": card_vis,
     }
 
 
@@ -180,6 +232,17 @@ def update_profile(
 
     if update.section_visibility is not None:
         profile.section_visibility_json = update.section_visibility.model_dump_json()
+
+    if update.card_visibility is not None:
+        merged = _card_visibility(profile)
+        for page, cards in update.card_visibility.items():
+            merged[page].update(cards)
+        profile.card_visibility_json = json.dumps(merged)
+
+    if update.posts is not None:
+        if len(update.posts) > 10:
+            raise HTTPException(status_code=400, detail="Up to 10 posts allowed.")
+        profile.posts_json = json.dumps([p.model_dump() for p in update.posts])
 
     db.add(profile)
     db.commit()

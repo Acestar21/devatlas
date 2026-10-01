@@ -11,3 +11,5 @@ class Profile(SQLModel, table=True):
     section_visibility_json: str = Field(
         default='{"github": true, "leetcode": true, "games": true, "interests": true}'
     )
+    card_visibility_json: str = Field(default="{}")  # {"github": {"graph": true, ...}, "activity": {...}}
+    posts_json: str = Field(default="[]")            # JSON list of {title, url}

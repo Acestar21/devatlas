@@ -1,7 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -11,6 +10,8 @@ from app.models.github_stats import GithubStatsCache
 from app.models.tag import Tag
 from app.models.profile import Profile
 from app.models.tags_relations import StackTag, UserGame, UserInterest, UserProject
+from app.models.leetcode import LeetcodeStats
+
 from sqlmodel import SQLModel
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
