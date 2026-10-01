@@ -1,0 +1,39 @@
+.card {
+	padding: 1.25rem 1.5rem;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius);
+	background: var(--card-bg);
+}
+.muted {
+	opacity: 0.48;
+	filter: saturate(0.45);
+}
+.label {
+	color: var(--primary);
+	font: 0.68rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.empty {
+	margin-top: 0.6rem;
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+}
+.posts {
+	list-style: none;
+	display: grid;
+	gap: 0.5rem;
+	margin-top: 0.8rem;
+}
+.posts a {
+	display: block;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid var(--border);
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+	overflow-wrap: anywhere;
+}
+.posts a:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}

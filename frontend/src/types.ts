@@ -21,6 +21,33 @@ export interface InterestTag {
   name: string;
 }
 
+export interface CalendarDay {
+  date: string;
+  count: number;
+}
+
+export interface ExtraStats {
+  commits: number;
+  pull_requests: number;
+  issues: number;
+  reviews: number;
+  current_streak: number;
+  longest_streak: number;
+  followers: number;
+  public_repos: number;
+  total_stars: number;
+  prs_all_time: number;
+  joined: string | null;
+}
+
+export interface ActivityItem {
+  type: string;
+  repo: string;
+  text: string;
+  at: string;
+  url: string;
+}
+
 export interface GithubStats {
   available: boolean;
   reason?: string;
@@ -32,6 +59,9 @@ export interface GithubStats {
     stars: number;
     url: string;
   }>;
+  calendar?: CalendarDay[][] | null;
+  extra?: ExtraStats | null;
+  activity?: ActivityItem[] | null;
 }
 
 export interface SectionVisibility {
@@ -39,6 +69,22 @@ export interface SectionVisibility {
   leetcode: boolean;
   games: boolean;
   interests: boolean;
+}
+
+export type CardVisibility = Record<string, Record<string, boolean>>;
+
+export interface LeetcodeStats {
+  username: string;
+  url: string;
+  easy: number;
+  medium: number;
+  hard: number;
+  total: number;
+}
+
+export interface Post {
+  title: string;
+  url: string;
 }
 
 export interface Profile {
@@ -52,6 +98,9 @@ export interface Profile {
   stats: GithubStats | null;
   games: GameEntry[] | null;
   interests: InterestTag[] | null;
+  leetcode: LeetcodeStats | null;
+  posts: Post[] | null;
   is_owner: boolean;
   section_visibility: SectionVisibility | null;
+  card_visibility: CardVisibility;
 }

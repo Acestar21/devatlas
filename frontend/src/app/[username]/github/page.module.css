@@ -217,6 +217,57 @@
 	margin-top: 0.55rem;
 	color: var(--foreground-dimmed);
 }
+.hiddenSection {
+	opacity: 0.48;
+	filter: saturate(0.45);
+}
+.metricGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+	gap: 0.6rem;
+	margin-top: 0.9rem;
+}
+.metric {
+	padding: 0.7rem;
+	border: 1px solid var(--border);
+}
+.metric span {
+	display: block;
+	color: var(--foreground-muted);
+	font-size: 0.65rem;
+}
+.metric strong {
+	display: block;
+	margin-top: 0.3rem;
+	color: var(--foreground);
+	font: 700 1.2rem var(--font-mono, monospace);
+}
+.activityList {
+	list-style: none;
+	display: grid;
+	gap: 0.5rem;
+	margin-top: 0.9rem;
+}
+.activityItem {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid var(--border);
+	color: var(--foreground-muted);
+	font-size: 0.75rem;
+}
+.activityItem:hover {
+	border-color: var(--primary);
+}
+.activityItem strong {
+	color: var(--foreground);
+	font-weight: 600;
+}
+.activityDate {
+	white-space: nowrap;
+	font: 0.65rem var(--font-mono, monospace);
+}
 @media (max-width: 720px) {
 	.topBar {
 		padding: 0 1rem;
