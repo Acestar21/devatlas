@@ -251,6 +251,8 @@
 	display: grid;
 	gap: 0.45rem;
 	margin-top: 0.7rem;
+	max-height: 7rem;
+	overflow-y: auto;
 }
 .gameCard {
 	display: flex;
@@ -324,9 +326,6 @@
 }
 .splitRow > .panel {
 	height: 100%;
-}
-.splitRow > .twoColumn {
-	grid-template-rows: 1fr;
 }
 .viewAll {
 	margin-bottom: 0.7rem;

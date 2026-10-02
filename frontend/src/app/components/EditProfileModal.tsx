@@ -243,6 +243,28 @@ export default function EditProfileModal({
 		setPostTags("");
 	};
 
+	const postsForSave = () => {
+		const title = postTitle.trim();
+		const url = postUrl.trim();
+		if (!title || !url || posts.length >= 10) return posts;
+		const minutes = Number(postMinutes);
+		return [
+			...posts,
+			{
+				title,
+				url,
+				description: postDesc.trim() || null,
+				date: postDate || null,
+				read_minutes: minutes > 0 ? minutes : null,
+				tags: postTags
+					.split(",")
+					.map((tag) => tag.trim())
+					.filter(Boolean)
+					.slice(0, 3),
+			},
+		];
+	};
+
 	const addGame = () => {
 		if (!gName.trim()) return;
 		setGames((current) => [
@@ -265,6 +287,25 @@ export default function EditProfileModal({
 			{ platform: hPlatform, handle: hHandle.trim() },
 		]);
 		setHHandle("");
+	};
+
+	const gamesForSave = () => {
+		const name = gName.trim();
+		if (!name || games.length >= 12) return games;
+		return [
+			...games,
+			{
+				name,
+				detail: gDetail.trim() || null,
+				url: gUrl.trim() || null,
+			},
+		];
+	};
+
+	const handlesForSave = () => {
+		const handle = hHandle.trim();
+		if (!handle || handles.length >= 8) return handles;
+		return [...handles, { platform: hPlatform, handle }];
 	};
 
 	const saveLeetcode = () =>
@@ -294,8 +335,13 @@ export default function EditProfileModal({
 					method: "PATCH",
 					body: JSON.stringify({
 						card_visibility: { [page]: cards },
-						...(isActivity ? { posts } : {}),
-						...(isGames ? { games, gaming_handles: handles } : {}),
+						...(isActivity ? { posts: postsForSave() } : {}),
+						...(isGames
+							? {
+									games: gamesForSave(),
+									gaming_handles: handlesForSave(),
+								}
+							: {}),
 					}),
 				});
 				router.refresh();
@@ -568,13 +614,14 @@ export default function EditProfileModal({
 									className={styles.addLink}
 									onClick={addPost}
 								>
-									Add post
+									Add post to list
 								</button>
 							</>
 						)}
 						<p className={styles.help}>
 							Up to 10 posts, newest first. Posts link out to your
-							site. Saved when you click Save.
+							site. Click “Add post to list” or leave it entered
+							and click “Save settings”.
 						</p>
 					</>
 				)}
@@ -648,14 +695,15 @@ export default function EditProfileModal({
 										className={styles.addLink}
 										onClick={addGame}
 									>
-										Add game
+										Add game to list
 									</button>
 								</div>
 							</>
 						)}
 						<p className={styles.help}>
-							Any game works, no platform needed. Up to 12. Saved
-							when you click Save.
+							Any game works, no platform needed. Up to 12. Click
+							“Add game to list” or leave it entered and click
+							“Save settings”.
 						</p>
 
 						<div className={styles.linkList}>
@@ -717,12 +765,14 @@ export default function EditProfileModal({
 									className={styles.addLink}
 									onClick={addHandle}
 								>
-									Add handle
+									Add handle to list
 								</button>
 							</div>
 						)}
 						<p className={styles.help}>
 							Shown as plain text so people can find you. Up to 8.
+							Click “Add handle to list” or leave it entered and
+							click “Save settings”.
 						</p>
 					</>
 				)}
