@@ -4,7 +4,7 @@ import { Profile } from "@/types";
 import ProfileNav from "./ProfileNav";
 import ThemeSwitcher from "./ThemeSwitcher";
 import styles from "./SectionPlaceholder.module.css";
-import { getThemeCookie } from "@/lib/server-context";
+import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 
 export default async function SectionPlaceholder({
 	profile,
@@ -17,6 +17,7 @@ export default async function SectionPlaceholder({
 }) {
 	const activeSection = title.toLowerCase();
 	const themeCookie = await getThemeCookie();
+	const viewer = profile.is_owner ? profile : await fetchViewer();
 	return (
 		<main className={styles.page}>
 			<header className={styles.topBar}>
@@ -30,15 +31,13 @@ export default async function SectionPlaceholder({
 					<Link href="/directory" className={styles.directory}>
 						/Directory
 					</Link>
-					{profile.is_owner ? (
+					{viewer ? (
 						<Link
-							href={`/${profile.username}`}
+							href={`/${viewer.username}`}
 							aria-label="Open your profile"
 						>
 							<Image
-								src={
-									profile.avatar_url || "/default-avatar.png"
-								}
+								src={viewer.avatar_url || "/default-avatar.png"}
 								alt="Your profile"
 								width={40}
 								height={40}

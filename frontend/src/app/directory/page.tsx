@@ -51,6 +51,25 @@ const HINT_PREFIX: Record<string, string> = {
 	interest: "Into",
 };
 
+const LOGIN_ERRORS: Record<string, string> = {
+	denied: "Login was cancelled.",
+	invalid_state: "Your login session expired. Please try again.",
+	github_failed: "GitHub didn't complete the sign-in. Please try again.",
+	backend: "The DevAtlas server didn't respond (free hosting can take a minute to wake up). Please try again.",
+	config: "Login isn't configured correctly. Please try again later.",
+	failed: "Login failed. Please try again.",
+};
+
+function noticeFor(params: { login_error?: string; wait?: string; deleted?: string }): string | null {
+	if (params.deleted === "1") return "Your DevAtlas account was deleted and DevAtlas' access to your GitHub account was revoked.";
+	if (params.deleted === "manual") return "Your DevAtlas account was deleted, but we couldn't reach GitHub to revoke access. Remove DevAtlas manually at github.com/settings/applications.";
+	if (params.login_error === "account_too_new") {
+		const wait = /^\d{1,3}$/.test(params.wait ?? "") ? Number(params.wait) : null;
+		return `GitHub accounts must be at least 30 days old to sign up for DevAtlas. This keeps out bots and throwaway accounts.${wait ? ` Try again in ${wait} day${wait === 1 ? "" : "s"}.` : ""}`;
+	}
+	return params.login_error ? (LOGIN_ERRORS[params.login_error] ?? LOGIN_ERRORS.failed) : null;
+}
+
 function bioPreview(value: string, limit = 112): string {
 	if (value.length <= limit) return value;
 	const shortened = value.slice(0, limit - 3).trimEnd();
@@ -67,10 +86,15 @@ export default async function DirectoryPage({
 		sort?: string;
 		page?: string;
 		login?: string;
+		login_error?: string;
+		wait?: string;
+		deleted?: string;
 	}>;
 }) {
 	const params = await searchParams;
-	const data = await fetchDirectory(params);
+	const { login_error: loginError, wait, deleted, ...listParams } = params;
+	const notice = noticeFor({ login_error: loginError, wait, deleted });
+	const data = await fetchDirectory(listParams);
 	const user = await getCurrentUser();
 	const themeCookie = await getThemeCookie();
 
@@ -81,6 +105,7 @@ export default async function DirectoryPage({
 				<div className={styles.topActions}><ThemeSwitcher initialTheme={themeCookie || "terminal"} /><Link href="/directory" className={styles.topLink}>/Directory</Link>{user ? <Link href={`/${user.username}`} aria-label="Open your profile"><Image src={user.avatar_url || "/default-avatar.png"} alt="Your profile" width={40} height={40} loading="eager" className={styles.headerAvatar} /></Link> : <Link href="/directory?login=1" className={styles.topLink}>/login</Link>}</div></div>
 			</div>
 			<div className={styles.container}>
+				{notice && <p className={styles.notice} role="alert">{notice}</p>}
 				<DirectoryControls
 					initialSearch={params.search || ""}
 					initialStack={params.stack || ""}
@@ -160,7 +185,7 @@ export default async function DirectoryPage({
 						).map((p) => (
 							<a
 								key={p}
-								href={`?${new URLSearchParams({ ...params, page: String(p) } as Record<string, string>).toString()}`}
+								href={`?${new URLSearchParams({ ...listParams, page: String(p) } as Record<string, string>).toString()}`}
 								className={`${styles.pageLink} ${p === data.page ? styles.pageActive : ""}`}
 							>
 								{p}

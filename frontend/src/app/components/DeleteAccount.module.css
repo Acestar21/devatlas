@@ -1,0 +1,61 @@
+.zone {
+	display: grid;
+	gap: 0.6rem;
+	margin-top: 1.4rem;
+	padding: 1rem;
+	border: 1px solid #b34d4d;
+}
+.title {
+	color: #b34d4d;
+	font: 0.65rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.text {
+	color: var(--foreground-muted);
+	font-size: 0.74rem;
+	line-height: 1.5;
+}
+.text strong {
+	color: var(--foreground);
+}
+.input {
+	width: 100%;
+	padding: 0.55rem 0.65rem;
+	border: 1px solid var(--input-border);
+	background: var(--input-bg);
+	color: var(--foreground);
+	font: 0.78rem var(--font-mono, monospace);
+}
+.row {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+.row button,
+.open {
+	padding: 0.45rem 0.7rem;
+	border: 1px solid var(--border);
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font-size: 0.72rem;
+}
+.open {
+	justify-self: start;
+	border-color: #b34d4d;
+	color: #b34d4d;
+}
+.confirm {
+	border-color: #b34d4d;
+	background: #b34d4d;
+	color: #fff;
+}
+.row button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+.error {
+	color: #b34d4d;
+	font-size: 0.72rem;
+}

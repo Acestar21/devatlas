@@ -8,5 +8,5 @@ class Tag(SQLModel, table=True):
     name: str = Field(index=True)
     category: str  # "stack" | "game" | "interest" — plain string, no enum needed at this scale
     status: str = Field(default="pending")  # "pending" | "approved"
-    submitted_by_user_id: int = Field(foreign_key="user.id")
+    submitted_by_user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)

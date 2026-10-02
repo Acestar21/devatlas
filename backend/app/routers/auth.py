@@ -61,7 +61,7 @@ async def github_internal_exchange(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     if state not in _pending_states:
-        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
+        raise HTTPException(status_code=400, detail={"code": "invalid_state"})
     _pending_states.discard(state)
 
     async with httpx.AsyncClient() as client:
@@ -80,7 +80,7 @@ async def github_internal_exchange(
         access_token = token_data.get("access_token")
 
         if not access_token:
-            raise HTTPException(status_code=400, detail="GitHub token exchange failed")
+            raise HTTPException(status_code=400, detail={"code": "github_failed"})
 
         # Fetch the user's public GitHub profile using that token
         user_resp = await client.get(
@@ -110,11 +110,10 @@ async def github_internal_exchange(
         if account_age_days < MIN_ACCOUNT_AGE_DAYS:
             raise HTTPException(
                 status_code=403,
-                detail=(
-                    f"GitHub accounts must be at least {MIN_ACCOUNT_AGE_DAYS} days "
-                    "old to sign up for DevAtlas. This helps keep the directory "
-                    "free of bots and throwaway accounts."
-                ),
+                detail={
+                    "code": "account_too_new",
+                    "days_left": MIN_ACCOUNT_AGE_DAYS - account_age_days,
+                },
             )
 
     encrypted = encrypt_token(access_token)

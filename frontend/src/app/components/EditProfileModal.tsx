@@ -14,6 +14,7 @@ import {
 } from "@/types";
 import { proxyFetch } from "@/lib/api-client";
 import TagEditor from "./TagEditor";
+import DeleteAccount from "./DeleteAccount";
 import styles from "./EditProfileModal.module.css";
 
 const DEFAULT_VISIBILITY: SectionVisibility = {
@@ -987,6 +988,9 @@ export default function EditProfileModal({
 								</label>
 							))}
 						</div>
+						
+						<DeleteAccount username={profile.username} />
+
 					</>
 				)}
 
