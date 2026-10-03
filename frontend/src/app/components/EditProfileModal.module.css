@@ -213,7 +213,36 @@
 	font: 0.78rem var(--font-body, sans-serif);
 }
 @media (max-width: 560px) {
+	.backdrop {
+		padding: 0.5rem;
+	}
+	.modal {
+		max-height: calc(100vh - 1rem);
+		padding: 1rem;
+	}
 	.grid {
 		grid-template-columns: 1fr;
+	}
+	.header {
+		margin-bottom: 0.8rem;
+	}
+	.header h2 {
+		font-size: 1.05rem;
+	}
+	.actions {
+		position: sticky;
+		bottom: -1rem;
+		padding: 0.75rem 0 0.25rem;
+		background: var(--card-bg);
+	}
+	.cancel,
+	.save {
+		flex: 1;
+		min-height: 40px;
+	}
+	.field input,
+	.field textarea,
+	.field select {
+		font-size: 1rem;
 	}
 }

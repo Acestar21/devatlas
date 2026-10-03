@@ -118,7 +118,8 @@
 }
 .card {
 	display: block;
-	min-height: 190px;
+	min-height: 0;
+	padding: 0.85rem;
 	padding: 1.25rem;
 	border: 1px solid var(--border);
 	border-radius: var(--card-radius);
@@ -134,6 +135,9 @@
 	gap: 0.75rem;
 	margin-bottom: 0.9rem;
 }
+.cardHeader > div {
+	min-width: 0;
+}
 .cardAvatar {
 	display: block;
 	flex: 0 0 46px;
@@ -148,11 +152,13 @@
 .displayName {
 	color: var(--foreground);
 	font-size: 0.95rem;
+	overflow-wrap: anywhere;
 }
 .username {
 	margin-top: 0.2rem;
 	color: var(--foreground-muted);
 	font: 0.72rem var(--font-mono, monospace);
+	overflow-wrap: anywhere;
 }
 .bio {
 	min-height: 3.6em;
@@ -179,12 +185,18 @@
 }
 .cardFooter {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 0.5rem;
 	padding-top: 0.7rem;
 	border-top: 1px solid var(--border-muted);
 	color: var(--foreground-muted);
 	font: 0.66rem var(--font-mono, monospace);
+}
+.contributions,
+.hint {
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 .pagination {
 	display: flex;
@@ -220,16 +232,32 @@
 	.topBarInner {
 		padding: 0 1rem;
 	}
+	.brand {
+		font-size: 1.4rem;
+	}
+	.topActions {
+		gap: 0.4rem;
+	}
 	.topActions select {
-		max-width: 82px;
+		min-width: 0;
+		max-width: 78px;
+	}
+	.topActions a.topLink:first-of-type {
+		display: none;
 	}
 	.container {
-		padding: 1.25rem 0.85rem 0;
+		padding: 0.85rem 0.65rem 0;
 	}
 	.controls {
 		grid-template-columns: 1fr;
+		gap: 0.45rem;
+		margin-bottom: 0.85rem;
 	}
 	.grid {
 		grid-template-columns: 1fr;
+	}
+	.card {
+		min-height: 0;
+		padding: 0.85rem;
 	}
 }

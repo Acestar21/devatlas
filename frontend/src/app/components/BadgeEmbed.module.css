@@ -9,3 +9,9 @@
 .codePanel { display: grid; gap: .5rem; }
 .codePanel code { min-height: 54px; padding: .5rem; overflow-wrap: anywhere; color: var(--foreground-muted); font: .6rem/1.4 var(--font-mono, monospace); }
 .codePanel button { justify-self: end; }
+
+@media (max-width: 720px) {
+	.embed {
+		width: min(100%, 360px);
+	}
+}

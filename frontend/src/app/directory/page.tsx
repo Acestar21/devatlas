@@ -102,7 +102,7 @@ export default async function DirectoryPage({
 		<main className={styles.page}>
 			<div className={styles.topBar}>
 				<div className={styles.topBarInner}><div><Link href="/" className={styles.brand}>DevAtlas</Link></div>
-				<div className={styles.topActions}><ThemeSwitcher initialTheme={themeCookie || "terminal"} /><Link href="/directory" className={styles.topLink}>/Directory</Link>{user ? <Link href={`/${user.username}`} aria-label="Open your profile"><Image src={user.avatar_url || "/default-avatar.png"} alt="Your profile" width={40} height={40} loading="eager" className={styles.headerAvatar} /></Link> : <Link href="/directory?login=1" className={styles.topLink}>/login</Link>}</div></div>
+				<div className={styles.topActions}><ThemeSwitcher initialTheme={themeCookie || "terminal"} mobileIcon /><Link href="/directory" className={styles.topLink}>/Directory</Link>{user ? <Link href={`/${user.username}`} aria-label="Open your profile"><Image src={user.avatar_url || "/default-avatar.png"} alt="Your profile" width={40} height={40} loading="eager" className={styles.headerAvatar} /></Link> : <Link href="/directory?login=1" className={styles.topLink}>/login</Link>}</div></div>
 			</div>
 			<div className={styles.container}>
 				{notice && <p className={styles.notice} role="alert">{notice}</p>}

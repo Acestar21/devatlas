@@ -10,6 +10,74 @@
 	background: var(--card-bg);
 	border: 1px solid var(--border);
 }
+.controls {
+	position: relative;
+	margin-top: auto;
+	padding-top: 0.45rem;
+	border-top: 1px solid var(--border);
+}
+.menuButton {
+	display: grid;
+	gap: 4px;
+	width: 100%;
+	padding: 0.55rem;
+	border: 1px solid var(--border);
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+}
+.menuButton:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.menuButton span {
+	display: block;
+	width: 18px;
+	height: 2px;
+	margin: 0 auto;
+	background: currentColor;
+}
+.menu {
+	position: absolute;
+	bottom: calc(100% + 0.5rem);
+	left: 0;
+	z-index: 5;
+	display: grid;
+	gap: 0.45rem;
+	width: 100%;
+	padding: 0.55rem;
+	box-sizing: border-box;
+	border: 1px solid var(--border);
+	background: var(--card-bg);
+	box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.24);
+	overflow: visible;
+}
+.menu > * {
+	width: 100%;
+	min-width: 0;
+}
+.menu :global(.themeSwitcher),
+.menu :global(.themeButton),
+.menu :global(.themeOption),
+.menu form,
+.menu form button {
+	width: 100%;
+}
+.menu :global(.themeMenu) {
+	top: auto;
+	bottom: calc(100% + 0.35rem);
+}
+
+@media (min-width: 901px) {
+	.menu {
+		top: calc(100% + 0.5rem);
+		bottom: auto;
+	}
+	.menu :global(.themeMenu) {
+		top: calc(100% + 0.35rem);
+		bottom: auto;
+	}
+}
 
 .item {
 	display: flex;
@@ -61,15 +129,9 @@
 	background: var(--secondary-bg);
 	color: var(--foreground-muted);
 }
-.edit {
-	margin-top: auto;
-	padding: 0.45rem 0.45rem 0.3rem;
-	border-top: 1px solid var(--border);
-}
 .logout {
 	display: block;
-	width: calc(100% - 0.9rem);
-	margin: 0 0.45rem 0.45rem;
+	width: 100%;
 	padding: 0.45rem 0.35rem;
 	border: 1px solid var(--border);
 	color: var(--foreground-muted);
@@ -78,29 +140,80 @@
 	box-sizing: border-box;
   background-color: var(--primary-foreground);
 }
+.menuDivider {
+	height: 1px;
+	background: var(--border-muted);
+}
 .logout:hover {
 	border-color: var(--primary);
 	color: var(--primary);
   background-color: var(--secondary-bg);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
 	.nav {
-		position: sticky;
-		top: 0.5rem;
-		flex-basis: 136px;
-		width: 136px;
+		position: fixed !important;
+		left: 0.5rem;
+		right: auto;
+		top: auto !important;
+		bottom: max(0.8rem, env(safe-area-inset-bottom));
+		z-index: 20;
+		width: calc(100vw - 1.5rem) !important;
+		max-width: none;
+		min-width: 0;
+		margin: 0 auto;
+		flex-direction: row;
+		align-items: stretch;
+		justify-content: stretch;
+		gap: 0.2rem;
+		padding: 0.3rem;
+		border-radius: 999px;
+		box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.3);
 	}
 	.item {
-		gap: 0.45rem;
+		flex: 1 1 0;
+		min-width: 0;
+		justify-content: center;
+		min-height: 44px;
 		padding: 0.35rem;
+		border-radius: 999px;
+	}
+	.label {
+		display: none;
 	}
 	.icon {
-		width: 24px;
-		flex-basis: 24px;
+		width: 22px;
+		height: 22px;
+		flex-basis: 22px;
 	}
 	.icon svg {
+		width: 20px;
+		height: 20px;
+	}
+	.controls {
+		flex: 0 0 44px;
+		margin-top: 0;
+		padding: 0;
+		border-top: 0;
+	}
+	.menuButton {
+		display: grid;
+		place-content: center;
+		gap: 4px;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border-radius: 999px;
+	}
+	.menuButton span {
 		width: 19px;
-		height: 19px;
+		height: 2px;
+	}
+	.menu {
+		right: 0;
+		left: auto;
+		width: 180px;
+		border-radius: var(--card-radius);
+		z-index: 25;
 	}
 }

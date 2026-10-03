@@ -35,12 +35,14 @@
 }
 .footer {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 0.75rem;
 	margin-top: 0.25rem;
 }
 .tags {
+	min-width: 0;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.35rem;
@@ -52,6 +54,7 @@
 	background: var(--card-bg);
 	color: var(--secondary-fg);
 	font-size: 0.62rem;
+	overflow-wrap: anywhere;
 }
 .read {
 	flex: none;
@@ -60,4 +63,9 @@
 }
 .read:hover {
 	text-decoration: underline;
+}
+@media (max-width: 480px) {
+	.read {
+		width: 100%;
+	}
 }

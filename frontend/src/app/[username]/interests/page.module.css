@@ -4,6 +4,17 @@
 	border-radius: var(--card-radius);
 	background: var(--card-bg);
 }
+
+@media (max-width: 720px) {
+	.card {
+		padding: 0.85rem 0.8rem;
+	}
+	.grid,
+	.handles {
+		gap: 0.45rem;
+		margin-top: 0.65rem;
+	}
+}
 .muted {
 	opacity: 0.48;
 	filter: saturate(0.45);
