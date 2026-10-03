@@ -12,34 +12,14 @@ import ContributionGraph from "@/app/components/ContributionGraph";
 import LeetcodeCard from "@/app/components/LeetcodeCard";
 import { currentStreakRange, joinedAgo } from "@/lib/streak";
 import styles from "./page.module.css";
-import {
-	getSessionCookieValue,
-	getThemeCookie,
-	sessionHeaders,
-} from "@/lib/server-context";
+import { fetchViewer, getThemeCookie } from "@/lib/server-context";
+import { backendFetch } from "@/lib/backend";
 
 async function fetchProfile(username: string): Promise<Profile | null> {
-	const sessionCookie = await getSessionCookieValue();
-	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/profiles/${username}`,
-		{
-			cache: "no-store",
-			headers: sessionHeaders(sessionCookie),
-		},
-	);
+	const response = await backendFetch(`profiles/${encodeURIComponent(username)}`);
 	if (response.status === 404) notFound();
 	if (!response.ok) return null;
 	return response.json();
-}
-
-async function fetchViewer() {
-	const sessionCookie = await getSessionCookieValue();
-	if (!sessionCookie) return null;
-	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/profiles/me`,
-		{ cache: "no-store", headers: sessionHeaders(sessionCookie) },
-	);
-	return response.ok ? (response.json() as Promise<Profile>) : null;
 }
 
 export default async function ProfilePage({

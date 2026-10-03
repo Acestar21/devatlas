@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
+import { backendFetch } from "@/lib/backend";
 import { Profile } from "@/types";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import LeetcodeCard from "@/app/components/LeetcodeCard";
@@ -12,16 +12,7 @@ export default async function ActivityPage({
 	params: Promise<{ username: string }>;
 }) {
 	const { username } = await params;
-	const cookie = (await cookies()).get("devcard_session");
-	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/profiles/${username}`,
-		{
-			cache: "no-store",
-			headers: cookie
-				? { Cookie: `devcard_session=${cookie.value}` }
-				: {},
-		},
-	);
+	const response = await backendFetch(`profiles/${encodeURIComponent(username)}`);
 	if (response.status === 404) notFound();
 	if (!response.ok) return null;
 	const profile = (await response.json()) as Profile;

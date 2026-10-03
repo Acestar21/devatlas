@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { backendFetch } from "@/lib/backend";
 
 const SESSION_COOKIE_NAME = "devcard_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14; // 14 days, must match backend
@@ -13,19 +14,15 @@ export async function GET(request: NextRequest) {
 	const state = searchParams.get("state");
 
 	if (!code || !state) return fail(request, "denied");
-
-	const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-	const internalSecret = process.env.INTERNAL_API_SECRET; // no NEXT_PUBLIC_ prefix — server-only, never exposed to the browser
-	if (!backendUrl || !internalSecret) return fail(request, "config");
+	if (!process.env.NEXT_PUBLIC_API_URL || !process.env.INTERNAL_API_SECRET) return fail(request, "config");
 
 	let exchangeRes: Response;
 	try {
-		exchangeRes = await fetch(
-			`${backendUrl}/auth/github/internal/exchange?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
-			{
-				method: "POST",
-				headers: { "X-Internal-Secret": internalSecret },
-			},
+		// internal: true attaches the raw shared secret. This route is the ONLY place allowed to.
+		exchangeRes = await backendFetch(
+			`auth/github/internal/exchange?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+			{ method: "POST" },
+			{ internal: true },
 		);
 	} catch {
 		return fail(request, "backend");

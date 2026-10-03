@@ -5,20 +5,18 @@ import DirectoryControls from "./DirectoryControls";
 import LoginModal from "@/app/components/LoginModal";
 import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 import styles from "./page.module.css";
-import { getSessionCookieValue, getThemeCookie, sessionHeaders } from "@/lib/server-context";
+import { fetchViewer, getThemeCookie } from "@/lib/server-context";
+import { backendFetch } from "@/lib/backend";
 
-async function getCurrentUser(): Promise<{ username: string; avatar_url: string | null } | null> {
+async function getCurrentUser(): Promise<{
+	username: string;
+	avatar_url: string | null;
+} | null> {
 	try {
-		const sessionCookie = await getSessionCookieValue();
-		if (!sessionCookie) return null;
-
-		const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/me`, {
-			cache: "no-store",
-			headers: sessionHeaders(sessionCookie),
-		});
-		if (!res.ok) return null;
-		const data = await res.json();
-		return { username: data.username, avatar_url: data.avatar_url };
+		const viewer = await fetchViewer();
+		return viewer
+			? { username: viewer.username, avatar_url: viewer.avatar_url }
+			: null;
 	} catch {
 		return null;
 	}
@@ -37,12 +35,7 @@ async function fetchDirectory(params: {
 	if (params.sort) qs.set("sort", params.sort);
 	if (params.page) qs.set("page", params.page);
 
-	const res = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/directory?${qs.toString()}`,
-		{
-			cache: "no-store",
-		},
-	);
+	const res = await backendFetch(`directory?${qs.toString()}`);
 	return res.json();
 }
 
@@ -55,19 +48,30 @@ const LOGIN_ERRORS: Record<string, string> = {
 	denied: "Login was cancelled.",
 	invalid_state: "Your login session expired. Please try again.",
 	github_failed: "GitHub didn't complete the sign-in. Please try again.",
-	backend: "The DevAtlas server didn't respond (free hosting can take a minute to wake up). Please try again.",
+	backend:
+		"The DevAtlas server didn't respond (free hosting can take a minute to wake up). Please try again.",
 	config: "Login isn't configured correctly. Please try again later.",
 	failed: "Login failed. Please try again.",
 };
 
-function noticeFor(params: { login_error?: string; wait?: string; deleted?: string }): string | null {
-	if (params.deleted === "1") return "Your DevAtlas account was deleted and DevAtlas' access to your GitHub account was revoked.";
-	if (params.deleted === "manual") return "Your DevAtlas account was deleted, but we couldn't reach GitHub to revoke access. Remove DevAtlas manually at github.com/settings/applications.";
+function noticeFor(params: {
+	login_error?: string;
+	wait?: string;
+	deleted?: string;
+}): string | null {
+	if (params.deleted === "1")
+		return "Your DevAtlas account was deleted and DevAtlas' access to your GitHub account was revoked.";
+	if (params.deleted === "manual")
+		return "Your DevAtlas account was deleted, but we couldn't reach GitHub to revoke access. Remove DevAtlas manually at github.com/settings/applications.";
 	if (params.login_error === "account_too_new") {
-		const wait = /^\d{1,3}$/.test(params.wait ?? "") ? Number(params.wait) : null;
+		const wait = /^\d{1,3}$/.test(params.wait ?? "")
+			? Number(params.wait)
+			: null;
 		return `GitHub accounts must be at least 30 days old to sign up for DevAtlas. This keeps out bots and throwaway accounts.${wait ? ` Try again in ${wait} day${wait === 1 ? "" : "s"}.` : ""}`;
 	}
-	return params.login_error ? (LOGIN_ERRORS[params.login_error] ?? LOGIN_ERRORS.failed) : null;
+	return params.login_error
+		? (LOGIN_ERRORS[params.login_error] ?? LOGIN_ERRORS.failed)
+		: null;
 }
 
 function bioPreview(value: string, limit = 112): string {
@@ -101,11 +105,53 @@ export default async function DirectoryPage({
 	return (
 		<main className={styles.page}>
 			<div className={styles.topBar}>
-				<div className={styles.topBarInner}><div><Link href="/" className={styles.brand}>DevAtlas</Link></div>
-				<div className={styles.topActions}><ThemeSwitcher initialTheme={themeCookie || "terminal"} mobileIcon /><Link href="/directory" className={styles.topLink}>/Directory</Link>{user ? <Link href={`/${user.username}`} aria-label="Open your profile"><Image src={user.avatar_url || "/default-avatar.png"} alt="Your profile" width={40} height={40} loading="eager" className={styles.headerAvatar} /></Link> : <Link href="/directory?login=1" className={styles.topLink}>/login</Link>}</div></div>
+				<div className={styles.topBarInner}>
+					<div>
+						<Link href="/" className={styles.brand}>
+							DevAtlas
+						</Link>
+					</div>
+					<div className={styles.topActions}>
+						<ThemeSwitcher
+							initialTheme={themeCookie || "terminal"}
+							mobileIcon
+						/>
+						<Link href="/directory" className={styles.topLink}>
+							/Directory
+						</Link>
+						{user ? (
+							<Link
+								href={`/${user.username}`}
+								aria-label="Open your profile"
+							>
+								<Image
+									src={
+										user.avatar_url || "/default-avatar.png"
+									}
+									alt="Your profile"
+									width={40}
+									height={40}
+									loading="eager"
+									className={styles.headerAvatar}
+								/>
+							</Link>
+						) : (
+							<Link
+								href="/directory?login=1"
+								className={styles.topLink}
+							>
+								/login
+							</Link>
+						)}
+					</div>
+				</div>
 			</div>
 			<div className={styles.container}>
-				{notice && <p className={styles.notice} role="alert">{notice}</p>}
+				{notice && (
+					<p className={styles.notice} role="alert">
+						{notice}
+					</p>
+				)}
 				<DirectoryControls
 					initialSearch={params.search || ""}
 					initialStack={params.stack || ""}
@@ -124,7 +170,10 @@ export default async function DirectoryPage({
 							>
 								<div className={styles.cardHeader}>
 									<Image
-										src={card.avatar_url || "/default-avatar.png"}
+										src={
+											card.avatar_url ||
+											"/default-avatar.png"
+										}
 										alt={card.username}
 										width="46"
 										height="46"
@@ -141,7 +190,9 @@ export default async function DirectoryPage({
 								</div>
 
 								{card.bio && (
-									<p className={styles.bio}>{bioPreview(card.bio)}</p>
+									<p className={styles.bio}>
+										{bioPreview(card.bio)}
+									</p>
 								)}
 
 								{card.stack_tags.length > 0 && (
