@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { Profile } from "@/types";
 import ProfileEditButton from "./ProfileEditButton";
 import styles from "./ProfileNav.module.css";
@@ -16,6 +19,7 @@ export default function ProfileNav({
 	profile?: Profile;
 	activeSection?: string;
 }) {
+	const [menuOpen, setMenuOpen] = useState(false);
 	const items = [
 		{
 			href: `/${username}`,
@@ -107,19 +111,45 @@ export default function ProfileNav({
 					),
 				)}
 			{profile?.is_owner && (
-				<div className={styles.edit}>
-					<ProfileEditButton
-						profile={profile}
-						section={activeSection}
-					/>
-				</div>
-			)}
-			{profile?.is_owner && (
-				<form action="/api/auth/logout" method="POST">
-					<button type="submit" className={styles.logout}>
-						Log out
+				<div className={styles.controls}>
+					<button
+						type="button"
+						className={styles.menuButton}
+						onClick={() => setMenuOpen((open) => !open)}
+						aria-label="Open profile menu"
+						aria-expanded={menuOpen}
+					>
+						<span />
+						<span />
+						<span />
 					</button>
-				</form>
+					{menuOpen && (
+						<div className={styles.menu}>
+							<ProfileEditButton
+								profile={profile}
+								section={activeSection}
+							/>
+							<form
+								action="/api/auth/logout"
+								method="POST"
+								onSubmit={(event) => {
+									if (
+										!window.confirm(
+											"Are you sure you want to log out?",
+										)
+									) {
+										event.preventDefault();
+									}
+								}}
+							>
+								<div className={styles.menuDivider} />
+								<button type="submit" className={styles.logout}>
+									Log out
+								</button>
+							</form>
+						</div>
+					)}
+				</div>
 			)}
 		</nav>
 	);

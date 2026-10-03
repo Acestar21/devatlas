@@ -27,6 +27,7 @@ export default async function SectionPlaceholder({
 				<div className={styles.actions}>
 					<ThemeSwitcher
 						initialTheme={themeCookie || profile.theme}
+						mobileIcon
 					/>
 					<Link href="/directory" className={styles.directory}>
 						/Directory

@@ -4,6 +4,19 @@
 	border-radius: var(--card-radius);
 	background: var(--card-bg);
 }
+
+@media (max-width: 720px) {
+	.card {
+		padding: 0.85rem 0.8rem;
+	}
+	.chips {
+		gap: 0.4rem;
+		margin-top: 0.65rem;
+	}
+	.chips span {
+		padding: 0.35rem 0.6rem;
+	}
+}
 .muted {
 	opacity: 0.48;
 	filter: saturate(0.45);

@@ -66,6 +66,7 @@
 	display: flex;
 	align-items: center;
 	gap: 1rem;
+	min-width: 0;
 }
 .avatar {
 	width: 82px;
@@ -77,11 +78,13 @@
 .displayName {
 	color: var(--foreground);
 	font-size: 1.35rem;
+	overflow-wrap: anywhere;
 }
 .username {
 	color: var(--foreground-muted);
 	margin-top: 0.2rem;
 	font: 0.82rem var(--font-mono, monospace);
+	overflow-wrap: anywhere;
 }
 .headerRow {
 	display: flex;
@@ -263,28 +266,90 @@
 .activityItem strong {
 	color: var(--foreground);
 	font-weight: 600;
+	overflow-wrap: anywhere;
 }
 .activityDate {
 	white-space: nowrap;
 	font: 0.65rem var(--font-mono, monospace);
 }
-@media (max-width: 720px) {
-	.topBar {
-		padding: 0 1rem;
+@media (max-width: 900px) {
+	.page {
+		padding-bottom: calc(6rem + env(safe-area-inset-bottom));
 	}
-	.topActions .topLink {
-		display: none;
+}
+@media (max-width: 720px) {
+	.page {
+		padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+	}
+	.topBar {
+		height: 58px;
+		padding: 0 0.85rem;
+	}
+	.brand {
+		font-size: 1.35rem;
 	}
 	.layout {
-		padding: 1.25rem 0.85rem 0;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 0.75rem 0.65rem 0;
+	}
+	.layout > nav {
+		width: 100%;
+	}
+	.container {
+		width: 100%;
 	}
 	.profileHeader {
-		padding: 1.25rem;
+		padding: 0.85rem;
+	}
+	.headerRow {
+		position: relative;
+		align-items: flex-start;
+		padding-right: 5.5rem;
+	}
+	.redirect {
+		position: absolute;
+		top: 0;
+		right: 0;
+		padding: 0.35rem 0.45rem;
+		font-size: 0.62rem;
+	}
+	.identity {
+		gap: 0.65rem;
+	}
+	.avatar {
+		width: 68px;
+		height: 68px;
+	}
+	.displayName {
+		font-size: 1.1rem;
+	}
+	.panel {
+		padding: 0.85rem 0.8rem;
+	}
+	.container {
+		gap: 0.75rem;
+	}
+	.metricGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		margin-top: 0.65rem;
+	}
+	.metric {
+		padding: 0.55rem;
 	}
 	.twoColumn {
 		grid-template-columns: 1fr;
 	}
 	.repoCard {
 		flex-basis: 78%;
+	}
+	.activityItem {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	.footer {
+		margin-top: 1.25rem;
+		padding: 0 0.65rem 1rem;
 	}
 }

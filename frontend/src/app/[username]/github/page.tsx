@@ -85,6 +85,7 @@ export default async function GithubPage({
 				<div className={styles.topActions}>
 					<ThemeSwitcher
 						initialTheme={themeCookie || profile.theme}
+						mobileIcon
 					/>
 					<Link href="/directory" className={styles.topLink}>
 						/Directory

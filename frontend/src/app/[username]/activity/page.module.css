@@ -24,3 +24,13 @@
 	gap: 0.8rem;
 	margin-top: 0.9rem;
 }
+
+@media (max-width: 720px) {
+	.card {
+		padding: 0.85rem 0.8rem;
+	}
+	.postList {
+		gap: 0.6rem;
+		margin-top: 0.65rem;
+	}
+}

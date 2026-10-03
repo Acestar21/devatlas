@@ -92,6 +92,7 @@ export default async function ProfilePage({
 				<div className={styles.topActions}>
 					<ThemeSwitcher
 						initialTheme={themeCookie || profile.theme}
+						mobileIcon
 					/>
 					<Link href="/directory" className={styles.topLink}>
 						/Directory
