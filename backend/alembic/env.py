@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-
+from app.models.moderation import Report, ModerationLog
 from app.config import settings
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache

@@ -12,7 +12,7 @@ from app.models.tags_relations import StackTag, UserInterest
 from app.auth.dependencies import get_current_user_optional, require_current_user
 from app.schemas.profile import ProfileResponse, ProfileUpdate, ProfileUpdateResponse
 from app.services.github import is_stale, fetch_and_cache_stats, GithubTokenInvalid
-
+from app.moderation import can_view_profile, effective_role, is_staff, moderation_info
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -143,6 +143,8 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
         "is_owner": is_owner,
         "section_visibility": visibility,
         "card_visibility": card_vis,
+        "moderation": moderation_info(user) if (is_owner or is_staff(viewer)) else None,
+        "viewer_role": effective_role(viewer),
     }
 
 
@@ -179,7 +181,11 @@ async def get_profile(
     user = db.exec(select(User).where(User.github_username == username)).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
+    
+    if not can_view_profile(user, viewer):
+        # Identical to "no such user": don't reveal that a profile is suspended.
+        raise HTTPException(status_code=404, detail="User not found")
+    
     cache = db.exec(
         select(GithubStatsCache).where(GithubStatsCache.user_id == user.id)
     ).first()

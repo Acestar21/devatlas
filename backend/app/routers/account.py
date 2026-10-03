@@ -3,7 +3,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, update
 from sqlmodel import Session
-
+from app.moderation import is_suspended
 from app.auth.crypto import decrypt_token
 from app.auth.dependencies import require_current_user
 from app.config import settings
@@ -50,7 +50,11 @@ async def delete_account(
 ):
     if confirm != current_user.github_username:
         raise HTTPException(status_code=400, detail="Type your username exactly to confirm.")
-
+    if is_suspended(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is suspended, so it can't be deleted right now. Contact the moderators.",
+        )
     uid = current_user.id
     revoked = await _revoke_github_grant(current_user)
 

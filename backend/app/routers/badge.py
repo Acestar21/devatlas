@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlmodel import Session, select
 from app.rate_limit import limiter
 from app.database import get_session
+from html import escape
+from app.moderation import is_suspended
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache
 
@@ -37,11 +39,11 @@ def get_badge(
     db: Session = Depends(get_session),
 ):
     user = db.exec(select(User).where(User.github_username == username)).first()
-    if not user:
+    if not user or is_suspended(user):
         svg_content = f'''<svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="100%" rx="10" fill="#f3f4f6" />
             <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6b7280" font-family="sans-serif" font-size="14">
-                User "{username}" not found
+                User "{escape(username)}" not found
             </text>
         </svg>'''
         return Response(content=svg_content, media_type="image/svg+xml", status_code=404)

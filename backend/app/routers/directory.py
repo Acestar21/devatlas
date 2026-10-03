@@ -2,7 +2,8 @@ import json
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
-
+from sqlalchemy import not_
+from app.moderation import suspension_active_clause
 from app.database import get_session
 from app.models.user import User
 from app.models.profile import Profile
@@ -61,7 +62,7 @@ def browse_directory(
     page: int = Query(1, ge=1),
     db: Session = Depends(get_session),
 ):
-    query = select(User)
+    query = select(User).where(not_(suspension_active_clause()))
 
     if search:
         query = query.where(

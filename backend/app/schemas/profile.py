@@ -210,6 +210,10 @@ class LeetcodeResponse(BaseModel):
     hard: int
     total: int
 
+class ModerationInfo(BaseModel):
+    suspended: bool
+    reason: Optional[str] = None
+    until: Optional[str] = None  # ISO timestamp (UTC) or None = until lifted
 
 class ProfileResponse(BaseModel):
     username: str
@@ -228,7 +232,8 @@ class ProfileResponse(BaseModel):
     is_owner: bool
     section_visibility: SectionVisibility
     card_visibility: dict[str, dict[str, bool]] = Field(default_factory=dict)
-
+    moderation: Optional[ModerationInfo] = None  # only for the owner and staff
+    viewer_role: str = "anonymous"  # the VIEWER's role: anonymous | user | moderator | admin
 
 class ProfileUpdateResponse(BaseModel):
     display_name: Optional[str] = None

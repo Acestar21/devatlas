@@ -21,5 +21,10 @@ class User(SQLModel, table=True):
     # NEVER return this field in any API response schema.
     encrypted_github_token: Optional[str] = Field(default=None, exclude=True, repr=False)
     encrypted_refresh_token: Optional[str] = Field(default=None, exclude=True, repr=False)
+        # --- moderation (rules live in app/moderation.py) ---
+    role: str = Field(default="user")  # "user" | "moderator" | "admin"; see effective_role()
+    suspended: bool = Field(default=False)
+    suspended_until: Optional[datetime] = None  # None while suspended=True means "until a moderator lifts it"
+    suspension_reason: Optional[str] = None  # shown to the suspended user
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

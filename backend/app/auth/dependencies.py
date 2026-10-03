@@ -4,6 +4,7 @@ from sqlmodel import Session
 from app.database import get_session
 from app.models.user import User
 from app.auth.session import verify_session_token, SESSION_COOKIE_NAME
+from app.moderation import ROLE_ADMIN, effective_role, is_staff
 
 
 def get_current_user_optional(
@@ -34,4 +35,18 @@ def require_current_user(
     """
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+def require_moderator(user: User = Depends(require_current_user)) -> User:
+    """Gate for every /mod route. Non-staff get a 404 so the panel looks like it doesn't exist.
+    This is the single seam where the MFA check gets added in Step 3."""
+    if not is_staff(user):
+        raise HTTPException(status_code=404, detail="Not found")
+    return user
+
+
+def require_admin_role(user: User = Depends(require_moderator)) -> User:
+    if effective_role(user) != ROLE_ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
     return user
