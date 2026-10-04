@@ -1,0 +1,13 @@
+.button {
+	width: 100%;
+	padding: 0.45rem 0.35rem;
+	border: 1px solid var(--border);
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font-size: 0.68rem;
+}
+.button:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}

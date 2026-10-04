@@ -72,3 +72,13 @@ class ModerationInfoTests(unittest.TestCase):
         info = mod.moderation_info(make_user(suspended=True, suspension_reason="inappropriate image"))
         self.assertEqual(info["reason"], "inappropriate image")
         self.assertIsNone(info["until"])
+
+class SuspendedModeratorTests(unittest.TestCase):
+    def test_suspended_moderator_has_no_powers_but_keeps_rank(self):
+        suspended_mod = make_user(role="moderator", suspended=True)
+        self.assertEqual(mod.effective_role(suspended_mod), "user")
+        self.assertFalse(mod.is_staff(suspended_mod))
+        self.assertEqual(mod.assigned_role(suspended_mod), "moderator")
+
+    def test_active_moderator_is_staff(self):
+        self.assertTrue(mod.is_staff(make_user(role="moderator")))

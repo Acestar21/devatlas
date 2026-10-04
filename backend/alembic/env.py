@@ -11,6 +11,7 @@ from app.models.tag import Tag
 from app.models.profile import Profile
 from app.models.tags_relations import StackTag, UserGame, UserInterest, UserProject
 from app.models.leetcode import LeetcodeStats
+from app.models.staff_mfa import StaffMfa
 
 from sqlmodel import SQLModel
 # this is the Alembic Config object, which provides

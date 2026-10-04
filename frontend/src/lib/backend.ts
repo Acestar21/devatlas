@@ -9,7 +9,9 @@ import { cookies, headers } from "next/headers";
  *      each visitor separately instead of lumping everyone behind Vercel's IPs
  *      (see backend/app/rate_limit.py for the why).
  *
- * `options.internal` additionally sends the RAW shared secret. Only the OAuth callback route
+ *  `options.internal` additionally sends the RAW shared secret. Only the OAuth callback route and
+ * /api/mfa/[action] may use it. Never add it anywhere reachable by browser-chosen paths
+ * (e.g. the /api/proxy route).
  * may use it. Never add it anywhere reachable by browser-chosen paths (e.g. the /api/proxy route).
  *
  * Browser (client component) code must NOT use this; it goes through /api/proxy/* instead.

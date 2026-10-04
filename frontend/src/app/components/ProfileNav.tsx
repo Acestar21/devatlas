@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Profile } from "@/types";
 import ProfileEditButton from "./ProfileEditButton";
 import styles from "./ProfileNav.module.css";
+import ReportButton from "./ReportButton";
 
 export default function ProfileNav({
 	username,
@@ -151,6 +152,27 @@ export default function ProfileNav({
 					)}
 				</div>
 			)}
+			{profile &&
+				!profile.is_owner &&
+				profile.viewer_role !== "anonymous" && (
+					<div className={styles.edit}>
+						<ReportButton username={profile.username} />
+					</div>
+				)}
+			{profile &&
+				!profile.is_owner &&
+				profile.viewer_role === "anonymous" && (
+					<Link href="/directory?login=1" className={styles.logout}>
+						Log in to report
+					</Link>
+				)}
+			{profile &&
+				(profile.viewer_role === "moderator" ||
+					profile.viewer_role === "admin") && (
+					<Link href="/mod" className={styles.logout}>
+						Moderation
+					</Link>
+				)}
 		</nav>
 	);
 }

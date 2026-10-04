@@ -29,3 +29,16 @@ Give the FK an explicit `ondelete` (see `_user_fk` in `models/moderation.py`) so
 
 ## Audit log
 Append-only `moderationlog`; usernames are snapshotted. Never update or delete rows.
+
+## MFA (staff only)
+- Staff sign in with GitHub, then enter an authenticator (TOTP) code at `/mod/mfa` -> 30-minute elevated session.
+- Elevation is an `mfa_at` timestamp inside the signed session token. `require_moderator` (auth/dependencies.py)
+  checks role + a fresh `mfa_at` on every /mod request; logging in again drops elevation.
+- 5 wrong codes -> 15-minute lockout. Each TOTP code works once. 8 one-time recovery codes at enrolment.
+- Enrolment is self-service; every enrolment pings the staff Discord channel so the admin can sanity-check it.
+  (Future: admin-issued enrolment codes would close the "hijacked GitHub account enrols first" gap.)
+- Lost device: admin resets a moderator via DELETE /mod/team/{id}/mfa. Admin's own: `python -m app.scripts.reset_mfa <username>`.
+
+## Personal data we keep on purpose
+Reporter GitHub id/username on reports (cleared 180 days after closing) and the target's GitHub id on
+suspension log entries (cleared after 365 days). Purpose: stop delete-and-re-signup abuse. Keep the privacy text in sync.

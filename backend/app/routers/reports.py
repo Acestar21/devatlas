@@ -13,7 +13,7 @@ from app.services.notify import notify_staff
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 REPORT_CATEGORIES = {"inappropriate_image", "harassment", "spam", "impersonation", "other"}
-MAX_REPORTS_PER_HOUR = 5  # per reporter, counted in the DB (IP-based limits are unreliable behind the proxy)
+MAX_REPORTS_PER_HOUR = 5  # per reporter, counted in the DB by GitHub id (survives delete + re-signup)
 MAX_DETAILS_LENGTH = 500
 
 
@@ -41,7 +41,7 @@ def create_report(
 
     recent = db.exec(
         select(Report).where(
-            Report.reporter_user_id == current_user.id,
+            Report.reporter_github_id == current_user.github_id,
             Report.created_at > datetime.utcnow() - timedelta(hours=1),
         )
     ).all()
@@ -50,7 +50,7 @@ def create_report(
 
     already_open = db.exec(
         select(Report).where(
-            Report.reporter_user_id == current_user.id,
+            Report.reporter_github_id == current_user.github_id,
             Report.target_user_id == target.id,
             Report.status == "open",
         )
@@ -61,6 +61,8 @@ def create_report(
     details = (body.details or "").strip()[:MAX_DETAILS_LENGTH] or None
     db.add(Report(
         reporter_user_id=current_user.id,
+        reporter_github_id=current_user.github_id,
+        reporter_username=current_user.github_username,
         target_user_id=target.id,
         category=body.category,
         details=details,

@@ -14,3 +14,7 @@ export function hostOf(url: string): string {
 		return "";
 	}
 }
+
+export function formatDateTime(iso: string): string {
+	return `${new Date(iso).toLocaleString("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" })} UTC`;
+}

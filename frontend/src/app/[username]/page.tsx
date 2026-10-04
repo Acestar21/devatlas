@@ -14,6 +14,7 @@ import { currentStreakRange, joinedAgo } from "@/lib/streak";
 import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 import { backendFetch } from "@/lib/backend";
+import ModerationBanner from "@/app/components/ModerationBanner";
 
 async function fetchProfile(username: string): Promise<Profile | null> {
 	const response = await backendFetch(`profiles/${encodeURIComponent(username)}`);
@@ -110,6 +111,7 @@ export default async function ProfilePage({
 					activeSection="profile"
 				/>
 				<div className={styles.container}>
+					<ModerationBanner profile={profile} />
 					<section className={styles.profileCard}>
 						<div className={styles.banner} />
 						<div className={styles.profileBody}>

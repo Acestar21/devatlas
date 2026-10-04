@@ -112,4 +112,6 @@ export interface Profile {
   is_owner: boolean;
   section_visibility: SectionVisibility | null;
   card_visibility: CardVisibility;
+  moderation: { suspended: boolean; reason: string | null; until: string | null } | null;
+  viewer_role: "anonymous" | "user" | "moderator" | "admin";
 }

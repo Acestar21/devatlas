@@ -1,4 +1,5 @@
-"""Moderation API. Every route requires a moderator or admin (router-level dependency).
+"""Moderation API. Every route requires a moderator or admin with a fresh MFA-elevated session
+(router-level dependency).
 
 RULES FOR FUTURE CHANGES
 - A new route here is protected automatically. Admin-only? add Depends(require_admin_role).
@@ -8,7 +9,7 @@ RULES FOR FUTURE CHANGES
 import json
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func, or_
 from sqlmodel import Session, select
@@ -18,6 +19,7 @@ from app.database import get_session
 from app.models.leetcode import LeetcodeStats
 from app.models.moderation import ModerationLog, Report
 from app.models.profile import Profile
+from app.models.staff_mfa import StaffMfa
 from app.models.tag import Tag
 from app.models.tags_relations import StackTag, UserInterest
 from app.models.user import User
@@ -27,10 +29,14 @@ from app.moderation import (
     ROLE_ADMIN,
     ROLE_MODERATOR,
     ROLE_USER,
+    ADMIN_ONLY_ACTIONS,
+    assigned_role,
     effective_role,
     is_suspended,
+    purge_expired_personal_data,
     record,
 )
+from app.services.notify import notify_staff
 
 router = APIRouter(prefix="/mod", tags=["moderation"], dependencies=[Depends(require_moderator)])
 
@@ -74,7 +80,7 @@ def _card(user: User) -> dict:
         "id": user.id,
         "username": user.github_username,
         "display_name": user.display_name,
-        "role": effective_role(user),
+        "role": assigned_role(user),  # the rank, ignoring suspension; the UI uses it to decide who outranks whom
         "suspended": suspended,
         "suspended_until": _iso(user.suspended_until) if suspended else None,
         "suspension_reason": user.suspension_reason if suspended else None,
@@ -88,6 +94,51 @@ def _users_by_id(db: Session, ids: list[int | None]) -> dict[int, User]:
     return {u.id: u for u in db.exec(select(User).where(User.id.in_(wanted))).all()}
 
 
+def _users_by_github_id(db: Session, github_ids) -> dict[int, User]:
+    wanted = list({g for g in github_ids if g is not None})
+    if not wanted:
+        return {}
+    return {u.github_id: u for u in db.exec(select(User).where(User.github_id.in_(wanted))).all()}
+
+
+def _reporter_history(db: Session, github_ids) -> dict[int, dict]:
+    """How many reports each reporter has filed / had dismissed, matched by GitHub id so the
+    numbers survive deleting the account and signing up again."""
+    wanted = list({g for g in github_ids if g is not None})
+    stats = {g: {"total": 0, "dismissed": 0} for g in wanted}
+    if not wanted:
+        return stats
+    rows = db.exec(select(Report.reporter_github_id, Report.status).where(Report.reporter_github_id.in_(wanted))).all()
+    for github_id, status in rows:
+        stats[github_id]["total"] += 1
+        if status == "dismissed":
+            stats[github_id]["dismissed"] += 1
+    return stats
+
+
+def _reporter_info(report: Report, current_by_github_id: dict[int, User], history: dict[int, dict]) -> dict:
+    """Who filed this report. state: active | deleted | re-registered | purged."""
+    github_id = report.reporter_github_id
+    if github_id is None:
+        return {"username": "(identity purged)", "github_id": None, "account_id": None, "state": "purged", "filed": None, "dismissed": None}
+    current = current_by_github_id.get(github_id)
+    if current is None:
+        state = "deleted"
+    elif current.id == report.reporter_user_id:
+        state = "active"
+    else:
+        state = "re-registered"  # same GitHub account, new DevAtlas account
+    counts = history.get(github_id, {"total": 0, "dismissed": 0})
+    return {
+        "username": current.github_username if current else report.reporter_username,
+        "github_id": github_id,
+        "account_id": current.id if current else None,
+        "state": state,
+        "filed": counts["total"],
+        "dismissed": counts["dismissed"],
+    }
+
+
 def _get_user_or_404(db: Session, user_id: int) -> User:
     user = db.get(User, user_id)
     if user is None:
@@ -98,8 +149,8 @@ def _get_user_or_404(db: Session, user_id: int) -> User:
 def _check_can_act_on(staff: User, target: User) -> None:
     if target.id == staff.id:
         raise HTTPException(status_code=400, detail="You can't moderate yourself.")
-    target_role = effective_role(target)
-    if target_role == ROLE_ADMIN or (target_role == ROLE_MODERATOR and effective_role(staff) != ROLE_ADMIN):
+    target_rank = assigned_role(target)  # rank survives suspension: a suspended moderator still outranks moderators
+    if target_rank == ROLE_ADMIN or (target_rank == ROLE_MODERATOR and effective_role(staff) != ROLE_ADMIN):
         raise HTTPException(status_code=403, detail="You can't moderate this account.")
 
 
@@ -130,6 +181,7 @@ def _log_entry(entry: ModerationLog) -> dict:
         "actor": entry.actor_username,
         "action": entry.action,
         "target": entry.target_username,
+        "target_github_id": entry.target_github_id,
         "report_id": entry.report_id,
         "note": entry.note,
     }
@@ -146,21 +198,26 @@ def whoami(staff: User = Depends(require_moderator)):
 
 @router.get("/queue")
 def get_queue(db: Session = Depends(get_session)):
+    purge_expired_personal_data(db)
+    db.commit()
+
     open_reports = db.exec(select(Report).where(Report.status == "open").order_by(Report.created_at.desc())).all()
-    users = _users_by_id(db, [r.target_user_id for r in open_reports] + [r.reporter_user_id for r in open_reports])
+    targets = _users_by_id(db, [r.target_user_id for r in open_reports])
+    reporter_ids = {r.reporter_github_id for r in open_reports}
+    current_reporters = _users_by_github_id(db, reporter_ids)
+    history = _reporter_history(db, reporter_ids)
 
     groups: dict[int, dict] = {}
     for report in open_reports:
-        target = users.get(report.target_user_id)
+        target = targets.get(report.target_user_id)
         if target is None:
             continue
         group = groups.setdefault(target.id, {"target": _card(target), "reports": []})
-        reporter = users.get(report.reporter_user_id)
         group["reports"].append({
             "id": report.id,
             "category": report.category,
             "details": report.details,
-            "reporter": reporter.github_username if reporter else "(deleted account)",
+            "reporter": _reporter_info(report, current_reporters, history),
             "created_at": _iso(report.created_at),
         })
 
@@ -186,7 +243,7 @@ def search_users(query: str = Query("", max_length=60), db: Session = Depends(ge
 
 
 @router.get("/users/{user_id}")
-def user_detail(user_id: int, db: Session = Depends(get_session)):
+def user_detail(user_id: int, db: Session = Depends(get_session), staff: User = Depends(require_moderator)):
     user = _get_user_or_404(db, user_id)
     profile = db.exec(select(Profile).where(Profile.user_id == user.id)).first()
     leetcode = db.exec(select(LeetcodeStats).where(LeetcodeStats.user_id == user.id)).first()
@@ -194,14 +251,21 @@ def user_detail(user_id: int, db: Session = Depends(get_session)):
     against = db.exec(
         select(Report).where(Report.target_user_id == user.id).order_by(Report.created_at.desc()).limit(50)
     ).all()
+    # matched by GitHub id so reports filed before a delete + re-signup still count
     filed = db.exec(
-        select(Report).where(Report.reporter_user_id == user.id).order_by(Report.created_at.desc()).limit(200)
+        select(Report).where(Report.reporter_github_id == user.github_id).order_by(Report.created_at.desc()).limit(200)
     ).all()
-    history = db.exec(
-        select(ModerationLog).where(ModerationLog.target_user_id == user.id)
-        .order_by(ModerationLog.created_at.desc()).limit(100)
-    ).all()
-    reporters = _users_by_id(db, [r.reporter_user_id for r in against])
+    # also matched by GitHub id: a re-registered offender still shows their earlier suspensions
+    history_query = select(ModerationLog).where(
+        or_(ModerationLog.target_user_id == user.id, ModerationLog.target_github_id == user.github_id)
+    )
+    if effective_role(staff) != ROLE_ADMIN:
+        history_query = history_query.where(ModerationLog.action.not_in(ADMIN_ONLY_ACTIONS))
+    history = db.exec(history_query.order_by(ModerationLog.created_at.desc()).limit(100)).all()
+
+    against_reporter_ids = {r.reporter_github_id for r in against}
+    current_reporters = _users_by_github_id(db, against_reporter_ids)
+    reporter_history = _reporter_history(db, against_reporter_ids)
 
     return {
         "account": {
@@ -226,7 +290,7 @@ def user_detail(user_id: int, db: Session = Depends(get_session)):
                 "category": r.category,
                 "details": r.details,
                 "status": r.status,
-                "reporter": reporters[r.reporter_user_id].github_username if r.reporter_user_id in reporters else "(deleted account)",
+                "reporter": _reporter_info(r, current_reporters, reporter_history),
                 "created_at": _iso(r.created_at),
             }
             for r in against
@@ -457,8 +521,11 @@ def audit_log(
     action: str | None = Query(None, max_length=30),
     page: int = Query(1, ge=1),
     db: Session = Depends(get_session),
+    staff: User = Depends(require_moderator)
 ):
     query = select(ModerationLog).order_by(ModerationLog.created_at.desc(), ModerationLog.id.desc())
+    if effective_role(staff) != ROLE_ADMIN:
+        query = query.where(ModerationLog.action.not_in(ADMIN_ONLY_ACTIONS))
     if actor:
         query = query.where(func.lower(ModerationLog.actor_username) == actor.strip().lower())
     if target:
@@ -478,7 +545,18 @@ def audit_log(
 @router.get("/team")
 def list_team(admin: User = Depends(require_admin_role), db: Session = Depends(get_session)):
     moderators = db.exec(select(User).where(User.role == ROLE_MODERATOR).order_by(User.github_username)).all()
-    return {"moderators": [_card(u) for u in moderators]}
+    mfa_rows = {}
+    if moderators:
+        mfa_rows = {m.user_id: m for m in db.exec(select(StaffMfa).where(StaffMfa.user_id.in_([u.id for u in moderators]))).all()}
+    return {
+        "moderators": [
+            {
+                **_card(u),
+                "mfa_enrolled_at": _iso(mfa_rows[u.id].enrolled_at) if u.id in mfa_rows and mfa_rows[u.id].secret_encrypted else None,
+            }
+            for u in moderators
+        ]
+    }
 
 
 @router.post("/team")
@@ -487,13 +565,15 @@ def grant_moderator(body: TeamBody, admin: User = Depends(require_admin_role), d
     target = db.exec(select(User).where(func.lower(User.github_username) == username)).first()
     if target is None:
         raise HTTPException(status_code=404, detail="No such user. They must sign in to DevAtlas once first.")
-    if effective_role(target) != ROLE_USER:
+    if assigned_role(target) != ROLE_USER:
         raise HTTPException(status_code=400, detail="This account is already staff.")
+    if is_suspended(target):
+        raise HTTPException(status_code=400, detail="Suspended accounts can't be made moderators.")
     target.role = ROLE_MODERATOR
     db.add(target)
     record(db, admin, "role_grant", target=target, note=ROLE_MODERATOR)
     db.commit()
-    return {"message": f"@{target.github_username} is now a moderator."}
+    return {"message": f"@{target.github_username} is now a moderator. They can set up MFA at /mod/mfa."}
 
 
 @router.delete("/team/{user_id}")
@@ -503,6 +583,44 @@ def revoke_moderator(user_id: int, admin: User = Depends(require_admin_role), db
         raise HTTPException(status_code=400, detail="This account isn't a moderator.")
     target.role = ROLE_USER
     db.add(target)
+    mfa = db.exec(select(StaffMfa).where(StaffMfa.user_id == target.id)).first()
+    if mfa:
+        db.delete(mfa)  # a demoted user keeps no authenticator on file
     record(db, admin, "role_revoke", target=target)
     db.commit()
     return {"message": f"@{target.github_username} is no longer a moderator."}
+
+
+@router.delete("/team/{user_id}/mfa")
+def reset_mfa(
+    user_id: int,
+    background: BackgroundTasks,
+    admin: User = Depends(require_admin_role),
+    db: Session = Depends(get_session),
+):
+    """For a moderator who lost their device. Admins reset their own MFA with the CLI script."""
+    target = _get_user_or_404(db, user_id)
+    if effective_role(target) == ROLE_ADMIN:
+        raise HTTPException(status_code=400, detail="Admins reset MFA with: python -m app.scripts.reset_mfa <username>")
+    mfa = db.exec(select(StaffMfa).where(StaffMfa.user_id == target.id)).first()
+    if mfa is None:
+        raise HTTPException(status_code=400, detail="This user has no MFA set up.")
+    db.delete(mfa)
+    record(db, admin, "mfa_reset", target=target)
+    db.commit()
+    background.add_task(notify_staff, f"MFA reset for @{target.github_username} by @{admin.github_username}.")
+    return {"message": f"MFA reset for @{target.github_username}. They must set it up again."}
+
+
+@router.post("/team/{user_id}/end-elevation")
+def end_elevation(user_id: int, admin: User = Depends(require_admin_role), db: Session = Depends(get_session)):
+    """Kill a moderator's current elevated session immediately."""
+    target = _get_user_or_404(db, user_id)
+    mfa = db.exec(select(StaffMfa).where(StaffMfa.user_id == target.id)).first()
+    if mfa is None:
+        raise HTTPException(status_code=400, detail="This user has no MFA session.")
+    mfa.elevation_revoked_at = datetime.utcnow()
+    db.add(mfa)
+    record(db, admin, "elevation_end", target=target)
+    db.commit()
+    return {"message": f"@{target.github_username}'s elevated session was ended."}

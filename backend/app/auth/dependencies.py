@@ -1,9 +1,13 @@
-from fastapi import Depends, Request, HTTPException
+import hmac
+
+from fastapi import Depends, Header, HTTPException, Request
 from sqlmodel import Session
 
+from app.auth.mfa import elevated_until, get_mfa
+from app.auth.session import SESSION_COOKIE_NAME, read_session_token
+from app.config import settings
 from app.database import get_session
 from app.models.user import User
-from app.auth.session import verify_session_token, SESSION_COOKIE_NAME
 from app.moderation import ROLE_ADMIN, effective_role, is_staff
 
 
@@ -15,16 +19,18 @@ def get_current_user_optional(
     Use this for routes that behave differently for logged-in vs anonymous
     visitors but don't require login (e.g. a public profile page that shows
     an 'edit' button only to the owner).
+    Also stashes the token's MFA timestamp on request.state for require_moderator.
     """
     token = request.cookies.get(SESSION_COOKIE_NAME)
     if not token:
         return None
 
-    user_id = verify_session_token(token)
-    if user_id is None:
+    claims = read_session_token(token)
+    if claims is None:
         return None
 
-    return db.get(User, user_id)
+    request.state.mfa_at = claims.get("mfa_at")
+    return db.get(User, claims["user_id"])
 
 
 def require_current_user(
@@ -38,11 +44,33 @@ def require_current_user(
     return user
 
 
-def require_moderator(user: User = Depends(require_current_user)) -> User:
-    """Gate for every /mod route. Non-staff get a 404 so the panel looks like it doesn't exist.
-    This is the single seam where the MFA check gets added in Step 3."""
+def require_internal_secret(x_internal_secret: str = Header(...)) -> None:
+    """For routes that only our own Next.js server may call (they return session tokens).
+    The raw secret is sent only by the OAuth callback route and /api/mfa/[action]."""
+    if not hmac.compare_digest(x_internal_secret.encode(), settings.internal_api_secret.encode()):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+def require_staff(user: User = Depends(require_current_user)) -> User:
+    """Staff role only, NO MFA check. Used by the MFA routes themselves (you can't be
+    elevated before you've done MFA). Non-staff get a 404: the panel doesn't exist for them."""
     if not is_staff(user):
         raise HTTPException(status_code=404, detail="Not found")
+    return user
+
+
+def require_moderator(
+    request: Request,
+    user: User = Depends(require_staff),
+    db: Session = Depends(get_session),
+) -> User:
+    """Gate for every /mod route: staff role AND a fresh MFA-elevated session."""
+    mfa = get_mfa(db, user.id)
+    if elevated_until(getattr(request.state, "mfa_at", None), mfa) is None:
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "mfa_required", "message": "Verify your authenticator code to continue."},
+        )
     return user
 
 
