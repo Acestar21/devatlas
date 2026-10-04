@@ -1,112 +1,75 @@
-#  DevCard
+# DevAtlas
 
-**The identity layer for developers.**
+An open-source directory of developer profiles. Sign in with GitHub, add your stack, games, interests and writing, and share one link.
 
-DevCard is a public directory and community-style identity platform that aggregates a developer's credibility across the web into a single, shareable, and browsable profile. Instead of scattering stats across GitHub READMEs, LeetCode profiles, and social links, DevCard provides a unified "Tracker.gg for programmers."
+**Live:** https://YOUR-SITE · **Docs:** [docs/](docs/)
 
-##  The Problem
-Developers' professional footprints are fragmented. GitHub activity, LeetCode progress, and personal projects live in separate silos. While static widgets exist, there is no central, browsable directory where developers can discover each other based on verified technical contributions and skill sets.
+<!-- Add 2-3 screenshots here: profile page, GitHub tab, directory -->
 
-##  Key Features
-- **Unified Professional Profile:** A single URL that showcases your entire technical identity.
-- **Live GitHub Integration:** Real-time contributions, top languages, and repository highlights fetched via the official GitHub GraphQL API.
-- **LeetCode Integration:** Self-reported stats with required profile linking for community verification.
-- **Expanded Identity Layers:** Beyond code, profiles support custom sections for **Games**, **Interests**, and a flexible **Content Links** system.
-- **Skill Categorization:** A robust **Tagging system** allowing developers to categorize themselves (e.g., "Frontend", "Rust", "Open Source") for easier discovery.
-- **Badge System:** Integrated achievements and badges to highlight specific milestones or certifications.
-- **Community Discovery:** A public, searchable directory designed for browsing and networking.
-- **Identity Verification:** GitHub OAuth ensures that profiles are tied to real accounts, preventing impersonation in the public directory.
+## Features
 
-##  Tech Stack
-### Backend
-- **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (High-performance Python web framework)
-- **ORM/Database:** [SQLModel](https://sqlmodel.tiangolo.com/) + [PostgreSQL](https://www.postgresql.org/)
-- **Migrations:** [Alembic](https://alembic.sqlalchemy.org/) (Database schema versioning)
-- **Authentication:** GitHub OAuth 2.0 + Fernet Encryption for token storage at rest.
+- GitHub sign-in with the read-only `read:user` scope
+- Profile: bio, stack tags, links, interests, games and gaming handles, blog post cards, self-reported LeetCode stats
+- GitHub stats: contribution graph, streaks, pinned repos, languages, recent public activity (cached, refreshed at most every 6 hours)
+- Per-section and per-card visibility. Hidden data is never sent to other visitors.
+- Searchable directory, embeddable README badge, three themes (terminal, coffee, forest)
+- Self-service account deletion that also revokes the GitHub authorization
+- Moderation: user reports, temporary suspensions, audit log, MFA-protected staff panel
 
-### Frontend
-- **Framework:** [Next.js](https://nextjs.org/) (SSR for optimal SEO and shareable link previews)
-- **Styling:** CSS Modules and shared CSS variables
+## Tech stack
 
-### Infrastructure
-- **Hosting:** [Vercel](https://vercel.com/) for the Next.js frontend and [Render](https://render.com/) for the FastAPI backend and PostgreSQL
-- **CI/CD:** GitHub pushes trigger Vercel and Render deployments; GitHub Actions validates changes before merge.
+| Layer | Tech |
+|---|---|
+| Frontend | Next.js (App Router), React, TypeScript, CSS Modules |
+| Backend | FastAPI, SQLModel, Alembic, slowapi |
+| Database | PostgreSQL |
+| Hosting | Vercel (frontend), Render (API), Neon (database) |
 
-##  Architecture & Design Decisions
-DevCard was built with a focus on **defensible engineering**—choosing the right tool for the job rather than chasing resume keywords.
+## Quick start
 
-- **Centralized Hosting vs. Templates:** A self-hosted model was rejected because discovery and browsing are core hooks. A multi-tenant web product was necessary to enable a community directory.
-- **OAuth over Tokens:** To maximize security, DevCard never handles user passwords or raw API tokens from users. GitHub OAuth is used for identity verification, and tokens are encrypted at rest using Fernet.
-- **Right-Sized Infrastructure:** No Redis or Kafka were added to the stack. The project's scale is matched to its infrastructure to avoid unnecessary complexity.
-- **SSR for Profiles:** Next.js Server-Side Rendering was chosen to ensure that when a profile link is shared, the metadata (OpenGraph) correctly displays the developer's stats and bio.
+Requirements: Node.js 20.9+, Python 3.11+, PostgreSQL, a [GitHub OAuth App](https://github.com/settings/developers) with callback URL `http://localhost:3000/api/auth/callback`.
 
-##  Security Posture
-Security was integrated from day one:
-- **Zero-Password Architecture:** All authentication is delegated to GitHub OAuth.
-- **Token Encryption:** Stored GitHub tokens are encrypted at rest using a server-side Fernet key.
-- **Server-Side Authorization:** Strict checks ensure users can only edit their own profiles; authorization is verified on the server for every write request.
-- **Rate Limiting:** Integrated `slowapi` to prevent API abuse and ensure stability.
-- **Input Validation:** Strict sanitization of social links and profile inputs to prevent XSS and injection attacks.
-
-##  Getting Started
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- PostgreSQL instance
-- GitHub OAuth Application (Client ID and Secret)
-
-### Installation
-
-#### 1. Backend Setup
 ```bash
+git clone https://github.com/Acestar21/devatlas && cd devatlas
+
+# Backend
 cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
-Create a `.env` file in the `backend` directory:
-```env
-DATABASE_URL=postgresql://user:password@localhost/devcard
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
-GITHUB_OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/callback
-SECRET_KEY=your_secret_key
-FERNET_KEY=your_fernet_key
-FRONTEND_URL=http://localhost:3000
-INTERNAL_API_SECRET=your_internal_secret
-CORS_ORIGINS=http://localhost:3000
-ADMIN_GITHUB_ID=your_github_numeric_id
-# Required only when running the approved-tag seed script.
-SEED_SYSTEM_USER_ID=your_user_id
-```
-Initialize the database:
-```bash
+cp .env.example .env                                    # fill it in; see docs/DEPLOYMENT.md
 alembic upgrade head
-uvicorn app.main:app --reload
-```
+uvicorn app.main:app --reload --port 8000
 
-#### 2. Frontend Setup
-```bash
+# Frontend (new terminal)
 cd frontend
 npm install
-```
-Create a `.env.local` file in the `frontend` directory:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-INTERNAL_API_SECRET=your_internal_secret
-```
-Run the development server:
-```bash
+cp .env.example .env.local
 npm run dev
 ```
 
-## 🗺️ Roadmap & Future Work
-- [ ] **Seed Content Strategy:** Implementing a coordinated launch to populate the directory.
-- [ ] **LeetCode Verification:** Exploring potential ways to move beyond social verification for LeetCode stats.
-- [ ] **Advanced Search:** Adding filters to the directory (e.g., search by top language or LeetCode rank).
-- [ ] **Performance Caching:** Implementing a caching layer for GitHub API responses to stay well within rate limits.
+Generate secrets:
 
----
-Developed with a focus on clean architecture and real-world utility.
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"   # FERNET_KEY
+python -c "import secrets; print(secrets.token_urlsafe(48))"                                 # SECRET_KEY, INTERNAL_API_SECRET
+```
+
+`ADMIN_GITHUB_ID` is your numeric GitHub ID; that account is always the admin.
+
+## Tests and checks
+
+```bash
+cd backend && python -m unittest discover tests
+cd frontend && npm run typecheck && npm run lint
+```
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md): how requests, auth, rate limiting and visibility work
+- [Deployment](docs/DEPLOYMENT.md): environment variables, migrations, going live
+- [Moderation](docs/MODERATION.md): roles, MFA, suspensions, runbook
+- [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md)
+
+## License
+
+GNU AGPL [LICENSE](LICENSE). (Choose a licence and add the file; without one, nobody may legally reuse the code.)
