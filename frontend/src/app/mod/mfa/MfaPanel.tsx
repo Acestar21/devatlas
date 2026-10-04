@@ -6,6 +6,7 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { proxyFetch } from "@/lib/api-client";
 import { MfaStatus } from "@/types-mod";
+import LocalTime from "@/app/components/LocalTime";
 import styles from "./page.module.css";
 
 // enroll / verify / lock go through /api/mfa/* (not /api/proxy): that route turns the backend's
@@ -23,8 +24,6 @@ async function postMfa<T>(action: "enroll" | "verify" | "lock", body: object = {
 	}
 	return data as T;
 }
-
-const formatTime = (iso: string) => new Date(iso).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
 
 export default function MfaPanel({ status }: { status: MfaStatus }) {
 	const router = useRouter();
@@ -102,7 +101,7 @@ export default function MfaPanel({ status }: { status: MfaStatus }) {
 
 				{status.elevated && status.elevated_until && (
 					<>
-						<p>Elevated session active until <strong>{formatTime(status.elevated_until)}</strong>.</p>
+						<p>Elevated session active until <strong><LocalTime iso={status.elevated_until} format="time" /></strong>.</p>
 						<div className={styles.row}>
 							<Link href="/mod" className={styles.primary}>Open moderation panel</Link>
 							<button onClick={lock} disabled={busy}>End session now</button>
@@ -142,7 +141,7 @@ export default function MfaPanel({ status }: { status: MfaStatus }) {
 							onKeyDown={(event) => event.key === "Enter" && code && verify()}
 							placeholder={useRecovery ? "XXXXX-XXXXX" : "123456"}
 						/>
-						{status.locked_until && <p className={styles.error}>Locked until {formatTime(status.locked_until)}.</p>}
+						{status.locked_until && <p className={styles.error}>Locked until <LocalTime iso={status.locked_until} format="time" />.</p>}
 						<div className={styles.row}>
 							<button className={styles.primary} onClick={verify} disabled={busy || !code}>Verify</button>
 							<button onClick={() => { setUseRecovery(!useRecovery); setCode(""); setError(null); }}>

@@ -1,6 +1,6 @@
 import time
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pyotp
 
@@ -12,7 +12,7 @@ from app.routers.mod import _reporter_info
 
 
 def enrolled_mfa(**overrides) -> StaffMfa:
-    fields = {"user_id": 1, "secret_encrypted": "x", "enrolled_at": datetime.utcnow()}
+    fields = {"user_id": 1, "secret_encrypted": "x", "enrolled_at": datetime.now(timezone.utc)}
     fields.update(overrides)
     return StaffMfa(**fields)
 
@@ -61,13 +61,20 @@ class ElevationTests(unittest.TestCase):
     def test_fresh_claim_is_elevated(self):
         self.assertIsNotNone(mfa_lib.elevated_until(int(time.time()), enrolled_mfa()))
 
+    def test_naive_revocation_timestamp_is_treated_as_utc(self):
+        issued = int(time.time()) - 60
+        row = enrolled_mfa(
+            elevation_revoked_at=datetime.now(timezone.utc).replace(tzinfo=None)
+        )
+        self.assertIsNone(mfa_lib.elevated_until(issued, row))
+
     def test_expired_claim_is_not(self):
         old = int(time.time()) - mfa_lib.ELEVATION_SECONDS - 5
         self.assertIsNone(mfa_lib.elevated_until(old, enrolled_mfa()))
 
     def test_revoked_claim_is_not(self):
         issued = int(time.time()) - 60
-        row = enrolled_mfa(elevation_revoked_at=datetime.utcnow())
+        row = enrolled_mfa(elevation_revoked_at=datetime.now(timezone.utc))
         self.assertIsNone(mfa_lib.elevated_until(issued, row))
 
 

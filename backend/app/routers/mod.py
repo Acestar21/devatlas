@@ -7,7 +7,7 @@ RULES FOR FUTURE CHANGES
 - Never return a User/Profile model directly (tokens live on User); build explicit dicts.
 """
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -30,6 +30,7 @@ from app.moderation import (
     ROLE_MODERATOR,
     ROLE_USER,
     ADMIN_ONLY_ACTIONS,
+    STAFF_ROLES,
     assigned_role,
     effective_role,
     is_suspended,
@@ -37,6 +38,7 @@ from app.moderation import (
     record,
 )
 from app.services.notify import notify_staff
+from app.time import iso_utc
 
 router = APIRouter(prefix="/mod", tags=["moderation"], dependencies=[Depends(require_moderator)])
 
@@ -67,11 +69,14 @@ class TagNamesBody(BaseModel):
 class TeamBody(BaseModel):
     username: str
 
+class MergeBody(BaseModel):
+    keep_id: int
+    remove_ids: list[int]
 
 # ---------- helpers ----------
 
 def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() + "Z" if value else None
+    return iso_utc(value)
 
 
 def _card(user: User) -> dict:
@@ -159,7 +164,7 @@ def _open_reports(db: Session, target_id: int) -> list[Report]:
 
 
 def _close_reports(db: Session, reports: list[Report], staff: User, status: str, note: str | None = None) -> None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     for report in reports:
         report.status = status
         report.handled_by_user_id = staff.id
@@ -186,6 +191,19 @@ def _log_entry(entry: ModerationLog) -> dict:
         "note": entry.note,
     }
 
+def _check_can_handle_reports(staff: User, target: User) -> None:
+    """Reports about staff are handled by an admin only, so nobody can clear reports about themselves.
+    The admin is the exception (nobody ranks above them); the audit log records it."""
+    if assigned_role(target) in STAFF_ROLES and effective_role(staff) != ROLE_ADMIN:
+        raise HTTPException(status_code=403, detail="Only an admin can handle reports about staff.")
+
+
+def _tag_use_counts(db: Session) -> dict[int, int]:
+    counts: dict[int, int] = {}
+    for link_model in (StackTag, UserInterest):
+        for tag_id, n in db.exec(select(link_model.tag_id, func.count()).group_by(link_model.tag_id)).all():
+            counts[tag_id] = counts.get(tag_id, 0) + n
+    return counts
 
 # ---------- identity ----------
 
@@ -324,7 +342,7 @@ def suspend_user(
         limit = ADMIN_MAX_SUSPENSION_DAYS if is_admin else MOD_MAX_SUSPENSION_DAYS
         if not 1 <= body.days <= limit:
             raise HTTPException(status_code=400, detail=f"Duration must be between 1 and {limit} days.")
-        target.suspended_until = datetime.utcnow() + timedelta(days=body.days)
+        target.suspended_until = datetime.now(timezone.utc) + timedelta(days=body.days)
         duration = f"{body.days} day(s)"
 
     target.suspended = True
@@ -380,12 +398,14 @@ def dismiss_reports(
     db: Session = Depends(get_session),
 ):
     target = _get_user_or_404(db, user_id)
+    _check_can_handle_reports(staff, target)
     open_reports = _open_reports(db, target.id)
     if not open_reports:
         raise HTTPException(status_code=400, detail="No open reports for this user.")
     note = (body.note or "").strip() or None
     _close_reports(db, open_reports, staff, "dismissed", note)
-    record(db, staff, "report_dismiss", target=target, note=f"{len(open_reports)} report(s)" + (f": {note}" if note else ""))
+    own = " (reports about themselves)" if target.id == staff.id else ""
+    record(db, staff, "report_dismiss", target=target, note=f"{len(open_reports)} report(s){own}" + (f": {note}" if note else ""))
     db.commit()
     return {"message": f"Dismissed {len(open_reports)} report(s)."}
 
@@ -402,9 +422,12 @@ def dismiss_report(
         raise HTTPException(status_code=404, detail="Report not found")
     if report.status != "open":
         raise HTTPException(status_code=400, detail="This report was already handled.")
+    target = db.get(User, report.target_user_id)
+    if target is not None:
+        _check_can_handle_reports(staff, target)
     note = (body.note or "").strip() or None
     _close_reports(db, [report], staff, "dismissed", note)
-    record(db, staff, "report_dismiss", target=db.get(User, report.target_user_id), report_id=report.id, note=note)
+    record(db, staff, "report_dismiss", target=target, report_id=report.id, note=note)
     db.commit()
     return {"message": "Report dismissed."}
 
@@ -422,7 +445,8 @@ def list_approved_tags(
     query = select(Tag).where(Tag.category == category, Tag.status == "approved").order_by(Tag.name).limit(100)
     if q.strip():
         query = query.where(Tag.name.ilike(f"%{q.strip()}%"))
-    return [{"id": t.id, "name": t.name} for t in db.exec(query).all()]
+    counts = _tag_use_counts(db)
+    return [{"id": t.id, "name": t.name, "uses": counts.get(t.id, 0)} for t in db.exec(query).all()]
 
 
 @router.get("/tags/pending")
@@ -511,6 +535,81 @@ def add_tags(body: TagNamesBody, staff: User = Depends(require_moderator), db: S
     db.commit()
     return {"added": added, "skipped": skipped}
 
+@router.get("/tags/duplicates")
+def tag_duplicates(admin: User = Depends(require_admin_role), db: Session = Depends(get_session)):
+    """Tags whose names match ignoring case and extra spaces ('html' vs 'HTML')."""
+    counts = _tag_use_counts(db)
+    groups: dict[tuple[str, str], list[Tag]] = {}
+    for tag in db.exec(select(Tag).where(Tag.category.in_(TAG_CATEGORIES))).all():
+        groups.setdefault((tag.category, " ".join(tag.name.lower().split())), []).append(tag)
+    return [
+        {
+            "category": category,
+            "tags": [
+                {"id": t.id, "name": t.name, "status": t.status, "uses": counts.get(t.id, 0)}
+                for t in sorted(tags, key=lambda t: -counts.get(t.id, 0))
+            ],
+        }
+        for (category, _), tags in groups.items()
+        if len(tags) > 1
+    ]
+
+
+@router.post("/tags/merge")
+def merge_tags(body: MergeBody, admin: User = Depends(require_admin_role), db: Session = Depends(get_session)):
+    """Fix duplicates: move every profile using the duplicates onto the tag to keep, then delete them."""
+    keep = db.get(Tag, body.keep_id)
+    if keep is None or keep.category not in TAG_CATEGORIES:
+        raise HTTPException(status_code=404, detail="Tag to keep not found")
+    if keep.status != "approved":
+        raise HTTPException(status_code=400, detail="The tag you keep must be approved.")
+    remove_ids = {i for i in body.remove_ids if i != keep.id}
+    if not remove_ids:
+        raise HTTPException(status_code=400, detail="Pick at least one other tag to merge.")
+
+    removed_names: list[str] = []
+    moved = 0
+    for tag_id in remove_ids:
+        duplicate = db.get(Tag, tag_id)
+        if duplicate is None or duplicate.category != keep.category:
+            raise HTTPException(status_code=400, detail="Tags to merge must exist and share the category of the one you keep.")
+        for link_model in (StackTag, UserInterest):
+            for link in db.exec(select(link_model).where(link_model.tag_id == duplicate.id)).all():
+                already_has_keep = db.exec(
+                    select(link_model).where(link_model.user_id == link.user_id, link_model.tag_id == keep.id)
+                ).first()
+                if already_has_keep:
+                    db.delete(link)  # that profile already has the tag we keep
+                else:
+                    link.tag_id = keep.id
+                    db.add(link)
+                    moved += 1
+        db.flush()  # links must move before the duplicate's row can be deleted
+        removed_names.append(duplicate.name)
+        db.delete(duplicate)
+
+    record(db, admin, "tag_merge", note=f"{keep.category}: kept '{keep.name}', merged {', '.join(removed_names)} ({moved} profile(s) moved)")
+    db.commit()
+    return {"message": f"Merged {len(removed_names)} tag(s) into '{keep.name}'."}
+
+
+@router.delete("/tags/{tag_id}/purge")
+def purge_tag(tag_id: int, admin: User = Depends(require_admin_role), db: Session = Depends(get_session)):
+    """Delete a tag even if profiles use it (it disappears from all of them). For junk or offensive tags."""
+    tag = db.get(Tag, tag_id)
+    if tag is None or tag.category not in TAG_CATEGORIES:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    uses = 0
+    for link_model in (StackTag, UserInterest):
+        links = db.exec(select(link_model).where(link_model.tag_id == tag.id)).all()
+        uses += len(links)
+        for link in links:
+            db.delete(link)
+    db.flush()
+    record(db, admin, "tag_delete", note=f"{tag.category}: {tag.name} (removed from {uses} profile(s))")
+    db.delete(tag)
+    db.commit()
+    return {"message": f"Deleted '{tag.name}' (removed from {uses} profile(s))."}
 
 # ---------- audit log ----------
 
@@ -619,7 +718,7 @@ def end_elevation(user_id: int, admin: User = Depends(require_admin_role), db: S
     mfa = db.exec(select(StaffMfa).where(StaffMfa.user_id == target.id)).first()
     if mfa is None:
         raise HTTPException(status_code=400, detail="This user has no MFA session.")
-    mfa.elevation_revoked_at = datetime.utcnow()
+    mfa.elevation_revoked_at = datetime.now(timezone.utc)
     db.add(mfa)
     record(db, admin, "elevation_end", target=target)
     db.commit()

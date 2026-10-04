@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import Column, ForeignKey, Integer
@@ -25,7 +25,7 @@ class Report(SQLModel, table=True):
     category: str  # see REPORT_CATEGORIES in routers/reports.py
     details: Optional[str] = None
     status: str = Field(default="open", index=True)  # open | actioned | dismissed
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     handled_by_user_id: Optional[int] = Field(default=None, sa_column=_user_fk(ondelete="SET NULL", index=False))
     handled_at: Optional[datetime] = None
     resolution_note: Optional[str] = None
@@ -36,7 +36,7 @@ class ModerationLog(SQLModel, table=True):
     account is deleted or renamed. Never delete rows. The one exception: target_github_id is
     cleared after LOG_GITHUB_ID_RETENTION_DAYS (data minimisation)."""
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
     actor_user_id: Optional[int] = Field(default=None, sa_column=_user_fk(ondelete="SET NULL"))
     actor_username: str
     action: str = Field(index=True)  # see ACTIONS in app/moderation.py

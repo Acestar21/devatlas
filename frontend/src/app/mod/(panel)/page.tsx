@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/app/components/LocalTime";
 import { modGet } from "@/lib/mod-api";
 import { CATEGORY_LABEL, QueueResponse } from "@/types-mod";
 import { ReporterCell, RoleBadge, StatusBadge } from "./Parts";
@@ -36,7 +36,7 @@ export default async function QueuePage() {
 						<tbody>
 							{reports.map((report) => (
 								<tr key={report.id}>
-									<td>{formatDateTime(report.created_at)}</td>
+									<td><LocalTime iso={report.created_at} /></td>
 									<td>{CATEGORY_LABEL[report.category] ?? report.category}</td>
 									<td><ReporterCell reporter={report.reporter} /></td>
 									<td className={styles.wrap}>{report.details ?? <span className={styles.muted}>—</span>}</td>
@@ -59,7 +59,7 @@ export default async function QueuePage() {
 						{queue.suspended.map((user) => (
 							<tr key={user.id}>
 								<td><Link href={`/mod/users/${user.id}`}>@{user.username}</Link> <span className={styles.muted}>id {user.id}</span></td>
-								<td>{user.suspended_until ? formatDateTime(user.suspended_until) : "until lifted"}</td>
+								<td>{user.suspended_until ? <LocalTime iso={user.suspended_until} /> : "until lifted"}</td>
 								<td className={styles.wrap}>{user.suspension_reason}</td>
 							</tr>
 						))}

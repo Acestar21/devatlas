@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -39,7 +39,7 @@ def save_leetcode(
         row = LeetcodeStats(user_id=current_user.id, username=username)
     row.username = username
     row.easy, row.medium, row.hard = update.easy, update.medium, update.hard
-    row.updated_at = datetime.utcnow()
+    row.updated_at = datetime.now(timezone.utc)
     db.add(row)
     db.commit()
     return {"message": "Saved"}

@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from app import moderation as mod
@@ -40,11 +40,11 @@ class SuspensionTests(unittest.TestCase):
         self.assertTrue(mod.is_suspended(make_user(suspended=True, suspended_until=None)))
 
     def test_suspended_in_future(self):
-        user = make_user(suspended=True, suspended_until=datetime.utcnow() + timedelta(days=1))
+        user = make_user(suspended=True, suspended_until=datetime.now(timezone.utc) + timedelta(days=1))
         self.assertTrue(mod.is_suspended(user))
 
     def test_expired_suspension_is_not_active(self):
-        user = make_user(suspended=True, suspended_until=datetime.utcnow() - timedelta(seconds=1))
+        user = make_user(suspended=True, suspended_until=datetime.now(timezone.utc) - timedelta(seconds=1))
         self.assertFalse(mod.is_suspended(user))
 
 

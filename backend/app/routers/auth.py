@@ -10,6 +10,7 @@ from app.database import get_session
 from app.models.user import User
 from app.auth.crypto import encrypt_token
 from app.auth.session import create_session_token, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS
+from app.auth.dependencies import require_internal_secret
 
 router = APIRouter(prefix="/auth/github", tags=["auth"])
 
@@ -51,14 +52,12 @@ async def github_internal_exchange(
     request: Request,
     code: str,
     state: str,
-    x_internal_secret: str = Header(...),
+    _: None = Depends(require_internal_secret),
     session: Session = Depends(get_session),
 ):
     # Only Vercel's own API route should ever call this — never exposed
     # to the browser or GitHub directly. The secret value lives only in
     # Render's and Vercel's environment variables, never in this repo.
-    if x_internal_secret != settings.internal_api_secret:
-        raise HTTPException(status_code=403, detail="Forbidden")
 
     if state not in _pending_states:
         raise HTTPException(status_code=400, detail={"code": "invalid_state"})

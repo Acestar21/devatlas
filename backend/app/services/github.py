@@ -2,11 +2,11 @@ import asyncio
 import json
 import logging
 import httpx
-from datetime import datetime
 from sqlmodel import Session, select
 
 from app.models.user import User
 from app.models.github_stats import GithubStatsCache
+from app.time import as_utc, utc_now
 from app.auth.crypto import decrypt_token
 
 logger = logging.getLogger(__name__)
@@ -222,7 +222,7 @@ async def fetch_and_cache_stats(user: User, db: Session) -> GithubStatsCache:
     cache.extra_stats_json = json.dumps(extra)
     if events is not None:
         cache.activity_json = json.dumps(events)
-    cache.last_fetched_at = datetime.utcnow()
+    cache.last_fetched_at = utc_now()
 
     db.add(cache)
     db.commit()
@@ -233,5 +233,6 @@ async def fetch_and_cache_stats(user: User, db: Session) -> GithubStatsCache:
 def is_stale(cache: GithubStatsCache | None) -> bool:
     if cache is None:
         return True
-    age = datetime.utcnow() - cache.last_fetched_at
+
+    age = utc_now() - as_utc(cache.last_fetched_at)
     return age.total_seconds() > STALE_AFTER_HOURS * 3600

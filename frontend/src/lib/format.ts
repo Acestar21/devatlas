@@ -18,3 +18,15 @@ export function hostOf(url: string): string {
 export function formatDateTime(iso: string): string {
 	return `${new Date(iso).toLocaleString("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" })} UTC`;
 }
+
+export function formatUtcTime(iso: string): string {
+	return `${new Date(iso).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC`;
+}
+
+export function formatLocalDateTime(iso: string): string {
+	return new Date(iso).toLocaleString("en", { dateStyle: "medium", timeStyle: "short" });
+}
+
+export function formatLocalTime(iso: string): string {
+	return new Date(iso).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
+}

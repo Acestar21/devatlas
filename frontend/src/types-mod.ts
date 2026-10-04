@@ -83,7 +83,7 @@ export const CATEGORY_LABEL: Record<string, string> = {
 };
 
 export const LOG_ACTIONS = [
-	"suspend", "unsuspend", "report_dismiss", "note", "tag_approve", "tag_reject", "tag_add",
+	"suspend", "unsuspend", "report_dismiss", "note", "tag_approve", "tag_reject", "tag_add", "tag_merge", "tag_delete",
 	"role_grant", "role_revoke",
 	"mfa_enroll", "mfa_verify", "mfa_recovery_used", "mfa_lockout", "mfa_lock", "mfa_reset", "mfa_recovery_regen", "elevation_end",
 ] as const;
@@ -93,3 +93,9 @@ export const ADMIN_ONLY_ACTIONS: readonly string[] = [
 	"mfa_enroll", "mfa_verify", "mfa_recovery_used", "mfa_lockout", "mfa_lock", "mfa_reset", "mfa_recovery_regen",
 	"elevation_end", "role_grant", "role_revoke",
 ];
+
+export interface ApprovedTag { id: number; name: string; uses: number }
+export interface DuplicateGroup {
+	category: string;
+	tags: { id: number; name: string; status: "approved" | "pending"; uses: number }[];
+}

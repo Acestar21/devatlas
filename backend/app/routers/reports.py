@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ def create_report(
     recent = db.exec(
         select(Report).where(
             Report.reporter_github_id == current_user.github_id,
-            Report.created_at > datetime.utcnow() - timedelta(hours=1),
+            Report.created_at > datetime.now(timezone.utc) - timedelta(hours=1),
         )
     ).all()
     if len(recent) >= MAX_REPORTS_PER_HOUR:

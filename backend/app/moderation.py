@@ -24,13 +24,14 @@ PERSONAL DATA WE KEEP ON PURPOSE (abuse prevention; disclose in the privacy text
 AUDIT
   Every state-changing moderation action must call record(). The log is append-only.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, or_, update
 from sqlmodel import Session
 
 from app.config import settings
 from app.models.moderation import ModerationLog, Report
+from app.time import as_utc, iso_utc, utc_now
 from app.models.user import User
 
 ROLE_USER = "user"
@@ -49,7 +50,7 @@ ACTIONS = (
     "suspend", "unsuspend",
     "report_dismiss", "note",
     "role_grant", "role_revoke",
-    "tag_approve", "tag_reject", "tag_add",
+    "tag_approve", "tag_reject", "tag_add","tag_merge", "tag_delete",
     "mfa_enroll", "mfa_verify", "mfa_recovery_used", "mfa_lockout",
     "mfa_lock", "mfa_reset", "mfa_recovery_regen", "elevation_end",
 )
@@ -88,14 +89,14 @@ def is_staff(user: User | None) -> bool:
 def is_suspended(user: User) -> bool:
     if not user.suspended:
         return False
-    return user.suspended_until is None or user.suspended_until > datetime.utcnow()
+    return user.suspended_until is None or as_utc(user.suspended_until) > utc_now()
 
 
 def suspension_active_clause():
     """SQL twin of is_suspended(). Keep the two in sync."""
     return and_(
         User.suspended.is_(True),
-        or_(User.suspended_until.is_(None), User.suspended_until > datetime.utcnow()),
+        or_(User.suspended_until.is_(None), User.suspended_until > datetime.now(timezone.utc)),
     )
 
 
@@ -112,7 +113,7 @@ def moderation_info(user: User) -> dict | None:
     return {
         "suspended": True,
         "reason": user.suspension_reason,
-        "until": user.suspended_until.isoformat() + "Z" if user.suspended_until else None,
+        "until": iso_utc(user.suspended_until),
     }
 
 
@@ -142,7 +143,7 @@ def record(
 def purge_expired_personal_data(db: Session) -> None:
     """Data minimisation. Cheap indexed UPDATEs, called whenever staff load the queue.
     Does NOT commit."""
-    now = datetime.utcnow()
+    now = utc_now()
     db.exec(
         update(Report)
         .where(

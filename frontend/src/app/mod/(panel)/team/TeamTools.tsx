@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { proxyFetch } from "@/lib/api-client";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/app/components/LocalTime";
 import { useRunner } from "@/lib/use-runner";
 import { TeamMember } from "@/types-mod";
 import { StatusBadge } from "../Parts";
@@ -34,7 +34,7 @@ export default function TeamTools({ moderators }: { moderators: TeamMember[] }) 
 								<tr key={m.id}>
 									<td><Link href={`/mod/users/${m.id}`}>@{m.username}</Link> <span className={styles.muted}>id {m.id}</span></td>
 									<td><StatusBadge card={m} /></td>
-									<td>{m.mfa_enrolled_at ? formatDateTime(m.mfa_enrolled_at) : <span className={styles.muted}>not yet</span>}</td>
+									<td>{m.mfa_enrolled_at ? <LocalTime iso={m.mfa_enrolled_at} /> : <span className={styles.muted}>not yet</span>}</td>
 									<td>
 										<div className={styles.row}>
 											<button className={styles.button} disabled={busy} onClick={() => act(`End @${m.username}'s current session now?`, `mod/team/${m.id}/end-elevation`, "POST")}>End session</button>

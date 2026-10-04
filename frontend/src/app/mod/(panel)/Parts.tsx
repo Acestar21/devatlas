@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/app/components/LocalTime";
 import { ModCard, ReporterInfo } from "@/types-mod";
 import styles from "@/app/mod/(panel)/mod.module.css";
 
 export function StatusBadge({ card }: { card: ModCard }) {
 	if (!card.suspended) return <span className={`${styles.badge} ${styles.badgeOk}`}>active</span>;
-	const until = card.suspended_until ? `until ${formatDateTime(card.suspended_until)}` : "until lifted";
-	return <span className={`${styles.badge} ${styles.badgeDanger}`}>suspended {until}</span>;
+	return (
+		<span className={`${styles.badge} ${styles.badgeDanger}`}>
+			suspended {card.suspended_until ? <>until <LocalTime iso={card.suspended_until} /></> : "until lifted"}
+		</span>
+	);
 }
 
 export function RoleBadge({ role }: { role: string }) {

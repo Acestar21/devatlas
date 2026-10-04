@@ -21,6 +21,7 @@ import pyotp
 from sqlmodel import Session, select
 
 from app.models.staff_mfa import StaffMfa
+from app.time import as_utc, utc_now
 
 ELEVATION_SECONDS = 30 * 60
 TOTP_INTERVAL = 30
@@ -93,11 +94,11 @@ def recovery_codes_left(mfa: StaffMfa | None) -> int:
 
 
 def elevated_until(mfa_at: int | None, mfa: StaffMfa | None) -> datetime | None:
-    """When the current elevated session ends (naive UTC), or None if not elevated."""
+    """When the current elevated session ends (aware UTC), or None if not elevated."""
     if mfa_at is None or not is_enrolled(mfa):
         return None
-    issued = datetime.fromtimestamp(mfa_at, timezone.utc).replace(tzinfo=None)
-    if mfa.elevation_revoked_at and issued <= mfa.elevation_revoked_at:
+    issued = datetime.fromtimestamp(mfa_at, timezone.utc)
+    if mfa.elevation_revoked_at and issued <= as_utc(mfa.elevation_revoked_at):
         return None
     expires = issued + timedelta(seconds=ELEVATION_SECONDS)
-    return expires if expires > datetime.utcnow() else None
+    return expires if expires > utc_now() else None

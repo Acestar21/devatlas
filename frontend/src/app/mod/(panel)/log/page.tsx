@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDateTime } from "@/lib/format";
+import LocalTime from "@/app/components/LocalTime";
 import { modGet } from "@/lib/mod-api";
 import { ADMIN_ONLY_ACTIONS, LOG_ACTIONS, LogPage, MfaStatus } from "@/types-mod";
 import styles from "../mod.module.css";
@@ -40,7 +40,7 @@ export default async function LogPageView({ searchParams }: { searchParams: Prom
 					<tbody>
 						{data.items.map((entry) => (
 							<tr key={entry.id}>
-								<td>{formatDateTime(entry.at)}</td>
+								<td><LocalTime iso={entry.at} /></td>
 								<td>@{entry.actor}</td>
 								<td>{entry.action}</td>
 								<td>

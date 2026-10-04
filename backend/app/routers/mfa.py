@@ -6,7 +6,7 @@ an httpOnly cookie. The browser never sees the token.
 """
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -35,6 +35,7 @@ from app.models.staff_mfa import StaffMfa
 from app.models.user import User
 from app.moderation import effective_role, record
 from app.services.notify import notify_staff
+from app.time import as_utc, iso_utc, utc_now
 
 router = APIRouter(prefix="/mfa", tags=["mfa"])
 
@@ -49,14 +50,14 @@ class VerifyBody(BaseModel):
 
 
 def _iso(value: datetime | None) -> str | None:
-    return value.isoformat() + "Z" if value else None
+    return iso_utc(value)
 
 
 def _elevation_response(user: User) -> dict:
     now = int(time.time())
     return {
         "session_token": create_session_token(user.id, mfa_at=now),
-        "elevated_until": _iso(datetime.utcfromtimestamp(now + ELEVATION_SECONDS)),
+        "elevated_until": _iso(datetime.fromtimestamp(now + ELEVATION_SECONDS, timezone.utc)),
     }
 
 
@@ -64,7 +65,11 @@ def _elevation_response(user: User) -> dict:
 def mfa_status(request: Request, user: User = Depends(require_staff), db: Session = Depends(get_session)):
     mfa = get_mfa(db, user.id)
     until = elevated_until(getattr(request.state, "mfa_at", None), mfa)
-    locked = mfa.locked_until if (mfa and mfa.locked_until and mfa.locked_until > datetime.utcnow()) else None
+    locked = (
+        mfa.locked_until
+        if (mfa and mfa.locked_until and as_utc(mfa.locked_until) > utc_now())
+        else None
+    )
     return {
         "username": user.github_username,
         "role": effective_role(user),
@@ -116,7 +121,7 @@ def mfa_enroll(
     plain, hashes = generate_recovery_codes()
     mfa.secret_encrypted = mfa.pending_secret_encrypted
     mfa.pending_secret_encrypted = None
-    mfa.enrolled_at = datetime.utcnow()
+    mfa.enrolled_at = datetime.now(timezone.utc)
     mfa.last_step = step
     mfa.failed_attempts = 0
     mfa.locked_until = None
@@ -142,10 +147,13 @@ def mfa_verify(
     if not is_enrolled(mfa):
         raise HTTPException(status_code=400, detail="Set up MFA first.")
 
-    now = datetime.utcnow()
-    if mfa.locked_until and mfa.locked_until > now:
-        raise HTTPException(status_code=429, detail=f"Too many attempts. Try again after {mfa.locked_until:%H:%M} UTC.")
-
+    now = utc_now()
+    locked_until = as_utc(mfa.locked_until) if mfa.locked_until else None
+    if locked_until and locked_until > now:
+        minutes = int((locked_until - now).total_seconds() // 60) + 1
+        raise HTTPException(status_code=429, detail=f"Too many attempts. Try again in {minutes} minute(s).")
+        message = "Invalid code. If this keeps happening, make sure your device's clock is set automatically."
+        
     ok = False
     used_recovery = False
     if body.recovery_code:
