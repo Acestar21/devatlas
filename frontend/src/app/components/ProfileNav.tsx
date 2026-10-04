@@ -166,13 +166,11 @@ export default function ProfileNav({
 						Log in to report
 					</Link>
 				)}
-			{profile &&
-				(profile.viewer_role === "moderator" ||
-					profile.viewer_role === "admin") && (
-					<Link href="/mod" className={styles.logout}>
-						Moderation
-					</Link>
-				)}
+			{profile?.is_owner && (profile.viewer_role === "moderator" || profile.viewer_role === "admin") && (
+				<Link href="/mod" className={styles.logout}>
+					Moderation
+				</Link>
+			)}
 		</nav>
 	);
 }

@@ -228,3 +228,18 @@
 	display: flex;
 	justify-content: space-between;
 }
+.dupGroup {
+	display: grid;
+	gap: 0.4rem;
+	padding: 0.7rem;
+	border: 1px solid var(--border-muted);
+}
+.chipX {
+	margin-left: 0.35rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #b34d4d;
+	cursor: pointer;
+	font: inherit;
+}

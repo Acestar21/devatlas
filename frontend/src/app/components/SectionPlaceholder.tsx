@@ -81,6 +81,8 @@ export default async function SectionPlaceholder({
 					<Link href="/contribute">contribute</Link>
 					<Link href="/report-issue">report-issue</Link>
 					<Link href="/about">about</Link>
+					<Link href="/privacy">privacy</Link>
+					<Link href="/rules">rules</Link>
 				</nav>
 				<p className={styles.disclaimer}>
 					DevAtlas is an independent community project. Information
