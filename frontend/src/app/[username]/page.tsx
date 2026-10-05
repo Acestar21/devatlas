@@ -15,13 +15,7 @@ import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 import { backendFetch } from "@/lib/backend";
 import ModerationBanner from "@/app/components/ModerationBanner";
-
-async function fetchProfile(username: string): Promise<Profile | null> {
-	const response = await backendFetch(`profiles/${encodeURIComponent(username)}`);
-	if (response.status === 404) notFound();
-	if (!response.ok) return null;
-	return response.json();
-}
+import { loadProfile } from "@/lib/profile-api";
 
 export default async function ProfilePage({
 	params,
@@ -30,11 +24,11 @@ export default async function ProfilePage({
 }) {
 	const { username } = await params;
 	const [profile, viewer] = await Promise.all([
-		fetchProfile(username),
+		loadProfile(username),
 		fetchViewer(),
 	]);
 	const themeCookie = await getThemeCookie();
-	if (!profile) return <div className={styles.errorPage}>Coming Soon</div>;
+
 	const visibility = profile.section_visibility || {
 		github: true,
 		leetcode: true,

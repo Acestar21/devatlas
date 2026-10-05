@@ -8,14 +8,7 @@ import ContributionGraph from "@/app/components/ContributionGraph";
 import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 import { backendFetch } from "@/lib/backend";
-
-async function fetchProfile(username: string): Promise<Profile | null> {
-	const response = await backendFetch(`profiles/${encodeURIComponent(username)}`);
-	if (response.status === 404) notFound();
-	if (!response.ok) return null;
-	return response.json();
-}
-
+import { loadProfile } from "@/lib/profile-api";
 
 export default async function GithubPage({
 	params,
@@ -23,15 +16,16 @@ export default async function GithubPage({
 	params: Promise<{ username: string }>;
 }) {
 	const { username } = await params;
-	const profile = await fetchProfile(username);
+	const profile = await loadProfile(username);
 	const viewer = await fetchViewer();
 	const themeCookie = await getThemeCookie();
+	
 	if (
-		!profile ||
 		profile.stats === null ||
 		(profile.section_visibility?.github === false && !profile.is_owner)
 	)
 		notFound();
+
 	const stats = profile.stats;
 	const e = stats.extra;
 
@@ -251,33 +245,42 @@ export default async function GithubPage({
 							</p>
 							{stats.activity?.length ? (
 								<ul className={styles.activityList}>
-									{stats.activity.slice(0, 5).map((item, i) => (
-										<li key={i}>
-											<a
-												className={styles.activityItem}
-												href={item.url}
-												target="_blank"
-												rel="noreferrer"
-											>
-												<span>
-													<strong>{item.repo}</strong>{" "}
-													· {item.text}
-												</span>
-												<span
+									{stats.activity
+										.slice(0, 5)
+										.map((item, i) => (
+											<li key={i}>
+												<a
 													className={
-														styles.activityDate
+														styles.activityItem
 													}
+													href={item.url}
+													target="_blank"
+													rel="noreferrer"
 												>
-													{new Date(
-														item.at,
-													).toLocaleDateString("en", {
-														month: "short",
-														day: "numeric",
-													})}
-												</span>
-											</a>
-										</li>
-									))}
+													<span>
+														<strong>
+															{item.repo}
+														</strong>{" "}
+														· {item.text}
+													</span>
+													<span
+														className={
+															styles.activityDate
+														}
+													>
+														{new Date(
+															item.at,
+														).toLocaleDateString(
+															"en",
+															{
+																month: "short",
+																day: "numeric",
+															},
+														)}
+													</span>
+												</a>
+											</li>
+										))}
 								</ul>
 							) : (
 								<p className={styles.muted}>

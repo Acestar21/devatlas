@@ -1,15 +1,20 @@
 import json
+from collections import defaultdict
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy import func, not_, or_
 from sqlmodel import Session, select
-from sqlalchemy import not_
-from app.moderation import suspension_active_clause
+
 from app.database import get_session
-from app.models.user import User
-from app.models.profile import Profile
 from app.models.github_stats import GithubStatsCache
+from app.models.profile import Profile
 from app.models.tag import Tag
 from app.models.tags_relations import StackTag, UserInterest
+from app.models.user import User
+from app.moderation import suspension_active_clause
+from app.rate_limit import limiter
+from app.sqlutil import escape_like
 
 router = APIRouter(prefix="/directory", tags=["directory"])
 
@@ -23,95 +28,94 @@ def _visibility_for(profile: Optional[Profile]) -> dict:
     return json.loads(profile.section_visibility_json)
 
 
-def _stack_tags_for(user_id: int, db: Session) -> list[str]:
-    rows = db.exec(
-        select(Tag.name).join(StackTag, StackTag.tag_id == Tag.id).where(StackTag.user_id == user_id)
-    ).all()
-    return list(rows)
-
-
-def _one_hint(profile: Optional[Profile], user_id: int, visibility: dict, db: Session) -> Optional[dict]:
-    """A single lightweight personal-layer hint for the directory card —
-    one game or interest, whichever exists and is visible. Never both,
-    keeps the card lightweight. Respects visibility same as the full
-    profile page — a hidden section never leaks a hint either.
-    """
-    if visibility.get("games", True) and profile:
+def _hint(profile: Optional[Profile], visibility: dict, first_interest: Optional[str]) -> Optional[dict]:
+    """One lightweight personal-layer hint per card: a game, else an interest. Respects visibility
+    exactly like the full profile page, so a hidden section never leaks a hint."""
+    if profile and visibility.get("games", True):
         games = json.loads(profile.games_json)
         if games:
             return {"type": "game", "name": games[0]["name"]}
-
-    if visibility.get("interests", True):
-        interest = db.exec(
-            select(Tag.name)
-            .join(UserInterest, UserInterest.tag_id == Tag.id)
-            .where(UserInterest.user_id == user_id)
-            .limit(1)
-        ).first()
-        if interest:
-            return {"type": "interest", "name": interest}
-
+    if first_interest and visibility.get("interests", True):
+        return {"type": "interest", "name": first_interest}
     return None
 
 
 @router.get("")
+@limiter.limit("60/minute")
 def browse_directory(
-    search: str = Query("", description="matches username or display name"),
-    stack: str = Query("", description="filter by stack tag name"),
+    request: Request,
+    search: str = Query("", max_length=60, description="matches username or display name"),
+    stack: str = Query("", max_length=40, description="filter by stack tag name"),
     sort: str = Query("newest", description="newest | active"),
-    page: int = Query(1, ge=1),
+    page: int = Query(1, ge=1, le=1000),
     db: Session = Depends(get_session),
 ):
-    query = select(User).where(not_(suspension_active_clause()))
+    base = select(User).where(not_(suspension_active_clause()))
 
     if search:
-        query = query.where(
-            (User.github_username.ilike(f"%{search}%"))
-            | (User.display_name.ilike(f"%{search}%"))
-        )
+        pattern = escape_like(search)
+        base = base.where(or_(
+            User.github_username.ilike(pattern, escape="\\"),
+            User.display_name.ilike(pattern, escape="\\"),
+        ))
 
     if stack:
-        query = query.join(StackTag, StackTag.user_id == User.id).join(
-            Tag, Tag.id == StackTag.tag_id
-        ).where(Tag.name.ilike(f"%{stack}%"))
+        # EXISTS instead of a join: a user matching several tags still appears once
+        base = base.where(
+            select(StackTag.id)
+            .join(Tag, Tag.id == StackTag.tag_id)
+            .where(StackTag.user_id == User.id, Tag.name.ilike(escape_like(stack), escape="\\"))
+            .exists()
+        )
+
+    total = db.exec(select(func.count()).select_from(base.subquery())).one()
 
     if sort == "active":
-        query = query.outerjoin(
-            GithubStatsCache, GithubStatsCache.user_id == User.id
-        ).order_by(GithubStatsCache.total_contributions.desc().nullslast())
+        ordered = base.outerjoin(GithubStatsCache, GithubStatsCache.user_id == User.id).order_by(
+            GithubStatsCache.total_contributions.desc().nullslast(), User.id.desc()
+        )
     else:
-        query = query.order_by(User.created_at.desc())
+        ordered = base.order_by(User.created_at.desc(), User.id.desc())
+    users = db.exec(ordered.offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)).all()
 
-    total = len(db.exec(query).all())  # simple count; fine at this scale
-    query = query.offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
-    users = db.exec(query).all()
+    # One query per kind of data for the whole page (no per-user queries).
+    ids = [u.id for u in users]
+    profiles: dict[int, Profile] = {}
+    caches: dict[int, GithubStatsCache] = {}
+    stack_by_user: dict[int, list[str]] = defaultdict(list)
+    first_interest: dict[int, str] = {}
+    if ids:
+        profiles = {p.user_id: p for p in db.exec(select(Profile).where(Profile.user_id.in_(ids))).all()}
+        caches = {c.user_id: c for c in db.exec(select(GithubStatsCache).where(GithubStatsCache.user_id.in_(ids))).all()}
+        for user_id, name in db.exec(
+            select(StackTag.user_id, Tag.name).select_from(StackTag)
+            .join(Tag, Tag.id == StackTag.tag_id)
+            .where(StackTag.user_id.in_(ids)).order_by(StackTag.id)
+        ).all():
+            stack_by_user[user_id].append(name)
+        for user_id, name in db.exec(
+            select(UserInterest.user_id, Tag.name).select_from(UserInterest)
+            .join(Tag, Tag.id == UserInterest.tag_id)
+            .where(UserInterest.user_id.in_(ids)).order_by(UserInterest.id)
+        ).all():
+            first_interest.setdefault(user_id, name)
 
     cards = []
     for user in users:
-        profile = db.exec(select(Profile).where(Profile.user_id == user.id)).first()
+        profile = profiles.get(user.id)
         visibility = _visibility_for(profile)
-
-        cache = db.exec(
-            select(GithubStatsCache).where(GithubStatsCache.user_id == user.id)
-        ).first()
-        # Directory NEVER triggers a live fetch — read-only from cache,
-        # same rule as badges. Avoids burning GitHub API rate limits on
-        # every directory page load.
-        contributions = None
-        if cache and visibility.get("github", True):
-            contributions = cache.total_contributions
-
-        cards.append(
-            {
-                "username": user.github_username,
-                "display_name": user.display_name,
-                "avatar_url": user.avatar_url,
-                "bio": profile.bio if profile else None,
-                "stack_tags": _stack_tags_for(user.id, db),
-                "contributions": contributions,
-                "hint": _one_hint(profile, user.id, visibility, db),
-            }
-        )
+        cache = caches.get(user.id)
+        # Directory NEVER triggers a live GitHub fetch: read-only from cache, same rule as badges.
+        contributions = cache.total_contributions if (cache and visibility.get("github", True)) else None
+        cards.append({
+            "username": user.github_username,
+            "display_name": user.display_name,
+            "avatar_url": user.avatar_url,
+            "bio": profile.bio if profile else None,
+            "stack_tags": stack_by_user.get(user.id, []),
+            "contributions": contributions,
+            "hint": _hint(profile, visibility, first_interest.get(user.id)),
+        })
 
     return {
         "results": cards,

@@ -87,3 +87,5 @@ Homepage: your site URL. Authorization callback URL: `https://YOUR-SITE/api/auth
 - Health check: `GET /health`
 - Check database size periodically in the Neon dashboard.
 - Lost admin MFA: `python -m app.scripts.reset_mfa <username>` from a machine that can reach the database.
+
+Don't run a 24/7 keep-alive ping on Render's free plan. It uses almost all of the 750 monthly free hours."

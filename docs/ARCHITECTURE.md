@@ -51,7 +51,7 @@ GitHub stats refresh on view when older than 6 hours (`services/github.py`); the
 
 ## Known limitations
 
-- OAuth `state` is stored in process memory: a backend restart between clicking "Log in" and returning from GitHub shows "login session expired".
+- Free-tier Render sleeps after 15 minutes idle (about a minute to wake); the app shows a loader with a mini-game, and error.tsx handles real failures.
 - Rate-limit counters are per process. Run more than one backend instance and you need a shared store (Redis) in `rate_limit.py`.
 - The stats cache stores a year of daily counts per user (~12 KB each before compression). Fine for thousands of users; revisit at tens of thousands.
 - No email notifications; staff alerts go to a Discord webhook.

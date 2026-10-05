@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
-
+from sqlalchemy import func
+from app.sqlutil import escape_like
 from app.database import get_session
 from app.models.tag import Tag
 from app.models.user import User
@@ -39,7 +40,7 @@ def search_tags(
     query = select(Tag).where(Tag.category == category, Tag.status == "approved")
     if search:
         canonical = _canonical_search(category, search)
-        query = query.where(Tag.name.ilike(f"%{canonical}%"))
+        query = query.where(Tag.name.ilike(escape_like(canonical), escape="\\"))
 
     results = db.exec(query.limit(20)).all()
     return [{"id": t.id, "name": t.name} for t in results]
@@ -64,7 +65,7 @@ def submit_tag(
     # Case-insensitive check against ALL tags (approved or pending) to avoid
     # duplicate submissions of the same tag under different casing.
     existing = db.exec(
-        select(Tag).where(Tag.category == category, Tag.name.ilike(canonical))
+        select(Tag).where(Tag.category == category, func.lower(Tag.name) == canonical)
     ).first()
 
     if existing:

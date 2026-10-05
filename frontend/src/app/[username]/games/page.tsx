@@ -4,6 +4,7 @@ import { Profile } from "@/types";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import GameCard from "@/app/components/GameCard";
 import styles from "./page.module.css";
+import { loadProfile } from "@/lib/profile-api";
 
 const HANDLE_LABEL: Record<string, string> = {
 	steam: "Steam",
@@ -21,19 +22,8 @@ export default async function GamesPage({
 	params: Promise<{ username: string }>;
 }) {
 	const { username } = await params;
-	const cookie = (await cookies()).get("devcard_session");
-	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/profiles/${username}`,
-		{
-			cache: "no-store",
-			headers: cookie
-				? { Cookie: `devcard_session=${cookie.value}` }
-				: {},
-		},
-	);
-	if (response.status === 404) notFound();
-	if (!response.ok) return null;
-	const profile = (await response.json()) as Profile;
+
+	const profile = await loadProfile(username);
 	if (profile.section_visibility?.games === false && !profile.is_owner)
 		notFound();
 

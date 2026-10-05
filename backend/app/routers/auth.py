@@ -10,6 +10,8 @@ from app.database import get_session
 from app.models.user import User
 from app.auth.crypto import encrypt_token
 from app.auth.session import create_session_token, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS
+from urllib.parse import urlencode
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 from app.auth.dependencies import require_internal_secret
 
 router = APIRouter(prefix="/auth/github", tags=["auth"])
@@ -27,24 +29,35 @@ MIN_ACCOUNT_AGE_DAYS = 30
 # Fine for a single-process dev setup. If you ever run multiple backend
 # processes/workers, this needs to move to Redis or the DB instead —
 # an in-memory set won't be shared across processes.
-_pending_states: set[str] = set()
+# OAuth `state` is a signed, expiring token instead of an in-memory set, so it survives restarts and
+# multiple workers and can't grow without bound. It proves the flow started at OUR /login; it is not
+# bound to one browser or single-use (GitHub's code is single-use).
+STATE_MAX_AGE_SECONDS = 10 * 60
+_state_serializer = URLSafeTimedSerializer(settings.secret_key, salt="devcard-oauth-state")
+
+
+def _new_state() -> str:
+    return _state_serializer.dumps(secrets.token_urlsafe(16))
+
+
+def _state_is_valid(state: str) -> bool:
+    try:
+        _state_serializer.loads(state, max_age=STATE_MAX_AGE_SECONDS)
+        return True
+    except BadSignature:  # includes SignatureExpired
+        return False
 
 
 @router.get("/login")
 @limiter.limit("10/minute")
 def github_login(request: Request):
-    state = secrets.token_urlsafe(32)
-    _pending_states.add(state)
-
     params = {
         "client_id": settings.github_client_id,
         "redirect_uri": settings.github_oauth_callback_url,
-        "scope": "read:user",   # read-only GitHub profile access; no repository access
-        "state": state,
+        "scope": "read:user",  # read-only GitHub profile access; no repository access
+        "state": _new_state(),
     }
-    query = "&".join(f"{k}={v}" for k, v in params.items())
-    return RedirectResponse(f"{GITHUB_AUTHORIZE_URL}?{query}")
-
+    return RedirectResponse(f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}")
 
 @router.post("/internal/exchange")
 @limiter.limit("20/minute")
@@ -52,16 +65,11 @@ async def github_internal_exchange(
     request: Request,
     code: str,
     state: str,
-    _: None = Depends(require_internal_secret),
     session: Session = Depends(get_session),
+    _: None = Depends(require_internal_secret),  # constant-time check of the shared secret
 ):
-    # Only Vercel's own API route should ever call this — never exposed
-    # to the browser or GitHub directly. The secret value lives only in
-    # Render's and Vercel's environment variables, never in this repo.
-
-    if state not in _pending_states:
+    if not _state_is_valid(state):
         raise HTTPException(status_code=400, detail={"code": "invalid_state"})
-    _pending_states.discard(state)
 
     async with httpx.AsyncClient() as client:
         # Exchange the temporary code for an access token
@@ -104,7 +112,7 @@ async def github_internal_exchange(
         account_created_at = datetime.strptime(
             gh_user["created_at"], "%Y-%m-%dT%H:%M:%SZ"
         ).replace(tzinfo=timezone.utc)
-        account_age_days = (datetime.now(timezone.utc) - account_created_at).days
+        account_age_days = (datetime.now(timezone.utc) - account_created_at).days # tz-aware ok
 
         if account_age_days < MIN_ACCOUNT_AGE_DAYS:
             raise HTTPException(

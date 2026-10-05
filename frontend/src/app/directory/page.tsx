@@ -36,6 +36,7 @@ async function fetchDirectory(params: {
 	if (params.page) qs.set("page", params.page);
 
 	const res = await backendFetch(`directory?${qs.toString()}`);
+	if (!res.ok) throw new Error(`Directory API returned ${res.status}`);
 	return res.json();
 }
 

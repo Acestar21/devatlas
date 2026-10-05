@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
+from sqlalchemy import text
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -38,6 +38,11 @@ def create_report(
         raise HTTPException(status_code=404, detail="User not found")
     if target.id == current_user.id:
         raise HTTPException(status_code=400, detail="You can't report yourself.")
+
+    # Serialise this reporter's requests so concurrent submissions can't race past the hourly cap or the
+    # duplicate check. The lock is released at commit/rollback. Postgres only (tests run on SQLite).
+    if db.get_bind().dialect.name == "postgresql":
+        db.exec(text("SELECT pg_advisory_xact_lock(:key)"), {"key": current_user.github_id})
 
     recent = db.exec(
         select(Report).where(

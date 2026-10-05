@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { backendFetch } from "@/lib/backend";
 import { Profile } from "@/types";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
+import { loadProfile } from "@/lib/profile-api";
 import LeetcodeCard from "@/app/components/LeetcodeCard";
 import PostCard from "@/app/components/PostCard";
 import styles from "./page.module.css";
@@ -12,10 +13,7 @@ export default async function ActivityPage({
 	params: Promise<{ username: string }>;
 }) {
 	const { username } = await params;
-	const response = await backendFetch(`profiles/${encodeURIComponent(username)}`);
-	if (response.status === 404) notFound();
-	if (!response.ok) return null;
-	const profile = (await response.json()) as Profile;
+	const profile = await loadProfile(username);
 
 	const cv = profile.card_visibility?.activity ?? {};
 	const showLc = profile.leetcode !== null || profile.is_owner;
