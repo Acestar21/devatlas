@@ -2,9 +2,7 @@
 
 An open-source directory of developer profiles. Sign in with GitHub, add your stack, games, interests and writing, and share one link.
 
-**Live:** https://YOUR-SITE · **Docs:** [docs/](docs/)
-
-<!-- Add 2-3 screenshots here: profile page, GitHub tab, directory -->
+**Live:** https://devatlas.cyan.vercel.app · **Docs:** [docs/](docs/)
 
 ## Features
 
@@ -72,4 +70,4 @@ cd frontend && npm run typecheck && npm run lint
 
 ## License
 
-GNU AGPL [LICENSE](LICENSE). (Choose a licence and add the file; without one, nobody may legally reuse the code.)
+GNU AGPL [LICENSE](LICENSE). 
