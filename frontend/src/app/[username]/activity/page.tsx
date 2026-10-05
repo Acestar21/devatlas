@@ -1,6 +1,3 @@
-import { notFound } from "next/navigation";
-import { backendFetch } from "@/lib/backend";
-import { Profile } from "@/types";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import { loadProfile } from "@/lib/profile-api";
 import LeetcodeCard from "@/app/components/LeetcodeCard";

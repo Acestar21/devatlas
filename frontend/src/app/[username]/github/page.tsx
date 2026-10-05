@@ -1,13 +1,11 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Profile } from "@/types";
 import ProfileNav from "@/app/components/ProfileNav";
 import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 import ContributionGraph from "@/app/components/ContributionGraph";
 import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
-import { backendFetch } from "@/lib/backend";
 import { loadProfile } from "@/lib/profile-api";
 
 export default async function GithubPage({
@@ -19,7 +17,7 @@ export default async function GithubPage({
 	const profile = await loadProfile(username);
 	const viewer = await fetchViewer();
 	const themeCookie = await getThemeCookie();
-	
+
 	if (
 		profile.stats === null ||
 		(profile.section_visibility?.github === false && !profile.is_owner)

@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { Profile } from "@/types";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import GameCard from "@/app/components/GameCard";
 import styles from "./page.module.css";

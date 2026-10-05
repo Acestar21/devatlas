@@ -1,7 +1,5 @@
-import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Profile } from "@/types";
 import ProfileNav from "@/app/components/ProfileNav";
 import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
@@ -13,7 +11,6 @@ import LeetcodeCard from "@/app/components/LeetcodeCard";
 import { currentStreakRange, joinedAgo } from "@/lib/streak";
 import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
-import { backendFetch } from "@/lib/backend";
 import ModerationBanner from "@/app/components/ModerationBanner";
 import { loadProfile } from "@/lib/profile-api";
 

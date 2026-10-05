@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { Profile } from "@/types";
 import { loadProfile } from "@/lib/profile-api";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import styles from "./page.module.css";
@@ -12,7 +10,7 @@ export default async function InterestsPage({
 }) {
 	const { username } = await params;
 	const profile = await loadProfile(username)
-	
+
 	if (profile.section_visibility?.interests === false && !profile.is_owner)
 		notFound();
 
