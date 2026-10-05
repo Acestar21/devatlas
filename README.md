@@ -2,7 +2,7 @@
 
 An open-source directory of developer profiles. Sign in with GitHub, add your stack, games, interests and writing, and share one link.
 
-**Live:** https://devatlas.cyan.vercel.app · **Docs:** [docs/](docs/)
+**Live:** https://devatlas-cyan.vercel.app · **Docs:** [docs/](docs/)
 
 ## Features
 
