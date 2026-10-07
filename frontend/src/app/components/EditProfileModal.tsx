@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { getSteamGameNames, gameArtUrl } from "@/lib/game-art";
 import {
 	ContentLink,
 	GameEntry,
@@ -118,6 +119,7 @@ export default function EditProfileModal({
 	);
 	const [lcHard, setLcHard] = useState(String(profile.leetcode?.hard ?? 0));
 	const [games, setGames] = useState<GameEntry[]>(profile.games ?? []);
+	const [gameSearchOpen, setGameSearchOpen] = useState(false);
 	const [gName, setGName] = useState("");
 	const [gDetail, setGDetail] = useState("");
 	const [gUrl, setGUrl] = useState("");
@@ -216,6 +218,15 @@ export default function EditProfileModal({
 		setResults([]);
 		setUnmatchedTokens([]);
 	};
+	const filteredGames = gName.trim()
+		? getSteamGameNames()
+				.filter((name) => name.includes(gName.trim().toLowerCase()))
+				.filter(
+					(name) =>
+						!games.some((game) => game.name.toLowerCase() === name),
+				)
+				.slice(0, 8)
+		: [];
 
 	const addPost = () => {
 		if (!postTitle.trim() || !postUrl.trim()) return;
@@ -278,6 +289,7 @@ export default function EditProfileModal({
 		setGName("");
 		setGDetail("");
 		setGUrl("");
+		setGameSearchOpen(false);
 	};
 
 	const addHandle = () => {
@@ -664,20 +676,64 @@ export default function EditProfileModal({
 										<input
 											maxLength={60}
 											value={gName}
-											onChange={(event) =>
-												setGName(event.target.value)
+											placeholder="Search games..."
+											autoComplete="off"
+											onFocus={() =>
+												setGameSearchOpen(true)
 											}
+											onChange={(event) => {
+												setGName(event.target.value);
+												setGameSearchOpen(true);
+											}}
+											onKeyDown={(event) => {
+												if (event.key === "Escape") {
+													setGameSearchOpen(false);
+												}
+											}}
 										/>
-									</label>
-									<label className={styles.field}>
-										Rank / hours (optional)
-										<input
-											maxLength={40}
-											value={gDetail}
-											onChange={(event) =>
-												setGDetail(event.target.value)
-											}
-										/>
+										{gameSearchOpen &&
+											filteredGames.length > 0 && (
+												<div className={styles.results}>
+													{filteredGames.map(
+														(name) => {
+															const art =
+																gameArtUrl(
+																	name,
+																);
+
+															return (
+																<button
+																	type="button"
+																	key={name}
+																	onClick={() => {
+																		setGName(
+																			name,
+																		);
+																		setGameSearchOpen(
+																			false,
+																		);
+																	}}
+																>
+																	{art && (
+																		// eslint-disable-next-line
+																		<img
+																			src={
+																				art
+																			}
+																			alt=""
+																			width={
+																				64
+																			}
+																			loading="lazy"
+																		/>
+																	)}
+																	{name}
+																</button>
+															);
+														},
+													)}
+												</div>
+											)}
 									</label>
 								</div>
 								<div className={styles.grid}>
@@ -694,6 +750,7 @@ export default function EditProfileModal({
 									<button
 										className={styles.addLink}
 										onClick={addGame}
+										
 									>
 										Add game to list
 									</button>
@@ -1038,9 +1095,8 @@ export default function EditProfileModal({
 								</label>
 							))}
 						</div>
-						
-						<DeleteAccount username={profile.username} />
 
+						<DeleteAccount username={profile.username} />
 					</>
 				)}
 
