@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
-
+from app.time import utc_now
 
 class GithubStatsCache(SQLModel, table=True):
     """Cached GitHub stats for a user, refreshed stale-on-view.
@@ -19,4 +19,4 @@ class GithubStatsCache(SQLModel, table=True):
     extra_stats_json: str = "{}"     # commits, PRs, streaks, followers, etc.
     activity_json: str = "[]"        # recent public events
 
-    last_fetched_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    last_fetched_at: datetime = Field(default_factory=utc_now)
