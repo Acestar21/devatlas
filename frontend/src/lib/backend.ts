@@ -26,21 +26,36 @@ export async function backendFetch(
 	const base = process.env.NEXT_PUBLIC_API_URL;
 	if (!base) throw new Error("NEXT_PUBLIC_API_URL is not set");
 
-	const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+	const [cookieStore, requestHeaders] = await Promise.all([
+		cookies(),
+		headers(),
+	]);
 	const outgoing = new Headers(init.headers);
 
 	const session = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-	if (session && !outgoing.has("Cookie")) outgoing.set("Cookie", `${SESSION_COOKIE_NAME}=${session}`);
+	if (session && !outgoing.has("Cookie"))
+		outgoing.set("Cookie", `${SESSION_COOKIE_NAME}=${session}`);
 
 	const secret = process.env.INTERNAL_API_SECRET;
 	if (secret) {
-		const ip = requestHeaders.get("x-real-ip") ?? requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
+		const ip =
+			requestHeaders.get("x-real-ip") ??
+			requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
 		if (ip) {
 			outgoing.set("X-Client-IP", ip);
-			outgoing.set("X-Client-IP-Signature", createHmac("sha256", secret).update(ip).digest("hex"));
+			outgoing.set(
+				"X-Client-IP-Signature",
+				createHmac("sha256", secret).update(ip).digest("hex"),
+			);
 		}
 		if (options.internal) outgoing.set("X-Internal-Secret", secret);
 	}
 
-	return fetch(`${base}/${path.replace(/^\//, "")}`, { cache: "no-store", ...init, headers: outgoing });
+	const timeoutMs = options.internal ? 30000 : 8000;
+	return fetch(`${base}/${path.replace(/^\//, "")}`, {
+		cache: "no-store",
+		signal: AbortSignal.timeout(timeoutMs),
+		...init,
+		headers: outgoing,
+	});
 }

@@ -24,6 +24,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.api_route("/health", methods=["GET", "HEAD"])
+def health():
+    return {"ok": True}
+
 app.include_router(auth.router)
 app.include_router(profiles.router)
 app.include_router(badge.router)

@@ -1,5 +1,6 @@
 import { GameEntry } from "@/types";
 import styles from "./GameCard.module.css";
+import { gameArtUrl } from "@/lib/game-art";
 
 export default function GameCard({
 	game,
@@ -8,6 +9,7 @@ export default function GameCard({
 	game: GameEntry;
 	compact?: boolean;
 }) {
+	const art = gameArtUrl(game.name);
 	const content = (
 		<>
 			<strong className={styles.name}>{game.name}</strong>
@@ -21,7 +23,16 @@ export default function GameCard({
 	);
 	const className = `${styles.card} ${compact ? styles.compact : ""}`;
 
-	// FUTURE (images): add an absolutely-positioned <img> as the first child here.
+	const body = (
+		<>
+			{art && (
+				// eslint-disable-next-line @next/next/no-img-element
+				<img src={art} alt="" loading="lazy" className={styles.art} />
+			)}
+			<div className={styles.scrim} aria-hidden="true" />
+			<div className={styles.content}>{content}</div>
+		</>
+	);
 	// .card is already position: relative; overflow: hidden.
 	return game.url ? (
 		<a
@@ -30,9 +41,9 @@ export default function GameCard({
 			rel="noreferrer"
 			className={className}
 		>
-			{content}
+			{body}
 		</a>
 	) : (
-		<div className={className}>{content}</div>
+		<div className={className}>{body}</div>
 	);
 }
