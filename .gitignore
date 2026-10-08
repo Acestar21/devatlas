@@ -52,5 +52,6 @@ pnpm-debug.log*
 Thumbs.db
 
 discussion/
-.agents
+src_back/
+.agents/
 skills-lock.json
