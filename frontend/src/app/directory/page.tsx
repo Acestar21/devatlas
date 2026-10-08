@@ -3,10 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import DirectoryControls from "./DirectoryControls";
 import LoginModal from "@/app/components/LoginModal";
-import ThemeSwitcher from "@/app/components/ThemeSwitcher";
+import AppShell from "@/app/components/AppShell";
 import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 import { backendFetch } from "@/lib/backend";
+import { bannerUrl } from "@/lib/profile-mock";
 
 async function getCurrentUser(): Promise<{
 	username: string;
@@ -104,55 +105,21 @@ export default async function DirectoryPage({
 	const themeCookie = await getThemeCookie();
 
 	return (
-		<main className={styles.page}>
-			<div className={styles.topBar}>
-				<div className={styles.topBarInner}>
-					<div>
-						<Link href="/" className={styles.brand}>
-							DevAtlas
-						</Link>
-					</div>
-					<div className={styles.topActions}>
-						<ThemeSwitcher
-							initialTheme={themeCookie || "terminal"}
-							mobileIcon
-						/>
-						<Link href="/directory" className={styles.topLink}>
-							/Directory
-						</Link>
-						{user ? (
-							<Link
-								href={`/${user.username}`}
-								aria-label="Open your profile"
-							>
-								<Image
-									src={
-										user.avatar_url || "/default-avatar.png"
-									}
-									alt="Your profile"
-									width={40}
-									height={40}
-									loading="eager"
-									className={styles.headerAvatar}
-								/>
-							</Link>
-						) : (
-							<Link
-								href="/directory?login=1"
-								className={styles.topLink}
-							>
-								/login
-							</Link>
-						)}
-					</div>
-				</div>
-			</div>
+		<AppShell viewer={user} initialTheme={themeCookie || "terminal"}>
+			<main className={styles.page}>
 			<div className={styles.container}>
 				{notice && (
 					<p className={styles.notice} role="alert">
 						{notice}
 					</p>
 				)}
+				<div className={styles.hero}>
+					<h1>The identity layer for developers</h1>
+					<p>
+						Browse public DevAtlas profiles, filter by stack, and
+						open a Discord-style card for anyone in the directory.
+					</p>
+				</div>
 				<DirectoryControls
 					initialSearch={params.search || ""}
 					initialStack={params.stack || ""}
@@ -169,6 +136,13 @@ export default async function DirectoryPage({
 								href={`/${card.username}`}
 								className={styles.card}
 							>
+								<div
+									className={styles.cardBanner}
+									style={{
+										// MOCK: replace with card.banner_url when directory payload includes banners.
+										["--banner-image" as string]: `url(${bannerUrl(card.username)})`,
+									}}
+								/>
 								<div className={styles.cardHeader}>
 									<Image
 										src={
@@ -176,8 +150,8 @@ export default async function DirectoryPage({
 											"/default-avatar.png"
 										}
 										alt={card.username}
-										width="46"
-										height="46"
+										width="64"
+										height="64"
 										className={styles.cardAvatar}
 									/>
 									<div>
@@ -246,7 +220,8 @@ export default async function DirectoryPage({
 					</div>
 				)}
 			</div>
-			{params.login === "1" && <LoginModal />}
-		</main>
+				{params.login === "1" && <LoginModal />}
+			</main>
+		</AppShell>
 	);
 }

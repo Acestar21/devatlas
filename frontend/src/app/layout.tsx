@@ -1,6 +1,8 @@
 import './globals.css';
 import './themes.css';
-import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import './tokens.css';
+import { JetBrains_Mono, Outfit, Space_Grotesk } from 'next/font/google';
+import { THEME_IDS } from '@/themes/registry';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -14,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-const inter = Inter({
+const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',
@@ -34,11 +36,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+        className={`${spaceGrotesk.variable} ${outfit.variable} ${jetbrainsMono.variable}`}
       >
         <script
           dangerouslySetInnerHTML={{
-            __html: `try { var match = document.cookie.match(/(?:^|; )devatlas-theme=([^;]+)/); var theme = match ? decodeURIComponent(match[1]) : localStorage.getItem('devatlas-theme'); if (theme === 'terminal' || theme === 'coffee' || theme === 'forest') document.documentElement.dataset.theme = theme; } catch (error) {}`,
+            __html: `try { var validThemes = ${JSON.stringify(THEME_IDS)}; var match = document.cookie.match(/(?:^|; )devatlas-theme=([^;]+)/); var theme = match ? decodeURIComponent(match[1]) : localStorage.getItem('devatlas-theme'); if (validThemes.indexOf(theme) !== -1) document.documentElement.dataset.theme = theme; } catch (error) {}`,
           }}
         />
         {children}

@@ -1,0 +1,34 @@
+/*
+ * Copy this file into a named theme directory and replace every value.
+ * Keep the token names unchanged so existing components remain portable.
+ */
+[data-theme="replace-me"] {
+	--background: #000000;
+	--foreground: #ffffff;
+	--card-bg: #000000;
+	--card-raised: #000000;
+	--foreground-muted: #ffffff;
+	--foreground-dimmed: #ffffff;
+	--border: #ffffff;
+	--border-muted: #ffffff;
+	--hairline: #ffffff;
+	--highlight: #ffffff;
+	--input-bg: #000000;
+	--input-border: #ffffff;
+	--primary: #ffffff;
+	--primary-foreground: #000000;
+	--secondary-bg: #000000;
+	--secondary-fg: #ffffff;
+	--accent-bg: #000000;
+	--accent-fg: #ffffff;
+	--danger: #ffffff;
+	--online: #ffffff;
+	--surface-pattern: none;
+	--control-radius: 10px;
+	--card-radius: 22px;
+	--shell-radius: 28px;
+	--inner-radius: 18px;
+	--shadow-card: none;
+	--shadow-lift: none;
+	--glow: none;
+}

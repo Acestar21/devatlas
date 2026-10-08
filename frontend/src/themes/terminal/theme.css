@@ -1,0 +1,31 @@
+[data-theme="terminal"] {
+	--background: #06140f;
+	--foreground: #e6ffe9;
+	--card-bg: #0b1f16;
+	--card-raised: #10281c;
+	--foreground-muted: #8fdba0;
+	--foreground-dimmed: #6db883;
+	--border: color-mix(in srgb, #52f77d 28%, #123524);
+	--border-muted: #1a4a30;
+	--hairline: color-mix(in srgb, #d7ffde 12%, transparent);
+	--highlight: color-mix(in srgb, #ffffff 14%, transparent);
+	--input-bg: #10331e;
+	--input-border: #318250;
+	--primary: #3fd86a;
+	--primary-foreground: #06140f;
+	--secondary-bg: #123a24;
+	--secondary-fg: #b8f7c4;
+	--accent-bg: #173c24;
+	--accent-fg: #c9ffd2;
+	--danger: #e07a6a;
+	--online: #3fd86a;
+	--surface-pattern: radial-gradient(1200px 480px at 12% -10%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 58%),
+		radial-gradient(900px 420px at 90% 0%, color-mix(in srgb, #1a5c38 35%, transparent), transparent 50%);
+	--control-radius: 10px;
+	--card-radius: 22px;
+	--shell-radius: 28px;
+	--inner-radius: 18px;
+	--shadow-card: 0 18px 50px color-mix(in srgb, #021108 55%, transparent);
+	--shadow-lift: 0 22px 60px color-mix(in srgb, #021108 70%, transparent);
+	--glow: 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
+}

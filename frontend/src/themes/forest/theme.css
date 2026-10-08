@@ -1,0 +1,31 @@
+[data-theme="forest"] {
+	--background: #e7f1e8;
+	--foreground: #163226;
+	--card-bg: #f6fbf6;
+	--card-raised: #fdfffc;
+	--foreground-muted: #4c715b;
+	--foreground-dimmed: #6a8b74;
+	--border: color-mix(in srgb, #267044 20%, #c5dcc8);
+	--border-muted: #d4e5d6;
+	--hairline: color-mix(in srgb, #ffffff 72%, transparent);
+	--highlight: color-mix(in srgb, #ffffff 78%, transparent);
+	--input-bg: #f7fbf5;
+	--input-border: #86a98d;
+	--primary: #246b42;
+	--primary-foreground: #f6fbf6;
+	--secondary-bg: #dcebdd;
+	--secondary-fg: #245538;
+	--accent-bg: #e1eee1;
+	--accent-fg: #245538;
+	--danger: #b34d4d;
+	--online: #246b42;
+	--surface-pattern: radial-gradient(1100px 460px at 10% -10%, color-mix(in srgb, #7fb089 26%, transparent), transparent 56%),
+		radial-gradient(820px 380px at 94% 4%, color-mix(in srgb, #b7d4ba 42%, transparent), transparent 50%);
+	--control-radius: 12px;
+	--card-radius: 22px;
+	--shell-radius: 28px;
+	--inner-radius: 18px;
+	--shadow-card: 0 16px 40px color-mix(in srgb, #183324 12%, transparent);
+	--shadow-lift: 0 24px 56px color-mix(in srgb, #183324 18%, transparent);
+	--glow: 0 0 0 1px color-mix(in srgb, var(--primary) 14%, transparent);
+}
