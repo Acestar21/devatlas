@@ -18,13 +18,8 @@
 }
 .brand span {
 	color: var(--primary);
-	animation: blink 1.1s steps(1) infinite;
 }
-@keyframes blink {
-	50% {
-		opacity: 0;
-	}
-}
+
 .actions {
 	display: flex;
 	align-items: center;

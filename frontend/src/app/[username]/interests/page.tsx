@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import Card from "@/app/components/Card";
+import ProfileEditButton from "@/app/components/ProfileEditButton";
+import SubpageHeader from "@/app/components/SubpageHeader";
 import { loadProfile } from "@/lib/profile-api";
-import Panel from "@/app/components/Panel";
-import SectionPlaceholder from "@/app/components/SectionPlaceholder";
 import styles from "./page.module.css";
 
 export default async function InterestsPage({
@@ -18,8 +19,9 @@ export default async function InterestsPage({
 	const muted = profile.section_visibility?.interests === false;
 
 	return (
-		<SectionPlaceholder profile={profile} title="Interests">
-			<Panel label="Interests" gearSection="interests" gearLabel="Edit interests" muted={muted}>
+		<>
+			<SubpageHeader username={profile.username} title="Interests" />
+			<Card title="Interests" muted={muted} action={<ProfileEditButton section="interests" />}>
 				{interests.length ? (
 					<div className={styles.chips}>
 						{interests.map((interest) => (
@@ -28,12 +30,10 @@ export default async function InterestsPage({
 					</div>
 				) : (
 					<p className={styles.empty}>
-						{profile.is_owner
-							? "No interests yet. Use the gear to add some."
-							: "Nothing here yet."}
+						{profile.is_owner ? "No interests yet. Use the gear to add some." : "Nothing here yet."}
 					</p>
 				)}
-			</Panel>
-		</SectionPlaceholder>
+			</Card>
+		</>
 	);
 }

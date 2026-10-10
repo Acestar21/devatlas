@@ -1,4 +1,5 @@
 import Card from "@/app/components/Card";
+import ProfileEditButton from "@/app/components/ProfileEditButton";
 import TagList from "@/app/components/TagList";
 import { Profile } from "@/types";
 import styles from "./tabs.module.css";
@@ -13,13 +14,14 @@ export default function InterestsTab({ profile }: { profile: Profile }) {
 					title="Interests"
 					href={`/${profile.username}/interests`}
 					muted={muted}
+					action={<ProfileEditButton section="interests" />}
 				>
 					{interests.length ? (
 						<TagList tags={interests.map((t) => t.name)} limit={24} />
 					) : (
 						<p className={styles.empty}>
 							{profile.is_owner
-								? "No interests yet. Use Edit settings to add some."
+								? "No interests yet. Use the gear to add some."
 								: "Nothing here yet."}
 						</p>
 					)}

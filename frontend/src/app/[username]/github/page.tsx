@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import ContributionGraph from "@/app/components/ContributionGraph";
-import Panel from "@/app/components/Panel";
+import Card from "@/app/components/Card";
 import ProjectCard from "@/app/components/ProjectCard";
-import ProfileFrame from "@/app/components/ProfileFrame";
-import { SettingsGear } from "@/app/components/SettingsProvider";
+import ProfileEditButton from "@/app/components/ProfileEditButton";
+import SubpageHeader from "@/app/components/SubpageHeader";
 import { withBanners } from "@/lib/pinned";
 import { loadProfile } from "@/lib/profile-api";
 import styles from "./page.module.css";
@@ -49,59 +48,30 @@ export default async function GithubPage({
 		: [];
 
 	return (
-		<ProfileFrame profile={profile} active="github">
+		<>
+			<SubpageHeader username={profile.username} title="GitHub">
+				<a
+					href={`https://github.com/${profile.username}`}
+					target="_blank"
+					rel="noreferrer"
+					className={styles.redirect}
+				>
+					View on GitHub ↗
+				</a>
+			</SubpageHeader>
 			<div className={styles.container}>
-				<section className={styles.profileHeader}>
-					<div className={styles.headerRow}>
-						<div className={styles.identity}>
-							<Image
-								src={profile.avatar_url || "/default-avatar.png"}
-								alt={profile.display_name || profile.username}
-								width={82}
-								height={82}
-								loading="eager"
-								className={styles.avatar}
-							/>
-							<div>
-								<h1 className={styles.displayName}>{profile.display_name || profile.username}</h1>
-								<p className={styles.username}>@{profile.username}</p>
-							</div>
-						</div>
-						<div className={styles.headerActions}>
-							<a
-								href={`https://github.com/${profile.username}`}
-								target="_blank"
-								rel="noreferrer"
-								className={styles.redirect}
-							>
-								View on GitHub ↗
-							</a>
-							<SettingsGear section="github" label="Edit GitHub card settings" />
-						</div>
-					</div>
-					{profile.stack_tags.length > 0 && (
-						<div className={styles.tagRow}>
-							{profile.stack_tags.map((tag) => (
-								<span className={styles.tag} key={tag.id}>
-									{tag.name}
-								</span>
-							))}
-						</div>
-					)}
-				</section>
-
 				{show("graph") && (
-					<Panel label="GitHub contribution graph" muted={muted("graph")}>
+					<Card title="GitHub contribution graph" muted={muted("graph")} action={<ProfileEditButton section="github" />}>
 						{stats.calendar?.length ? (
 							<ContributionGraph weeks={stats.calendar} />
 						) : (
 							<div className={styles.graphBox}>No data yet</div>
 						)}
-					</Panel>
+					</Card>
 				)}
 
 				{show("stats") && (
-					<Panel label="GitHub statistics" muted={muted("stats")}>
+					<Card title="GitHub statistics" muted={muted("stats")} action={<ProfileEditButton section="github" />}>
 						{metrics.length ? (
 							<div className={styles.metricGrid}>
 								{metrics.map(([label, value]) => (
@@ -114,11 +84,11 @@ export default async function GithubPage({
 						) : (
 							<p className={styles.muted}>No data yet</p>
 						)}
-					</Panel>
+					</Card>
 				)}
 
 				{show("pinned") && (
-					<Panel label="Pinned repos" muted={muted("pinned")}>
+					<Card title="Pinned repos" muted={muted("pinned")} action={<ProfileEditButton section="github" />}>
 						{projects.length ? (
 							<div className={styles.projectGrid}>
 								{projects.map((repo) => (
@@ -135,12 +105,12 @@ export default async function GithubPage({
 						) : (
 							<p className={styles.muted}>No pinned repos</p>
 						)}
-					</Panel>
+					</Card>
 				)}
 
 				<div className={styles.pair}>
 					{show("languages") && (
-						<Panel label="Top languages" muted={muted("languages")}>
+						<Card title="Top languages" muted={muted("languages")} action={<ProfileEditButton section="github" />}>
 							{stats.top_languages?.length ? (
 								<div className={styles.languageList}>
 									{stats.top_languages.map((language) => (
@@ -152,11 +122,11 @@ export default async function GithubPage({
 							) : (
 								<p className={styles.muted}>No data yet</p>
 							)}
-						</Panel>
+						</Card>
 					)}
 
 					{show("activity") && (
-						<Panel label="Recent activity" muted={muted("activity")}>
+						<Card title="Recent activity" muted={muted("activity")} action={<ProfileEditButton section="github" />}>
 							{stats.activity?.length ? (
 								<ul className={styles.activityList}>
 									{stats.activity.slice(0, 5).map((item, i) => (
@@ -178,10 +148,10 @@ export default async function GithubPage({
 							) : (
 								<p className={styles.muted}>No recent public activity</p>
 							)}
-						</Panel>
+						</Card>
 					)}
 				</div>
 			</div>
-		</ProfileFrame>
+		</>
 	);
 }

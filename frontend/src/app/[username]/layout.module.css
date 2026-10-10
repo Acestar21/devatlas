@@ -7,12 +7,13 @@
 }
 .grid {
 	display: grid;
-	grid-template-columns: 64px 340px minmax(0, 1fr);
+	grid-template-columns: 380px minmax(0, 1fr);
 	align-items: start;
 	gap: 1.25rem;
 	width: min(100%, 1320px);
 	margin: 0 auto;
-	padding: 1.25rem 1.25rem 0;
+	/* left padding keeps content clear of the fixed notch nav (52px wide) */
+	padding: 1.25rem 1.25rem 0 4.5rem;
 }
 .side {
 	position: sticky;
@@ -32,7 +33,7 @@
 
 @media (max-width: 1100px) {
 	.grid {
-		grid-template-columns: 64px 290px minmax(0, 1fr);
+		grid-template-columns: 320px minmax(0, 1fr);
 	}
 }
 @media (max-width: 900px) {
@@ -40,6 +41,10 @@
 		grid-template-columns: minmax(0, 1fr);
 		gap: 1rem;
 		padding: 1rem 0.85rem 0;
+	}
+	.shell {
+		/* room for the notch nav that moves to the bottom edge */
+		padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 	}
 	.side {
 		position: static;

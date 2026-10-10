@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import Card from "@/app/components/Card";
 import GameDetailCard from "@/app/components/GameDetailCard";
-import Panel from "@/app/components/Panel";
-import SectionPlaceholder from "@/app/components/SectionPlaceholder";
+import ProfileEditButton from "@/app/components/ProfileEditButton";
+import SubpageHeader from "@/app/components/SubpageHeader";
 import { loadProfile } from "@/lib/profile-api";
 import styles from "./page.module.css";
 
@@ -31,8 +32,9 @@ export default async function GamesPage({
 	const showHandles = handles.length > 0 || profile.is_owner;
 
 	return (
-		<SectionPlaceholder profile={profile} title="Games">
-			<Panel label="Games" gearSection="games" gearLabel="Edit games" muted={sectionMuted}>
+		<>
+			<SubpageHeader username={profile.username} title="Games" />
+			<Card title="Games" muted={sectionMuted} action={<ProfileEditButton section="games" />}>
 				{games.length ? (
 					<div className={styles.grid}>
 						{games.map((game, i) => (
@@ -44,9 +46,9 @@ export default async function GamesPage({
 						{profile.is_owner ? "No games yet. Use the gear to add some." : "Nothing here yet."}
 					</p>
 				)}
-			</Panel>
+			</Card>
 			{showHandles && (
-				<Panel label="Find me on" gearSection="games" gearLabel="Edit gaming handles" muted={handlesMuted}>
+				<Card title="Find me on" muted={handlesMuted} action={<ProfileEditButton section="games" />}>
 					{handles.length ? (
 						<div className={styles.handles}>
 							{handles.map((h, i) => (
@@ -59,8 +61,8 @@ export default async function GamesPage({
 					) : (
 						<p className={styles.empty}>No handles added yet.</p>
 					)}
-				</Panel>
+				</Card>
 			)}
-		</SectionPlaceholder>
+		</>
 	);
 }

@@ -1,19 +1,33 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Profile } from "@/types";
 import BioText from "./BioText";
-import ProfileEditButton from "./ProfileEditButton";
-import ReportButton from "./ReportButton";
+import { SettingsGear } from "./SettingsProvider";
 import TagList from "./TagList";
 import styles from "./ProfileSidebar.module.css";
 
-export default function ProfileSidebar({ profile }: { profile: Profile }) {
+export default function ProfileSidebar({
+	profile,
+	banner = null,
+}: {
+	profile: Profile;
+	/** devatlas/banner.* from the <user>/<user> repo, already probed on the server; null = solid fallback */
+	banner?: string | null;
+}) {
 	const interests = profile.interests ?? [];
 	const interestsMuted = profile.section_visibility?.interests === false;
 
 	return (
 		<div className={styles.card}>
-			<div className={styles.banner} aria-hidden="true" />
+			<div
+				className={banner ? styles.banner : `${styles.banner} ${styles.solid}`}
+				aria-hidden={banner ? undefined : true}
+			>
+				{banner && (
+					// eslint-disable-next-line @next/next/no-img-element
+					<img src={banner} alt="" className={styles.bannerImage} />
+				)}
+				<SettingsGear section="profile" label="Profile settings" className={styles.cornerGear} />
+			</div>
 			<div className={styles.head}>
 				<Image
 					src={profile.avatar_url || "/default-avatar.png"}
@@ -34,7 +48,10 @@ export default function ProfileSidebar({ profile }: { profile: Profile }) {
 			)}
 
 			<section className={`${styles.section} ${styles.hideMobile}`}>
-				<h2>Stack</h2>
+				<div className={styles.sectionHead}>
+					<h2>Stack</h2>
+					<SettingsGear section="profile" label="Edit stack" />
+				</div>
 				{profile.stack_tags.length ? (
 					<TagList tags={profile.stack_tags.map((t) => t.name)} />
 				) : (
@@ -47,7 +64,10 @@ export default function ProfileSidebar({ profile }: { profile: Profile }) {
 					<section
 						className={`${styles.section} ${styles.hideMobile} ${interestsMuted ? styles.muted : ""}`}
 					>
-						<h2>Interests</h2>
+						<div className={styles.sectionHead}>
+							<h2>Interests</h2>
+							<SettingsGear section="interests" label="Edit interests" />
+						</div>
 						{interests.length ? (
 							<TagList tags={interests.map((t) => t.name)} />
 						) : (
@@ -60,12 +80,7 @@ export default function ProfileSidebar({ profile }: { profile: Profile }) {
 				<section className={styles.section}>
 					<div className={styles.sectionHead}>
 						<h2>Links</h2>
-						{profile.is_owner && (
-							<ProfileEditButton
-								profile={profile}
-								section="links"
-							/>
-						)}
+						<SettingsGear section="links" label="Edit links" />
 					</div>
 					{profile.content_links.length ? (
 						<ul className={styles.links}>
@@ -87,15 +102,6 @@ export default function ProfileSidebar({ profile }: { profile: Profile }) {
 				</section>
 			)}
 
-			{!profile.is_owner && (
-				<div className={styles.footer}>
-					{profile.viewer_role === "anonymous" ? (
-						<Link href="/directory?login=1">Log in to report</Link>
-					) : (
-						<ReportButton username={profile.username} />
-					)}
-				</div>
-			)}
 		</div>
 	);
 }

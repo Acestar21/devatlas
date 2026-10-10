@@ -1,7 +1,7 @@
 .footer {
 	width: min(100%, 1320px);
 	margin: 2.5rem auto 0;
-	padding: 0 1.25rem 1.5rem;
+	padding: 0 1.25rem 1.5rem 4.5rem;
 	color: var(--foreground-dimmed);
 	font-size: 0.7rem;
 }
@@ -29,8 +29,28 @@
 .meta {
 	margin-top: 0.55rem;
 }
+.row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1.5rem;
+}
+.text {
+	min-width: 0;
+}
+.badge {
+	flex: 0 0 260px;
+	width: 260px;
+}
 @media (max-width: 900px) {
 	.footer {
-		padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+		padding: 0 0.85rem 1rem;
+	}
+	.row {
+		flex-direction: column;
+	}
+	.badge {
+		flex-basis: auto;
+		width: min(100%, 360px);
 	}
 }

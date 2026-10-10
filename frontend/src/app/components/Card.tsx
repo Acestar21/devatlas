@@ -25,12 +25,12 @@ export default function Card({
 		<section className={className} aria-label={title}>
 			<header className={styles.header}>
 				<h2 className={styles.title}>{title}</h2>
-				{action}
 				{href && (
 					<Link href={href} className={styles.more}>
 						{hrefLabel} <span aria-hidden="true">→</span>
 					</Link>
 				)}
+				{action}
 			</header>
 			{children}
 		</section>

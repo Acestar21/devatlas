@@ -2,7 +2,7 @@
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 1rem;
-	align-items: start;
+	align-items: stretch; /* cards in a row share one height */
 }
 .single {
 	display: flex;
@@ -127,5 +127,22 @@
 	}
 	.big {
 		font-size: 2.1rem;
+	}
+}
+
+.postStack {
+	display: grid;
+	flex: 1;
+	grid-auto-rows: 1fr;
+	gap: 0.75rem;
+}
+.gameGrid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.75rem;
+}
+@media (max-width: 900px) {
+	.gameGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }

@@ -1,7 +1,8 @@
+import Card from "@/app/components/Card";
 import LeetcodeCard from "@/app/components/LeetcodeCard";
-import Panel from "@/app/components/Panel";
 import PostCard from "@/app/components/PostCard";
-import SectionPlaceholder from "@/app/components/SectionPlaceholder";
+import ProfileEditButton from "@/app/components/ProfileEditButton";
+import SubpageHeader from "@/app/components/SubpageHeader";
 import { loadProfile } from "@/lib/profile-api";
 import styles from "./page.module.css";
 
@@ -23,20 +24,21 @@ export default async function ActivityPage({
 	);
 
 	return (
-		<SectionPlaceholder profile={profile} title="Activity">
+		<>
+			<SubpageHeader username={profile.username} title="Activity" />
 			{/* one grid row: both cards stretch to the same height */}
 			<div className={showLc && showPosts ? styles.pair : styles.single}>
 				{showLc && (
-					<Panel label="LeetCode" gearSection="leetcode" gearLabel="Edit LeetCode stats" muted={lcMuted}>
+					<Card title="LeetCode" muted={lcMuted} action={<ProfileEditButton section="leetcode" />}>
 						{profile.leetcode ? (
 							<LeetcodeCard lc={profile.leetcode} />
 						) : (
 							<p className={styles.empty}>No LeetCode stats added yet.</p>
 						)}
-					</Panel>
+					</Card>
 				)}
 				{showPosts && (
-					<Panel label="Writing" gearSection="activity" gearLabel="Edit writing settings" muted={postsMuted}>
+					<Card title="Writing" muted={postsMuted} action={<ProfileEditButton section="activity" />}>
 						{sortedPosts.length ? (
 							<div className={styles.postList}>
 								{sortedPosts.map((post, i) => (
@@ -46,10 +48,10 @@ export default async function ActivityPage({
 						) : (
 							<p className={styles.empty}>No posts added yet.</p>
 						)}
-					</Panel>
+					</Card>
 				)}
 			</div>
 			{!showLc && !showPosts && <p className={styles.empty}>Nothing here yet.</p>}
-		</SectionPlaceholder>
+		</>
 	);
 }

@@ -21,7 +21,13 @@ export function gameChips(game: GameEntry): string[] {
  * hover / keyboard focus. Games with no artwork keep the name visible, since
  * there would otherwise be nothing to look at.
  */
-export default function GameCard({ game }: { game: GameEntry }) {
+export default function GameCard({
+	game,
+}: {
+	game: GameEntry;
+	/** accepted for older call sites; tiles are always the same size now */
+	compact?: boolean;
+}) {
 	const art = gameArt(game);
 	const chips = gameChips(game);
 	const className = `${styles.card} ${art ? styles.hasArt : styles.noArt}`;

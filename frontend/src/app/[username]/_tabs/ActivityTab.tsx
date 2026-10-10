@@ -63,6 +63,7 @@ export default function ActivityTab({ profile }: { profile: Profile }) {
 					title="Recent GitHub activity"
 					href={`${base}/github`}
 					hrefLabel="More"
+					action={<ProfileEditButton section="github" />}
 					span={!showLc}
 				>
 					<ul className={styles.feed}>
@@ -91,6 +92,7 @@ export default function ActivityTab({ profile }: { profile: Profile }) {
 					title="Writing"
 					href={`${base}/activity`}
 					muted={cardMuted(profile, "activity", "posts")}
+					action={<ProfileEditButton section="activity" />}
 					span
 				>
 					{posts.length ? (

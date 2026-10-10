@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Profile } from "@/types";
 import { SettingsGear } from "./SettingsProvider";
@@ -35,19 +36,13 @@ function Icon({ name }: { name: string }) {
  * The active pill slides between items; its position is measured, so one
  * implementation serves both orientations.
  */
-export default function ProfileNav({
-	username,
-	showGithub,
-	visibility,
-	profile,
-	activeSection = "profile",
-}: {
-	username: string;
-	showGithub: boolean;
-	visibility?: Visibility;
-	profile?: Profile;
-	activeSection?: string;
-}) {
+export default function ProfileNav({ profile }: { profile: Profile }) {
+	const pathname = usePathname();
+	const username = profile.username;
+	const visibility: Visibility | undefined = profile.section_visibility ?? undefined;
+	const showGithub = profile.stats !== null;
+	const base = `/${username}`;
+	const activeSection = pathname === base || pathname === `${base}/` ? "profile" : (pathname.split("/")[2] ?? "profile");
 	const items = [
 		{ href: `/${username}`, icon: "home", label: "Profile", visible: true },
 		{

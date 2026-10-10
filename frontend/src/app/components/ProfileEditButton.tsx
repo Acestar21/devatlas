@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { Profile } from "@/types";
-import EditProfileModal from "./EditProfileModal";
-import styles from "./ProfileEditButton.module.css";
+import { SettingsGear } from "./SettingsProvider";
 
-export default function ProfileEditButton({ profile, section = "profile" }: { profile: Profile; section?: string }) {
-  const [open, setOpen] = useState(false);
-  return <>{<button className={styles.button} onClick={() => setOpen(true)}>Edit settings</button>}{open && <EditProfileModal profile={profile} section={section} onClose={() => setOpen(false)} />}</>;
+/**
+ * Kept for the existing call sites. It is now just the owner's gear icon; the
+ * settings modal itself is owned once by SettingsProvider in [username]/layout.tsx,
+ * so no card or menu that renders this button can unmount it.
+ */
+export default function ProfileEditButton({
+	section = "profile",
+}: {
+	profile?: Profile;
+	section?: string;
+}) {
+	return <SettingsGear section={section} />;
 }

@@ -4,47 +4,6 @@
 	gap: 1rem;
 	min-width: 0;
 }
-.profileHeader {
-	padding: 1.25rem 1.5rem;
-	border: 1px solid var(--border);
-	border-radius: var(--card-radius);
-	background: var(--card-bg);
-}
-.headerRow {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-}
-.identity {
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	min-width: 0;
-}
-.avatar {
-	width: 72px;
-	height: 72px;
-	border: 2px solid var(--primary);
-	border-radius: 50%;
-	object-fit: cover;
-}
-.displayName {
-	font-size: 1.3rem;
-	overflow-wrap: anywhere;
-}
-.username {
-	margin-top: 0.2rem;
-	color: var(--foreground-muted);
-	font: 0.82rem var(--font-mono, monospace);
-	overflow-wrap: anywhere;
-}
-.headerActions {
-	display: flex;
-	flex: none;
-	align-items: center;
-	gap: 0.5rem;
-}
 .redirect {
 	padding: 0.45rem 0.7rem;
 	border: 1px solid var(--border);
@@ -56,20 +15,6 @@
 .redirect:hover {
 	border-color: var(--primary);
 	color: var(--primary);
-}
-.tagRow {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-	margin-top: 1rem;
-}
-.tag {
-	padding: 0.28rem 0.6rem;
-	border: 1px solid var(--border);
-	border-radius: var(--control-radius);
-	background: var(--secondary-bg);
-	color: var(--secondary-fg);
-	font-size: 0.7rem;
 }
 .graphBox {
 	display: grid;
@@ -157,17 +102,6 @@
 	}
 }
 @media (max-width: 720px) {
-	.profileHeader {
-		padding: 0.85rem;
-	}
-	.avatar {
-		width: 56px;
-		height: 56px;
-	}
-	.headerRow {
-		align-items: flex-start;
-		flex-direction: column;
-	}
 	.metricGrid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
