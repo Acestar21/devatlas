@@ -90,6 +90,22 @@
 }
 
 @media (min-width: 901px) {
+	.nav {
+		flex-basis: 64px;
+		width: 64px;
+		align-items: stretch;
+	}
+
+	.item {
+		justify-content: center;
+		padding-right: 0.4rem;
+		padding-left: 0.4rem;
+	}
+
+	.label {
+		display: none;
+	}
+
 	.menu {
 		top: calc(100% + 0.5rem);
 		bottom: auto;
@@ -150,6 +166,44 @@
 	stroke-linecap: round;
 	stroke-linejoin: round;
 	stroke-width: 1.6;
+}
+
+.iconGlyph {
+	display: block;
+	width: 21px;
+	height: 21px;
+	background: currentColor;
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	-webkit-mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
+.icon-profile {
+	mask-image: url("/user-02-stroke-rounded.svg");
+	-webkit-mask-image: url("/user-02-stroke-rounded.svg");
+}
+
+.icon-github {
+	mask-image: url("/code-xml-stroke-rounded.svg");
+	-webkit-mask-image: url("/code-xml-stroke-rounded.svg");
+}
+
+.icon-activity {
+	mask-image: url("/fire-03-stroke-rounded.svg");
+	-webkit-mask-image: url("/fire-03-stroke-rounded.svg");
+}
+
+.icon-games {
+	mask-image: url("/gameboy-stroke-rounded.svg");
+	-webkit-mask-image: url("/gameboy-stroke-rounded.svg");
+}
+
+.icon-interests {
+	mask-image: url("/music-stroke-rounded.svg");
+	-webkit-mask-image: url("/music-stroke-rounded.svg");
 }
 
 .label {

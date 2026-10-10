@@ -1,31 +1,31 @@
 [data-theme="coffee"] {
-	--background: #f3ebe1;
-	--foreground: #2c221b;
-	--card-bg: #fff8ef;
-	--card-raised: #fffdf8;
-	--foreground-muted: #6f5c4d;
-	--foreground-dimmed: #8a7462;
-	--border: color-mix(in srgb, #8a5837 22%, #e6d5c4);
-	--border-muted: #eadccb;
-	--hairline: color-mix(in srgb, #ffffff 70%, transparent);
-	--highlight: color-mix(in srgb, #ffffff 80%, transparent);
-	--input-bg: #fffaf2;
-	--input-border: #c6a58a;
-	--primary: #7a4b2e;
-	--primary-foreground: #fff8ef;
-	--secondary-bg: #f0e2d2;
-	--secondary-fg: #5d3d28;
-	--accent-bg: #f4e6d6;
-	--accent-fg: #5d3d28;
+	--background: #c7a07d;
+	--foreground: #2c2018;
+	--card-bg: #e4bb92;
+	--card-raised: #f0ceb0;
+	--foreground-muted: #5c402c;
+	--foreground-dimmed: #795d45;
+	--border: #795032;
+	--border-muted: #a97954;
+	--hairline: color-mix(in srgb, #fff1dc 48%, transparent);
+	--highlight: color-mix(in srgb, #fff1dc 52%, transparent);
+	--input-bg: #edc7a5;
+	--input-border: #966340;
+	--primary: #714023;
+	--primary-foreground: #f8e5ce;
+	--secondary-bg: #c99b72;
+	--secondary-fg: #3e281a;
+	--accent-bg: #d8aa7d;
+	--accent-fg: #3e281a;
 	--danger: #b34d4d;
 	--online: #3a8f5c;
-	--surface-pattern: radial-gradient(1100px 460px at 8% -12%, color-mix(in srgb, #c9a27c 28%, transparent), transparent 55%),
-		radial-gradient(800px 380px at 92% 0%, color-mix(in srgb, #e8c9a4 40%, transparent), transparent 52%);
+	--surface-pattern: radial-gradient(circle at 18% 18%, color-mix(in srgb, #fff1dc 12%, transparent) 0 1px, transparent 1.5px),
+		radial-gradient(circle at 78% 66%, color-mix(in srgb, #704528 11%, transparent) 0 1px, transparent 1.5px);
 	--control-radius: 12px;
-	--card-radius: 22px;
-	--shell-radius: 28px;
-	--inner-radius: 18px;
-	--shadow-card: 0 16px 40px color-mix(in srgb, #8a5837 14%, transparent);
-	--shadow-lift: 0 24px 56px color-mix(in srgb, #8a5837 20%, transparent);
+	--card-radius: 20px;
+	--shell-radius: 22px;
+	--inner-radius: 14px;
+	--shadow-card: 0 8px 0 color-mix(in srgb, #684126 18%, transparent);
+	--shadow-lift: 0 12px 0 color-mix(in srgb, #684126 22%, transparent);
 	--glow: 0 0 0 1px color-mix(in srgb, var(--primary) 12%, transparent);
 }

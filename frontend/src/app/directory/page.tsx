@@ -1,5 +1,4 @@
 import { DirectoryResponse } from "@/types-directory";
-import Link from "next/link";
 import Image from "next/image";
 import DirectoryControls from "./DirectoryControls";
 import LoginModal from "@/app/components/LoginModal";

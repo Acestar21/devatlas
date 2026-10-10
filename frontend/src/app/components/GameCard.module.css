@@ -41,7 +41,7 @@ a.card:active {
 }
 
 .compact {
-	aspect-ratio: 3 / 4;
+	aspect-ratio: 16 / 7;
 	padding: 0;
 	min-height: 0;
 	border-radius: 12px;

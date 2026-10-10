@@ -3,7 +3,7 @@ import Link from "next/link";
 import ProfileNav from "@/app/components/ProfileNav";
 import AppShell from "@/app/components/AppShell";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
-import GameCard from "@/app/components/GameCard";
+import GamesPreview from "@/app/components/GamesPreview";
 import BadgeEmbed from "@/app/components/BadgeEmbed";
 import BioText from "@/app/components/BioText";
 import ContributionGraph from "@/app/components/ContributionGraph";
@@ -13,8 +13,12 @@ import styles from "./page.module.css";
 import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 import ModerationBanner from "@/app/components/ModerationBanner";
 import { loadProfile } from "@/lib/profile-api";
-import { bannerUrl, pronounsFor, statusFor } from "@/lib/profile-mock";
+import { bannerUrl } from "@/lib/profile-mock";
 import { gameArtUrl } from "@/lib/game-art";
+import {
+	getFeaturedPost,
+	getFeaturedProject,
+} from "@/lib/profile-board-mock";
 
 export default async function ProfilePage({
 	params,
@@ -39,8 +43,8 @@ export default async function ProfilePage({
 		(profile.games.length > 0 || profile.is_owner);
 	const hasInterests =
 		profile.interests !== null &&
-		(profile.interests.length > 0 || profile.is_owner);
-	const hasLinks = profile.content_links.length > 0;
+		(profile.interests.length > 0 || profile.is_owner) &&
+		(visibility.interests || profile.is_owner);
 	const stats = profile.stats;
 	const extra = stats?.extra;
 	const graphCardVisible =
@@ -55,7 +59,6 @@ export default async function ProfilePage({
 	const showLc =
 		(visibility.leetcode || profile.is_owner) &&
 		Boolean(profile.leetcode || profile.is_owner);
-	const showPersonal = hasGames || hasInterests;
 	const githubLink = profile.content_links.find(
 		(link) => link.label.toLowerCase() === "github",
 	);
@@ -66,6 +69,8 @@ export default async function ProfilePage({
 		(link) => !["linkedin", "github"].includes(link.label.toLowerCase()),
 	);
 	const featuredGame = profile.games?.[0] ?? null;
+	const featuredProject = getFeaturedProject(profile);
+	const featuredPost = getFeaturedPost(profile);
 
 	return (
 		<AppShell
@@ -85,11 +90,12 @@ export default async function ProfilePage({
 					visibility={visibility}
 					profile={profile}
 					activeSection="profile"
+					sectionLinks
 				/>
 				<div className={styles.container}>
 					<ModerationBanner profile={profile} />
 					<div className={styles.discordLayout}>
-						<section className={styles.identityCard}>
+						<section className={styles.identityCard} id="profile">
 							<div
 								className={styles.banner}
 								style={{
@@ -113,11 +119,6 @@ export default async function ProfilePage({
 										loading="eager"
 										className={styles.avatar}
 									/>
-									{/* MOCK: wire to profile.presence when backend adds it. */}
-									<span
-										className={styles.presence}
-										aria-label="Online"
-									/>
 								</div>
 								<div className={styles.identity}>
 									<h1>
@@ -126,16 +127,11 @@ export default async function ProfilePage({
 									</h1>
 									<div className={styles.handleRow}>
 										<p>@{profile.username}</p>
-										{/* MOCK: replace pronounsFor() with profile.pronouns. */}
 										<span className={styles.pronoun}>
-											{pronounsFor(profile.username)}
+											he/him
 										</span>
 									</div>
 								</div>
-								<p className={styles.statusBubble}>
-									{/* MOCK: replace statusFor() with profile.custom_status. */}
-									{statusFor(profile.username, profile.bio)}
-								</p>
 								{profile.bio && (
 									<BioText
 										text={profile.bio}
@@ -176,6 +172,46 @@ export default async function ProfilePage({
 										</a>
 									)}
 								</div>
+								{(profile.content_links.length > 0 ||
+									profile.is_owner) && (
+									<div className={styles.cardLinks} id="links">
+										<div className={styles.cardLinksHeading}>
+											<span className={styles.linkHeading}>
+												Links{" "}
+												<span aria-hidden="true">↗</span>
+											</span>
+											{profile.is_owner && (
+												<ProfileEditButton
+													profile={profile}
+													section="links"
+												/>
+											)}
+										</div>
+										{profile.content_links.length > 0 ? (
+											<div className={styles.linkRow}>
+												{profile.content_links.map(
+													(link, index) => (
+														<a
+															key={index}
+															href={link.url}
+															target="_blank"
+															rel="noreferrer"
+															className={
+																styles.contentLink
+															}
+														>
+															{link.label}
+														</a>
+													),
+												)}
+											</div>
+										) : (
+											<p className={styles.muted}>
+												Add links to your profile.
+											</p>
+										)}
+									</div>
+								)}
 								{featuredGame && (
 									<div className={styles.nowPlaying}>
 										{gameArtUrl(featuredGame.name) ? (
@@ -206,7 +242,14 @@ export default async function ProfilePage({
 								)}
 							</div>
 							{profile.stack_tags.length > 0 ? (
-								<div className={styles.tagRow}>
+								<div className={styles.profileSection} id="stack">
+									<div className={styles.sectionHeading}>
+										<p className={styles.sectionLabel}>Stack</p>
+										<span className={styles.quietAction}>
+											{profile.stack_tags.length} tools
+										</span>
+									</div>
+									<div className={styles.tagRow}>
 									{profile.stack_tags.map((tag) => (
 										<span
 											key={tag.id}
@@ -215,14 +258,39 @@ export default async function ProfilePage({
 											{tag.name}
 										</span>
 									))}
+									</div>
 								</div>
 							) : (
 								<p
 									className={styles.muted}
-									style={{ margin: "0.9rem 1.15rem 0" }}
+									id="stack"
 								>
 									Stack: Coming Soon
 								</p>
+							)}
+							{hasInterests && (
+								<div className={styles.profileSection} id="interests">
+									<div className={styles.sectionHeading}>
+										<p className={styles.sectionLabel}>Interests</p>
+										<Link
+											href={`/${profile.username}/interests`}
+											className={styles.viewAll}
+										>
+											View all
+										</Link>
+									</div>
+									{profile.interests?.length ? (
+										<div className={styles.tagRow}>
+											{profile.interests.slice(0, 5).map((interest) => (
+												<span key={interest.id} className={styles.tag}>
+													{interest.name}
+												</span>
+											))}
+										</div>
+									) : (
+										<p className={styles.muted}>Nothing added yet.</p>
+									)}
+								</div>
 							)}
 						</section>
 						<div className={styles.boardColumn}>
@@ -251,6 +319,7 @@ export default async function ProfilePage({
 							</nav>
 							{(visibility.github || profile.is_owner) && (
 								<section
+									id="activity"
 									className={`${styles.widget} ${!visibility.github ? styles.hiddenSection : ""}`}
 								>
 									<div className={styles.activityHeader}>
@@ -313,38 +382,101 @@ export default async function ProfilePage({
 									)}
 								</section>
 							)}
+							<div className={styles.featureGrid} id="projects">
+								<section className={styles.featureCard}>
+									<div className={styles.sectionHeading}>
+										<p className={styles.sectionLabel}>
+											Featured project
+										</p>
+										<span className={styles.mockLabel}>
+											{featuredProject.url
+												? "Pinned"
+												: "Preview"}
+										</span>
+									</div>
+									<div className={styles.projectPreview}>
+										<span className={styles.projectMark}>
+											{featuredProject.title
+												.slice(0, 1)
+												.toUpperCase()}
+										</span>
+										<div>
+											<strong>{featuredProject.title}</strong>
+											<p>{featuredProject.description}</p>
+										</div>
+									</div>
+									{featuredProject.url ? (
+										<a
+											href={featuredProject.url}
+											target="_blank"
+											rel="noreferrer"
+											className={styles.previewLink}
+										>
+											Open project
+										</a>
+									) : (
+										<span className={styles.previewMeta}>
+											{featuredProject.meta}
+										</span>
+									)}
+								</section>
+								<section className={styles.featureCard}>
+									<div className={styles.sectionHeading}>
+										<p className={styles.sectionLabel}>
+											Notes / socials
+										</p>
+										<span className={styles.mockLabel}>
+											{featuredPost.url
+												? "Latest"
+												: "Preview"}
+										</span>
+									</div>
+									<div className={styles.postPreview}>
+										<strong>{featuredPost.title}</strong>
+										<p>{featuredPost.description}</p>
+										<span className={styles.previewMeta}>
+											{featuredPost.meta}
+										</span>
+									</div>
+									{featuredPost.url ? (
+										<a
+											href={featuredPost.url}
+											target="_blank"
+											rel="noreferrer"
+											className={styles.previewLink}
+										>
+											Read post
+										</a>
+									) : (
+										<span className={styles.previewMeta}>
+											Backend content not connected
+										</span>
+									)}
+								</section>
+							</div>
 							{hasGames && (
 								<section
+									id="games"
 									className={`${styles.widget} ${!visibility.games ? styles.hiddenSection : ""}`}
 								>
 									<div className={styles.sectionHeading}>
 										<div>
 											<p className={styles.sectionLabel}>
-												Games I like
+												Currently playing
 											</p>
 											<p className={styles.widgetHint}>
 												Add up to 20 games
 											</p>
 										</div>
-										<Link
-											href={`/${profile.username}/games`}
-											className={styles.viewAll}
-										>
-											Show more
-										</Link>
+										<span className={styles.mockLabel}>
+											{profile.games?.length || 0} games
+										</span>
 									</div>
 									{profile.games?.length ? (
-										<div className={styles.gameList}>
-											{profile.games
-												.slice(0, 8)
-												.map((game, i) => (
-													<GameCard
-														key={`${game.name}-${i}`}
-														game={game}
-														compact
-													/>
-												))}
-										</div>
+										<GamesPreview
+											username={profile.username}
+											games={profile.games}
+										/>
 									) : (
 										<p className={styles.muted}>
 											Nothing added yet.
@@ -352,12 +484,10 @@ export default async function ProfilePage({
 									)}
 								</section>
 							)}
-							{(showLc || hasInterests) && (
+							{showLc && (
 								<div
 									className={
-										showLc && hasInterests
-											? styles.splitRow
-											: styles.stackRow
+										styles.stackRow
 									}
 								>
 									{showLc && (
@@ -394,108 +524,11 @@ export default async function ProfilePage({
 											)}
 										</section>
 									)}
-									{hasInterests && (
-										<section
-											className={`${styles.widget} ${!visibility.interests ? styles.hiddenSection : ""}`}
-										>
-											<div
-												className={
-													styles.sectionHeading
-												}
-											>
-												<p
-													className={
-														styles.sectionLabel
-													}
-												>
-													Interests
-												</p>
-												<Link
-													href={`/${profile.username}/interests`}
-													className={styles.viewAll}
-												>
-													View all
-												</Link>
-											</div>
-											{profile.interests?.length ? (
-												<div className={styles.tagRow}>
-													{profile.interests
-														.slice(0, 8)
-														.map((interest) => (
-															<span
-																key={
-																	interest.id
-																}
-																className={
-																	styles.tag
-																}
-															>
-																{interest.name}
-															</span>
-														))}
-												</div>
-											) : (
-												<p className={styles.muted}>
-													Nothing added yet.
-												</p>
-											)}
-										</section>
-									)}
 								</div>
 							)}
-							{(hasLinks || profile.is_owner) && (
-								<div
-									className={
-										profile.is_owner
-											? styles.linksRow
-											: styles.linksOnly
-									}
-								>
-									{hasLinks && (
-										<section className={styles.widget}>
-											<div
-												className={
-													styles.sectionHeading
-												}
-											>
-												<p
-													className={
-														styles.sectionLabel
-													}
-												>
-													Links
-												</p>
-												{profile.is_owner && (
-													<ProfileEditButton
-														profile={profile}
-														section="links"
-													/>
-												)}
-											</div>
-											<div className={styles.linkRow}>
-												{profile.content_links.map(
-													(link, index) => (
-														<a
-															key={index}
-															href={link.url}
-															target="_blank"
-															rel="noreferrer"
-															className={
-																styles.contentLink
-															}
-														>
-															{link.label}
-														</a>
-													),
-												)}
-											</div>
-										</section>
-									)}
-									{profile.is_owner && (
-										<BadgeEmbed
-											username={profile.username}
-										/>
-									)}
+							{profile.is_owner && (
+								<div className={styles.badgeRow}>
+									<BadgeEmbed username={profile.username} />
 								</div>
 							)}
 						</div>

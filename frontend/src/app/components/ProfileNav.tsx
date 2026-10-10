@@ -13,70 +13,83 @@ export default function ProfileNav({
 	visibility,
 	profile,
 	activeSection = "profile",
+	sectionLinks = false,
 }: {
 	username: string;
 	showGithub: boolean;
 	visibility?: Partial<Record<"github" | "games" | "interests", boolean>>;
 	profile?: Profile;
 	activeSection?: string;
+	sectionLinks?: boolean;
 }) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const items = [
 		{
 			href: `/${username}`,
-			icon: "home",
+			icon: "profile",
 			label: "Profile",
+			section: "profile",
 			visible: true,
 			disabled: false,
 		},
 		{
-			href: `/${username}/github`,
-			icon: "code",
-			label: "GitHub",
+			href: sectionLinks ? `/${username}#projects` : `/${username}/github`,
+			icon: "github",
+			label: sectionLinks ? "Projects" : "GitHub",
+			section: sectionLinks ? "projects" : "github",
 			visible:
 				showGithub &&
 				(visibility?.github !== false || profile?.is_owner),
 			disabled: false,
 		},
 		{
-			href: `/${username}/activity`,
+			href: sectionLinks ? `/${username}#activity` : `/${username}/activity`,
 			icon: "activity",
 			label: "Activity",
+			section: "activity",
 			visible: true,
 			disabled: false,
 		},
 		{
-			href: `/${username}/games`,
-			icon: "game",
+			href: sectionLinks ? `/${username}#games` : `/${username}/games`,
+			icon: "games",
 			label: "Games",
+			section: "games",
 			visible: visibility?.games !== false || profile?.is_owner,
 			disabled: false,
 		},
 		{
-			href: `/${username}/interests`,
-			icon: "interest",
+			href: sectionLinks ? `/${username}#interests` : `/${username}/interests`,
+			icon: "interests",
 			label: "Interests",
+			section: "interests",
 			visible: visibility?.interests !== false || profile?.is_owner,
 			disabled: false,
 		},
 	];
+	if (sectionLinks) {
+		items.push(
+			{
+				href: `/${username}#stack`,
+				icon: "github",
+				label: "Stack",
+				section: "stack",
+				visible: true,
+				disabled: false,
+			},
+			{
+				href: `/${username}#links`,
+				icon: "profile",
+				label: "Links",
+				section: "links",
+				visible: true,
+				disabled: false,
+			},
+		);
+	}
 
 	const icon = (name: string) => {
-		const paths: Record<string, string> = {
-			home: "M3 10.5 12 3l9 7.5v9H14v-6h-4v6H3z",
-			code: "m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16",
-			activity:
-				"M4 14c0-4 2-7 5-9l1 4 3-2c2 2 4 5 3 9-1 3-4 5-7 5s-5-3-5-7z",
-			game: "M6 10h12a4 4 0 0 1 4 4v3a3 3 0 0 1-5 2l-2-2h-6l-2 2a3 3 0 0 1-5-2v-3a4 4 0 0 1 4-4zM8 14v4M6 16h4M17 15h.01M20 17h.01",
-			interest:
-				"M4 9a8 8 0 0 1 16 0v6a3 3 0 0 1-3 3h-1v-7h4M4 9v9h1a3 3 0 0 0 3-3v-4H4",
-			link: "M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1M14 11a5 5 0 0 0-7.1-.1l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1",
-		};
-		return (
-			<svg viewBox="0 0 24 24" aria-hidden="true">
-				<path d={paths[name]} />
-			</svg>
-		);
+		return <span className={`${styles.iconGlyph} ${styles[`icon-${name}`]}`} aria-hidden="true" />;
 	};
 
 	return (
@@ -102,7 +115,9 @@ export default function ProfileNav({
 						<Link
 							key={item.href}
 							href={item.href}
-							className={`${styles.item} ${activeSection === item.label.toLowerCase() ? styles.active : ""}`}
+							title={item.label}
+							aria-label={item.label}
+							className={`${styles.item} ${activeSection === item.section ? styles.active : ""}`}
 						>
 							<span className={styles.icon}>
 								{icon(item.icon)}

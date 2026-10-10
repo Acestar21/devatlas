@@ -1,6 +1,6 @@
 .page {
 	min-height: 100dvh;
-	padding-bottom: 3rem;
+	padding: 1.25rem 1.25rem 3rem;
 	color: var(--foreground);
 }
 
@@ -72,9 +72,9 @@
 	display: flex;
 	align-items: flex-start;
 	gap: 1.15rem;
-	width: min(100%, 1180px);
+	width: min(100%, 1120px);
 	margin: 0 auto;
-	padding: 1.5rem 1.25rem 0;
+	padding: 0;
 }
 
 .container {
@@ -88,7 +88,7 @@
 
 .discordLayout {
 	display: grid;
-	grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+	grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
 	gap: 1rem;
 	align-items: start;
 }
@@ -99,7 +99,7 @@
 	position: relative;
 	overflow: hidden;
 	background: var(--card-bg);
-	border: 1px solid var(--border);
+	border: 2px solid var(--border);
 	border-radius: var(--card-radius);
 	box-shadow:
 		inset 0 1px 0 var(--highlight),
@@ -108,11 +108,14 @@
 
 .identityCard {
 	padding: 0 0 1.15rem;
+	position: sticky;
+	top: calc(52px + 1rem);
+	align-self: start;
 }
 
 .banner {
 	position: relative;
-	height: 132px;
+	height: 112px;
 	background:
 		linear-gradient(180deg, transparent 30%, var(--card-bg)),
 		var(--banner-image) center / cover no-repeat,
@@ -190,31 +193,6 @@
 	font: 0.65rem var(--font-mono, monospace);
 }
 
-.statusBubble {
-	position: relative;
-	margin-top: 0.85rem;
-	padding: 0.7rem 0.85rem;
-	border-radius: 14px;
-	background: var(--card-raised);
-	border: 1px solid var(--border-muted);
-	color: var(--foreground-muted);
-	font-size: 0.78rem;
-	line-height: 1.45;
-}
-
-.statusBubble::before {
-	content: "";
-	position: absolute;
-	top: -7px;
-	left: 18px;
-	width: 12px;
-	height: 12px;
-	border-left: 1px solid var(--border-muted);
-	border-top: 1px solid var(--border-muted);
-	background: var(--card-raised);
-	transform: rotate(45deg);
-}
-
 .bio {
 	margin-top: 0.85rem;
 	color: var(--foreground-muted);
@@ -282,21 +260,60 @@
 	margin: 0.95rem 1.15rem 0;
 }
 
-.linksRow {
+.cardLinks {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
-	align-items: stretch;
-	gap: 1rem;
+	gap: 0.55rem;
+	margin-top: 1rem;
+	padding-top: 0.9rem;
+	border-top: 1px solid var(--border-muted);
 }
 
-.linksRow > .panel,
-.linksRow > .widget {
-	height: 100%;
+.profileSection {
+	display: grid;
+	gap: 0.55rem;
+	margin: 1rem 1.15rem 0;
+	padding-top: 0.9rem;
+	border-top: 1px solid var(--border-muted);
+	scroll-margin-top: 4.5rem;
 }
 
-.linksOnly > .panel,
-.linksOnly > .widget {
-	width: 100%;
+.quietAction {
+	color: var(--foreground-dimmed);
+	font: 0.62rem var(--font-mono, monospace);
+}
+
+.cardLinksHeading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	color: var(--foreground-muted);
+	font: 0.68rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+.badgeRow {
+	display: flex;
+	justify-content: flex-end;
+	min-width: 0;
+}
+
+.badgeRow > * {
+	width: min(100%, 260px);
+	min-width: 0;
+}
+
+.linkHeading {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.linkHeading span {
+	color: var(--primary);
+	font-family: var(--font-mono, monospace);
+	font-size: 0.9em;
 }
 
 .tag,
@@ -324,7 +341,14 @@
 
 .panel,
 .widget {
+	min-width: 0;
 	padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.panel > *,
+.widget > * {
+	min-width: 0;
+	max-width: 100%;
 }
 
 .boardColumn {
@@ -338,7 +362,7 @@
 	display: flex;
 	gap: 0.35rem;
 	padding: 0.3rem;
-	border: 1px solid var(--border);
+	border: 2px solid var(--border);
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--card-bg) 80%, transparent);
 	box-shadow: inset 0 1px 0 var(--highlight);
@@ -383,6 +407,7 @@
 	justify-content: space-between;
 	align-items: flex-start;
 	gap: 1rem;
+	min-width: 0;
 }
 
 .eyebrow,
@@ -421,6 +446,100 @@
 	border-radius: var(--inner-radius);
 	color: var(--foreground-muted);
 	font-size: 0.75rem;
+}
+
+.featureGrid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 1rem;
+}
+
+.featureCard {
+	display: grid;
+	gap: 0.7rem;
+	min-width: 0;
+	padding: 1.1rem 1.2rem 1.2rem;
+	overflow: hidden;
+	background: var(--card-bg);
+	border: 2px solid var(--border);
+	border-radius: var(--card-radius);
+	box-shadow:
+		inset 0 1px 0 var(--highlight),
+		var(--shadow-card);
+}
+
+.featureCard .sectionHeading {
+	align-items: center;
+}
+
+.mockLabel {
+	color: var(--foreground-dimmed);
+	font: 0.6rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+.projectPreview {
+	display: grid;
+	grid-template-columns: 68px minmax(0, 1fr);
+	gap: 0.75rem;
+	align-items: center;
+	min-width: 0;
+	padding: 0.7rem;
+	border: 2px solid var(--border-muted);
+	border-radius: var(--inner-radius);
+	background: var(--secondary-bg);
+}
+
+.projectMark {
+	display: grid;
+	place-items: center;
+	aspect-ratio: 1;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--accent-bg);
+	color: var(--primary);
+	font: 700 1.4rem var(--font-mono, monospace);
+}
+
+.projectPreview strong,
+.postPreview strong {
+	display: block;
+	color: var(--foreground);
+	font-size: 0.78rem;
+	overflow-wrap: anywhere;
+}
+
+.projectPreview p,
+.postPreview p {
+	margin-top: 0.25rem;
+	color: var(--foreground-muted);
+	font-size: 0.68rem;
+	line-height: 1.45;
+	overflow-wrap: anywhere;
+}
+
+.postPreview {
+	min-width: 0;
+	padding: 0.75rem;
+	border: 2px solid var(--border-muted);
+	border-radius: var(--inner-radius);
+	background: var(--secondary-bg);
+}
+
+.previewMeta,
+.previewLink {
+	display: inline-block;
+	color: var(--foreground-dimmed);
+	font: 0.62rem var(--font-mono, monospace);
+}
+
+.previewLink {
+	color: var(--primary);
+}
+
+.previewLink:hover {
+	text-decoration: underline;
 }
 
 .twoColumn {
@@ -509,6 +628,11 @@
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 1rem;
+	align-items: stretch;
+}
+
+.splitRow > * {
+	min-width: 0;
 }
 
 .stackRow {
@@ -556,10 +680,6 @@
 }
 
 @media (max-width: 1100px) {
-	.discordLayout {
-		grid-template-columns: 1fr;
-	}
-
 	.gameList {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
@@ -572,6 +692,14 @@
 
 	.topBar {
 		background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+	}
+
+	.discordLayout {
+		grid-template-columns: 1fr;
+	}
+
+	.identityCard {
+		position: static;
 	}
 }
 
@@ -591,7 +719,7 @@
 
 	.splitRow,
 	.twoColumn,
-	.linksRow {
+	.featureGrid {
 		grid-template-columns: 1fr;
 	}
 
@@ -637,16 +765,353 @@
 	}
 
 	.gameList {
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
 	.boardTabs {
 		width: 100%;
 		overflow-x: auto;
+		justify-content: flex-start;
+		scrollbar-width: none;
+	}
+
+	.boardTabs::-webkit-scrollbar {
+		display: none;
+	}
+
+	.boardTab {
+		flex: 0 0 auto;
+		white-space: nowrap;
 	}
 
 	.footer {
 		margin-top: 1.25rem;
 		padding: 0 0.65rem 1rem;
+	}
+}
+
+@media (max-width: 390px) {
+	.layout {
+		padding-right: 0.5rem;
+		padding-left: 0.5rem;
+	}
+
+	.profileBody {
+		padding-right: 0.9rem;
+		padding-left: 0.9rem;
+	}
+
+	.identityCard > .tagRow,
+	.profileBody .tagRow {
+		margin-right: 0.9rem;
+		margin-left: 0.9rem;
+	}
+
+	.profileLinks {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.actionBtn,
+	.external,
+	.social {
+		width: 100%;
+		padding-right: 0.55rem;
+		padding-left: 0.55rem;
+	}
+
+	.panel,
+	.widget {
+		padding-right: 0.75rem;
+		padding-left: 0.75rem;
+	}
+
+	.statValue {
+		font-size: 1.45rem;
+	}
+}
+
+/* desktop-3 visual system */
+@media (min-width: 901px) {
+	.page {
+		padding: 0.9rem 1rem 2.5rem;
+	}
+
+	.layout {
+		width: min(100%, 1000px);
+		gap: 0.8rem;
+	}
+
+	.container,
+	.boardColumn {
+		gap: 0.8rem;
+	}
+
+	.discordLayout {
+		grid-template-columns: minmax(290px, 326px) minmax(0, 1fr);
+		gap: 0.8rem;
+	}
+
+	.identityCard {
+		top: 4.2rem;
+		border-radius: 22px;
+		box-shadow:
+			inset 0 1px 0 var(--highlight),
+			0 7px 0 color-mix(in srgb, var(--border) 24%, transparent);
+	}
+
+	.banner {
+		height: 96px;
+	}
+
+	.profileBody {
+		padding: 0 1rem 0.2rem;
+		margin-top: -42px;
+	}
+
+	.avatarWrap,
+	.avatar {
+		width: 82px;
+		height: 82px;
+	}
+
+	.avatar {
+		border-width: 4px;
+	}
+
+	.identity {
+		margin-top: 0.55rem;
+	}
+
+	.identity h1 {
+		font-size: 1.15rem;
+	}
+
+	.bio {
+		margin-top: 0.7rem;
+		font-size: 0.74rem;
+		line-height: 1.45;
+	}
+
+	.profileLinks {
+		margin-top: 0.7rem;
+	}
+
+	.actionBtn,
+	.external,
+	.social {
+		min-height: 29px;
+		padding: 0 0.65rem;
+		font-size: 0.66rem;
+	}
+
+	.cardLinks {
+		margin-top: 0.75rem;
+		padding-top: 0.7rem;
+	}
+
+	.identityCard > .tagRow,
+	.profileBody .tagRow {
+		margin-top: 0.7rem;
+	}
+
+	.tag,
+	.contentLink {
+		min-height: 23px;
+		padding: 0.18rem 0.45rem;
+		font-size: 0.62rem;
+	}
+
+	.boardTabs {
+		gap: 0.2rem;
+		padding: 0.22rem;
+		border-width: 1px;
+	}
+
+	.boardTab {
+		padding: 0.32rem 0.7rem;
+		font-size: 0.68rem;
+	}
+
+	.widget,
+	.featureCard {
+		padding: 0.85rem 0.95rem 0.95rem;
+		border-radius: 19px;
+	}
+
+	.eyebrow,
+	.sectionLabel {
+		font-size: 0.78rem;
+	}
+
+	.statValue {
+		font-size: 1.45rem;
+	}
+
+	.featureGrid {
+		gap: 0.8rem;
+	}
+
+	.projectPreview,
+	.postPreview {
+		padding: 0.58rem;
+		border-radius: 13px;
+	}
+
+	.projectPreview {
+		grid-template-columns: 54px minmax(0, 1fr);
+		gap: 0.55rem;
+	}
+
+	.projectMark {
+		font-size: 1.1rem;
+	}
+
+	.projectPreview strong,
+	.postPreview strong {
+		font-size: 0.68rem;
+	}
+
+	.projectPreview p,
+	.postPreview p {
+		font-size: 0.6rem;
+	}
+}
+
+/* Figma profile-board treatment, mapped to the existing theme tokens. */
+@media (min-width: 901px) {
+	.page {
+		padding: 2rem 1.6rem 4.5rem;
+	}
+
+	.layout {
+		width: min(100%, 1110px);
+		gap: 1.1rem;
+	}
+
+	.container {
+		gap: 0.9rem;
+	}
+
+	.discordLayout {
+		grid-template-columns: minmax(330px, 0.82fr) minmax(500px, 1.22fr);
+		gap: 1.1rem;
+	}
+
+	.identityCard,
+	.widget,
+	.featureCard {
+		border-width: 3px;
+		border-radius: 30px;
+		background: linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--secondary-bg) 92%, var(--card-bg)) 2%,
+			var(--card-bg) 85%
+		);
+		box-shadow: 0 2px 0 color-mix(in srgb, var(--border) 18%, transparent);
+	}
+
+	.identityCard {
+		top: 5.4rem;
+		padding-bottom: 1.35rem;
+	}
+
+	.banner {
+		height: 152px;
+	}
+
+	.profileBody {
+		padding: 0 1.4rem;
+		margin-top: -34px;
+	}
+
+	.avatarWrap,
+	.avatar {
+		width: 96px;
+		height: 96px;
+	}
+
+	.avatar {
+		border-width: 5px;
+	}
+
+	.identity h1 {
+		font-size: 1.3rem;
+	}
+
+	.bio {
+		margin: 0.7rem 0 1rem;
+		padding: 0.95rem 1rem;
+		border: 3px solid var(--accent-bg);
+		border-radius: 22px;
+		background: var(--card-raised);
+		font-size: 0.78rem;
+	}
+
+	.profileSection,
+	.cardLinks {
+		margin-right: 1.4rem;
+		margin-left: 1.4rem;
+		padding-top: 0.95rem;
+	}
+
+	.profileSection {
+		margin-top: 0.85rem;
+	}
+
+	.profileSection .tagRow,
+	.cardLinks .linkRow {
+		margin-top: 0.55rem;
+	}
+
+	.tag,
+	.contentLink {
+		padding: 0.32rem 0.6rem;
+		border-color: var(--border);
+		background: var(--primary);
+		color: var(--primary-foreground);
+		font: 0.64rem var(--font-mono, monospace);
+	}
+
+	.contentLink {
+		background: var(--accent-bg);
+		color: var(--accent-fg);
+	}
+
+	.boardColumn {
+		gap: 0.9rem;
+	}
+
+	.boardTabs {
+		display: none;
+	}
+
+	.widget,
+	.featureCard {
+		padding: 1.15rem 1.35rem 1.3rem;
+	}
+
+	.featureGrid {
+		grid-template-columns: minmax(215px, 0.85fr) minmax(270px, 1.15fr);
+		gap: 0.9rem;
+	}
+
+	.featureCard {
+		min-height: 250px;
+	}
+
+	.projectPreview,
+	.postPreview {
+		border-color: var(--border);
+		border-radius: 18px;
+		background: var(--card-raised);
+	}
+
+	.postPreview {
+		padding: 1rem;
+	}
+
+	.gameCard {
+		border-radius: 10px;
 	}
 }

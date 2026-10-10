@@ -1,7 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import ThemeSwitcher from "./ThemeSwitcher";
-import MobileNav from "./MobileNav";
+import AdaptiveNavbar from "./AdaptiveNavbar";
 import styles from "./AppShell.module.css";
 
 type Viewer = {
@@ -22,48 +20,7 @@ export default function AppShell({
 }) {
 	return (
 		<>
-			<header className={styles.topBar}>
-				<div className={styles.topBarInner}>
-					<Link href="/directory" className={styles.brand}>
-						DevAtlas
-					</Link>
-					<div className={styles.desktopActions}>
-						<ThemeSwitcher
-							initialTheme={initialTheme}
-							mobileIcon
-						/>
-						<Link href="/directory" className={styles.topLink}>
-							/Directory
-						</Link>
-						{viewer ? (
-							<Link
-								href={`/${viewer.username}`}
-								aria-label="Open your profile"
-							>
-								<Image
-									src={
-										viewer.avatar_url ||
-										"/default-avatar.png"
-									}
-									alt="Your profile"
-									width={40}
-									height={40}
-									loading="eager"
-									className={styles.avatar}
-								/>
-							</Link>
-						) : (
-							<Link
-								href="/directory?login=1"
-								className={styles.topLink}
-							>
-								/login
-							</Link>
-						)}
-					</div>
-					<MobileNav viewer={viewer} initialTheme={initialTheme} />
-				</div>
-			</header>
+			<AdaptiveNavbar viewer={viewer} initialTheme={initialTheme} />
 			{children}
 			<footer className={styles.footer}>
 				<div className={styles.divider} />
