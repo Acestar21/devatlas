@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Defaults to no admin locally until explicitly configured.
     admin_github_id: int = 0
     seed_system_user_id: int | None = None
+    # IGDB (via Twitch) for game search/art; optional - the editor falls back to a local list
+    twitch_client_id: str | None = None
+    twitch_client_secret: str | None = None
 
 
 settings = Settings()

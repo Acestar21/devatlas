@@ -143,6 +143,7 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
         "is_owner": is_owner,
         "section_visibility": visibility,
         "card_visibility": card_vis,
+        "layout": json.loads(profile.layout_json) if profile and profile.layout_json else {},
         "moderation": moderation_info(user) if (is_owner or is_staff(viewer)) else None,
         "viewer_role": effective_role(viewer),
     }
@@ -250,6 +251,9 @@ def update_profile(
         if len(update.gaming_handles) > MAX_HANDLES:
             raise HTTPException(status_code=400, detail=f"Up to {MAX_HANDLES} handles allowed.")
         profile.gaming_handles_json = json.dumps([h.model_dump() for h in update.gaming_handles])
+
+    if update.layout is not None:
+        profile.layout_json = update.layout.model_dump_json()
 
     db.add(profile)
     db.commit()

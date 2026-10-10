@@ -1,18 +1,21 @@
-import Image from "next/image";
-import Link from "next/link";
-import ProfileNav from "@/app/components/ProfileNav";
-import ThemeSwitcher from "@/app/components/ThemeSwitcher";
-import ProfileEditButton from "@/app/components/ProfileEditButton";
-import GameCard from "@/app/components/GameCard";
-import BadgeEmbed from "@/app/components/BadgeEmbed";
-import BioText from "@/app/components/BioText";
 import ContributionGraph from "@/app/components/ContributionGraph";
+import FeaturedProject from "@/app/components/FeaturedProject";
+import GameCard from "@/app/components/GameCard";
 import LeetcodeCard from "@/app/components/LeetcodeCard";
+import ModerationBanner from "@/app/components/ModerationBanner";
+import Panel from "@/app/components/Panel";
+import PostCard from "@/app/components/PostCard";
+import ProfileCard from "@/app/components/ProfileCard";
+import ProfileFrame from "@/app/components/ProfileFrame";
+import ReorderableGrid, { GridCard } from "@/app/components/ReorderableGrid";
+import { findProfileBanner } from "@/lib/banners";
+import { withBanners } from "@/lib/pinned";
+import { loadProfile } from "@/lib/profile-api";
 import { currentStreakRange, joinedAgo } from "@/lib/streak";
 import styles from "./page.module.css";
-import { fetchViewer, getThemeCookie } from "@/lib/server-context";
-import ModerationBanner from "@/app/components/ModerationBanner";
-import { loadProfile } from "@/lib/profile-api";
+
+/** Default card order; the owner's saved layout overrides it. */
+const DEFAULT_ORDER = ["github", "featured", "writing", "leetcode", "games"];
 
 export default async function ProfilePage({
 	params,
@@ -20,11 +23,7 @@ export default async function ProfilePage({
 	params: Promise<{ username: string }>;
 }) {
 	const { username } = await params;
-	const [profile, viewer] = await Promise.all([
-		loadProfile(username),
-		fetchViewer(),
-	]);
-	const themeCookie = await getThemeCookie();
+	const profile = await loadProfile(username);
 
 	const visibility = profile.section_visibility || {
 		github: true,
@@ -32,422 +31,177 @@ export default async function ProfilePage({
 		games: true,
 		interests: true,
 	};
-	const hasGames =
-		profile.games !== null &&
-		(profile.games.length > 0 || profile.is_owner);
-	const hasInterests =
-		profile.interests !== null &&
-		(profile.interests.length > 0 || profile.is_owner);
-	const hasLinks = profile.content_links.length > 0;
 	const stats = profile.stats;
 	const extra = stats?.extra;
-	const graphCardVisible =
-		profile.card_visibility?.github?.graph !== false || profile.is_owner;
-	const lcMuted =
-		!visibility.leetcode ||
-		profile.card_visibility?.activity?.leetcode === false;
+	const cardVis = profile.card_visibility;
+	const owner = profile.is_owner;
+
+	const [banner, projects] = await Promise.all([
+		findProfileBanner(profile.username),
+		withBanners(stats?.pinned_repos),
+	]);
+
 	const streakRange =
-		stats?.calendar && extra
-			? currentStreakRange(stats.calendar, extra.current_streak)
-			: null;
+		stats?.calendar && extra ? currentStreakRange(stats.calendar, extra.current_streak) : null;
+
+	const showGithub = visibility.github || owner;
+	const showFeatured = showGithub && (cardVis?.github?.pinned !== false || owner) && stats !== null;
+	const posts = [...(profile.posts ?? [])].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+	const showWriting = (posts.length > 0 || owner) && (cardVis?.activity?.posts !== false || owner);
 	const showLc =
-		(visibility.leetcode || profile.is_owner) &&
-		Boolean(profile.leetcode || profile.is_owner);
-	const showPersonal = hasGames || hasInterests;
+		(visibility.leetcode || owner) && Boolean(profile.leetcode || owner);
+	const lcMuted = !visibility.leetcode || cardVis?.activity?.leetcode === false;
+	const showGames = profile.games !== null && ((profile.games?.length ?? 0) > 0 || owner) && (visibility.games || owner);
+
+	const cards: GridCard[] = [];
+
+	if (showGithub) {
+		cards.push({
+			id: "github",
+			label: "GitHub activity",
+			span: 2,
+			node: (
+				<Panel
+					label="GitHub activity"
+					gearSection="github"
+					viewAllHref={stats ? `/${profile.username}/github` : undefined}
+					muted={!visibility.github}
+				>
+					<div className={styles.activityHeader}>
+						<div>
+							<p className={styles.statValue}>
+								{stats?.available ? stats.total_contributions : "—"}
+							</p>
+							<p className={styles.muted}>contributions in the last year</p>
+						</div>
+						{extra && (
+							<div className={styles.streak}>
+								<p className={styles.statValue}>
+									{extra.current_streak} <span className={styles.muted}>Day Streak</span>
+								</p>
+								{streakRange && <p className={styles.muted}>{streakRange}</p>}
+							</div>
+						)}
+					</div>
+					{cardVis?.github?.graph !== false || owner ? (
+						stats?.calendar?.length ? (
+							<ContributionGraph weeks={stats.calendar} />
+						) : (
+							<div className={styles.graphPlaceholder}>No contribution data yet</div>
+						)
+					) : null}
+					{extra?.joined && <p className={styles.muted}>Joined GitHub {joinedAgo(extra.joined)}</p>}
+				</Panel>
+			),
+		});
+	}
+
+	if (showFeatured) {
+		cards.push({
+			id: "featured",
+			label: "Featured project",
+			span: 1,
+			node: (
+				<Panel
+					label="Featured project"
+					gearSection="github"
+					gearLabel="Edit GitHub card settings"
+					viewAllHref={`/${profile.username}/github`}
+					muted={cardVis?.github?.pinned === false}
+				>
+					<FeaturedProject projects={projects} />
+				</Panel>
+			),
+		});
+	}
+
+	if (showWriting) {
+		cards.push({
+			id: "writing",
+			label: "Writing",
+			span: 1,
+			node: (
+				<Panel
+					label="Writing"
+					gearSection="activity"
+					gearLabel="Edit writing settings"
+					viewAllHref={`/${profile.username}/activity`}
+					muted={cardVis?.activity?.posts === false}
+				>
+					{posts.length > 0 ? (
+						<div className={styles.postStack}>
+							{posts.slice(0, 2).map((post, i) => (
+								<PostCard key={`${post.url}-${i}`} post={post} />
+							))}
+						</div>
+					) : (
+						<p className={styles.muted}>No posts added yet.</p>
+					)}
+				</Panel>
+			),
+		});
+	}
+
+	if (showLc) {
+		cards.push({
+			id: "leetcode",
+			label: "LeetCode",
+			span: 1,
+			node: (
+				<Panel label="LeetCode" gearSection="leetcode" gearLabel="Edit LeetCode stats" muted={lcMuted}>
+					{profile.leetcode ? (
+						<LeetcodeCard lc={profile.leetcode} />
+					) : (
+						<p className={styles.muted}>Add your solved counts.</p>
+					)}
+				</Panel>
+			),
+		});
+	}
+
+	if (showGames) {
+		cards.push({
+			id: "games",
+			label: "Games",
+			span: 1,
+			node: (
+				<Panel
+					label="Games"
+					gearSection="games"
+					gearLabel="Edit games"
+					viewAllHref={`/${profile.username}/games`}
+					muted={!visibility.games}
+				>
+					{profile.games?.length ? (
+						<div className={styles.gameGrid}>
+							{profile.games.slice(0, 4).map((game, i) => (
+								<GameCard key={`${game.name}-${i}`} game={game} />
+							))}
+						</div>
+					) : (
+						<p className={styles.muted}>Nothing added yet.</p>
+					)}
+				</Panel>
+			),
+		});
+	}
+
+	const saved = profile.layout?.main ?? [];
 
 	return (
-		<main className={styles.page}>
-			<header className={styles.topBar}>
-				<Link href="/directory" className={styles.brand}>
-					DevAtlas
-				</Link>
-				<div className={styles.topActions}>
-					<ThemeSwitcher
-						initialTheme={themeCookie || profile.theme}
-						mobileIcon
+		<ProfileFrame profile={profile} active="profile">
+			<ModerationBanner profile={profile} />
+			<div className={styles.home}>
+				<ProfileCard profile={profile} banner={banner} />
+				<div className={styles.main}>
+					<ReorderableGrid
+						key={saved.join(",")}
+						cards={cards}
+						savedOrder={saved.length ? saved : DEFAULT_ORDER}
+						canEdit={owner}
 					/>
-					<Link href="/directory" className={styles.topLink}>
-						/Directory
-					</Link>
-					{viewer ? (
-						<Link
-							href={`/${viewer.username}`}
-							aria-label="Open your profile"
-						>
-							<Image
-								src={viewer.avatar_url || "/default-avatar.png"}
-								alt="Your profile"
-								width={40}
-								height={40}
-								loading="eager"
-								className={styles.viewerAvatar}
-							/>
-						</Link>
-					) : (
-						<Link
-							href="/directory?login=1"
-							className={styles.topLink}
-						>
-							/login
-						</Link>
-					)}
-				</div>
-			</header>
-			<div className={styles.layout}>
-				<ProfileNav
-					username={profile.username}
-					showGithub={profile.stats !== null}
-					visibility={visibility}
-					profile={profile}
-					activeSection="profile"
-				/>
-				<div className={styles.container}>
-					<ModerationBanner profile={profile} />
-					<section className={styles.profileCard}>
-						<div className={styles.banner} />
-						<div className={styles.profileBody}>
-							<Image
-								src={
-									profile.avatar_url || "/default-avatar.png"
-								}
-								alt={profile.display_name || profile.username}
-								width={96}
-								height={96}
-								loading="eager"
-								className={styles.avatar}
-							/>
-							<div className={styles.identity}>
-								<h1>
-									{profile.display_name || profile.username}
-								</h1>
-								<p>@{profile.username}</p>
-								{profile.bio && (
-									<BioText
-										text={profile.bio}
-										className={styles.bio}
-									/>
-								)}
-							</div>
-							<div className={styles.profileLinks}>
-								{profile.content_links
-									.filter(
-										(link) =>
-											!["linkedin", "github"].includes(
-												link.label.toLowerCase(),
-											),
-									)
-									.slice(0, 1)
-									.map((link) => (
-										<a
-											key={link.url}
-											href={link.url}
-											target="_blank"
-											rel="noreferrer"
-											aria-label="Open portfolio"
-											className={`${styles.social} ${styles.portfolio}`}
-										>
-											↗
-										</a>
-									))}
-								{profile.content_links
-									.filter(
-										(link) =>
-											link.label.toLowerCase() ===
-											"github",
-									)
-									.slice(0, 1)
-									.map((link) => (
-										<a
-											key={link.url}
-											href={link.url}
-											target="_blank"
-											rel="noreferrer"
-											aria-label="Open GitHub profile"
-											className={`${styles.external} ${styles.github}`}
-										>
-											GH
-										</a>
-									))}
-								{profile.content_links
-									.filter(
-										(link) =>
-											link.label.toLowerCase() ===
-											"linkedin",
-									)
-									.slice(0, 1)
-									.map((link) => (
-										<a
-											key={link.url}
-											href={link.url}
-											target="_blank"
-											rel="noreferrer"
-											aria-label="Open LinkedIn"
-											className={`${styles.social} ${styles.linkedin}`}
-										>
-											in
-										</a>
-									))}
-							</div>
-						</div>
-						{profile.stack_tags.length > 0 ? (
-							<div className={styles.tagRow}>
-								{profile.stack_tags.map((tag) => (
-									<span key={tag.id} className={styles.tag}>
-										{tag.name}
-									</span>
-								))}
-							</div>
-						) : (
-							<p className={styles.muted}>Stack: Coming Soon</p>
-						)}
-					</section>
-					{(visibility.github || profile.is_owner) && (
-						<section
-							className={`${styles.panel} ${!visibility.github ? styles.hiddenSection : ""}`}
-						>
-							<div className={styles.activityHeader}>
-								<div>
-									<p className={styles.eyebrow}>
-										GitHub activity
-									</p>
-									<p className={styles.statValue}>
-										{stats?.available
-											? stats.total_contributions
-											: "—"}
-									</p>
-									<p className={styles.muted}>
-										contributions in the last year
-									</p>
-								</div>
-								{extra && (
-									<div className={styles.streak}>
-										<p className={styles.statValue}>
-											{extra.current_streak}{" "}
-											<span className={styles.muted}>
-												Day Streak
-											</span>
-										</p>
-										{streakRange && (
-											<p className={styles.muted}>
-												{streakRange}
-											</p>
-										)}
-									</div>
-								)}
-							</div>
-							{graphCardVisible &&
-								(stats?.calendar?.length ? (
-									<ContributionGraph weeks={stats.calendar} />
-								) : (
-									<div className={styles.graphPlaceholder}>
-										No contribution data yet
-									</div>
-								))}
-							{extra?.joined && (
-								<p className={styles.muted}>
-									Joined GitHub {joinedAgo(extra.joined)}
-								</p>
-							)}
-						</section>
-					)}
-					{(showLc || showPersonal) && (
-						<div
-							className={
-								showLc && showPersonal
-									? styles.splitRow
-									: styles.stackRow
-							}
-						>
-							{showLc && (
-								<section
-									className={`${styles.panel} ${lcMuted ? styles.hiddenSection : ""}`}
-								>
-									<div className={styles.sectionHeading}>
-										<p className={styles.sectionLabel}>
-											LeetCode
-										</p>
-										{profile.is_owner && (
-											<ProfileEditButton
-												profile={profile}
-												section="leetcode"
-											/>
-										)}
-									</div>
-									{profile.leetcode ? (
-										<LeetcodeCard lc={profile.leetcode} />
-									) : (
-										<p className={styles.muted}>
-											Add your solved counts.
-										</p>
-									)}
-								</section>
-							)}
-							{showPersonal && (
-								<div
-									className={`${styles.twoColumn} ${hasGames && hasInterests ? "" : styles.singleColumn}`}
-								>
-									{hasGames && (
-										<section
-											className={`${styles.panel} ${!visibility.games ? styles.hiddenSection : ""}`}
-										>
-											<div
-												className={
-													styles.sectionHeading
-												}
-											>
-												<p
-													className={
-														styles.sectionLabel
-													}
-												>
-													Games
-												</p>
-												<Link
-													href={`/${profile.username}/games`}
-													className={styles.viewAll}
-												>
-													View all
-												</Link>
-											</div>
-											{profile.games?.length ? (
-												<div
-													className={styles.gameList}
-												>
-													{profile.games
-														.slice(0, 4)
-														.map((game, i) => (
-															<GameCard
-																key={`${game.name}-${i}`}
-																game={game}
-																compact
-															/>
-														))}
-												</div>
-											) : (
-												<p className={styles.muted}>
-													Nothing added yet.
-												</p>
-											)}
-										</section>
-									)}
-									{hasInterests && (
-										<section
-											className={`${styles.panel} ${!visibility.interests ? styles.hiddenSection : ""}`}
-										>
-											<div
-												className={
-													styles.sectionHeading
-												}
-											>
-												<p
-													className={
-														styles.sectionLabel
-													}
-												>
-													Interests
-												</p>
-												<Link
-													href={`/${profile.username}/interests`}
-													className={styles.viewAll}
-												>
-													View all
-												</Link>
-											</div>
-											{profile.interests?.length ? (
-												<div className={styles.tagRow}>
-													{profile.interests
-														.slice(0, 8)
-														.map((interest) => (
-															<span
-																key={
-																	interest.id
-																}
-																className={
-																	styles.tag
-																}
-															>
-																{interest.name}
-															</span>
-														))}
-												</div>
-											) : (
-												<p className={styles.muted}>
-													Nothing added yet.
-												</p>
-											)}
-										</section>
-									)}
-								</div>
-							)}
-						</div>
-					)}
-					{(hasLinks || profile.is_owner) && (
-						<div
-							className={
-								profile.is_owner
-									? styles.linksRow
-									: styles.linksOnly
-							}
-						>
-							{hasLinks && (
-								<section className={styles.panel}>
-									<div className={styles.sectionHeading}>
-										<p className={styles.sectionLabel}>
-											Links
-										</p>
-										{profile.is_owner && (
-											<ProfileEditButton
-												profile={profile}
-												section="links"
-											/>
-										)}
-									</div>
-									<div className={styles.linkRow}>
-										{profile.content_links.map(
-											(link, index) => (
-												<a
-													key={index}
-													href={link.url}
-													target="_blank"
-													rel="noreferrer"
-													className={
-														styles.contentLink
-													}
-												>
-													{link.label} ↗
-												</a>
-											),
-										)}
-									</div>
-								</section>
-							)}
-							{profile.is_owner && (
-								<BadgeEmbed username={profile.username} />
-							)}
-						</div>
-					)}
 				</div>
 			</div>
-			<footer className={styles.footer}>
-				<div className={styles.divider} />
-				<nav className={styles.links} aria-label="Footer navigation">
-					<a href="https://github.com/Acestar21/devatlas">github</a>
-					<Link href="/contribute">contribute</Link>
-					<Link href="/report-issue">report-issue</Link>
-					<Link href="/about">about</Link>
-					<Link href="/privacy">privacy</Link>
-					<Link href="/rules">rules</Link>
-				</nav>
-				<p className={styles.disclaimer}>
-					DevAtlas is an independent community project. Information
-					may be outdated or inaccurate; verify important information
-					with official sources. Running on free hosting - occasional
-					slow loads are expected.
-				</p>
-				<p className={styles.meta}>
-					© 2026 DevAtlas · Open source · Built for developers
-				</p>
-			</footer>
-		</main>
+		</ProfileFrame>
 	);
 }

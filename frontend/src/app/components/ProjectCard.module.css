@@ -1,0 +1,116 @@
+.card {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius);
+	background: var(--card-bg);
+	color: var(--foreground);
+	transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.2s;
+}
+.card:hover {
+	transform: translateY(-4px);
+	border-color: var(--primary);
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.14);
+}
+
+/* image banner is taller than the solid fallback, as designed */
+.banner {
+	position: relative;
+	flex: none;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-bottom: 1px solid var(--border);
+	background: var(--secondary-bg);
+}
+.solid {
+	aspect-ratio: auto;
+	height: 72px;
+	background: var(--primary);
+	opacity: 0.92;
+}
+.solid::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--surface-pattern);
+	opacity: 0.18;
+}
+.image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.6s ease;
+}
+.card:hover .image {
+	transform: scale(1.06);
+}
+.initial {
+	position: absolute;
+	right: 0.9rem;
+	bottom: -0.35rem;
+	color: var(--primary-foreground);
+	font: 700 3.2rem/1 var(--font-display, sans-serif);
+	opacity: 0.35;
+}
+
+.body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 1rem 1.1rem 1.05rem;
+}
+.titleRow {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+.title {
+	min-width: 0;
+	font-size: 1rem;
+	overflow-wrap: anywhere;
+	transition: color 0.2s;
+}
+.card:hover .title {
+	color: var(--primary);
+}
+.stars {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	color: var(--foreground-muted);
+	font: 0.7rem var(--font-mono, monospace);
+}
+.description {
+	flex: 1; /* pushes the CTA to the bottom so sibling cards align */
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+	line-height: 1.5;
+}
+.cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	align-self: flex-start;
+	color: var(--primary);
+	font-size: 0.74rem;
+	font-weight: 600;
+}
+.cta svg {
+	transition: transform 0.25s;
+}
+.cta:hover {
+	text-decoration: underline;
+}
+.cta:hover svg {
+	transform: translateX(3px);
+}

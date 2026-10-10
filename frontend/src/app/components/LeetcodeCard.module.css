@@ -1,9 +1,10 @@
 .wrap {
 	display: grid;
+	flex: 1; /* fill the card so its siblings' heights match */
 	grid-template-columns: auto 1fr;
 	gap: 0.8rem 1.5rem;
 	align-items: center;
-	margin-top: 0.6rem;
+	align-content: space-between;
 }
 .total strong {
 	display: block;

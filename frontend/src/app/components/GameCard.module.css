@@ -1,33 +1,17 @@
 .card {
 	position: relative;
+	display: block;
 	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-	padding: 0.9rem 1rem;
+	aspect-ratio: 460 / 215; /* Steam header / IGDB screenshot ratio */
 	border: 1px solid var(--border);
 	border-radius: var(--control-radius);
 	background: var(--secondary-bg);
-	color: var(--foreground);
+	color: #fff;
+	outline: none;
 }
-a.card:hover {
+.card:hover,
+.card:focus-visible {
 	border-color: var(--primary);
-}
-.name {
-	font-size: 0.9rem;
-	overflow-wrap: anywhere;
-}
-.detail {
-	color: var(--foreground-muted);
-	font: 0.68rem var(--font-mono, monospace);
-}
-.link {
-	margin-top: 0.35rem;
-	color: var(--primary);
-	font-size: 0.65rem;
-}
-.compact {
-	padding: 0.6rem 0.75rem;
 }
 .art {
 	position: absolute;
@@ -35,22 +19,62 @@ a.card:hover {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+	transition: transform 0.5s ease;
+}
+.card:hover .art,
+.card:focus-visible .art {
+	transform: scale(1.05);
 }
 .scrim {
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.25));
+	background: linear-gradient(to top, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.35));
+	opacity: 0;
+	transition: opacity 0.2s ease;
 }
 .content {
-	position: relative;
+	position: absolute;
+	inset: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
-	min-height: 64px;
 	justify-content: flex-end;
+	gap: 0.2rem;
+	padding: 0.65rem 0.8rem;
+	opacity: 0;
+	transform: translateY(6px);
+	transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.art ~ .content .name,
-.art ~ .content .detail,
-.art ~ .content .link {
-	color: #fff;
+.card:hover .scrim,
+.card:focus-visible .scrim,
+.card:hover .content,
+.card:focus-visible .content {
+	opacity: 1;
+}
+.card:hover .content,
+.card:focus-visible .content {
+	transform: none;
+}
+.name {
+	font-size: 0.86rem;
+	line-height: 1.25;
+	overflow-wrap: anywhere;
+}
+.detail {
+	color: rgba(255, 255, 255, 0.85);
+	font: 0.66rem var(--font-mono, monospace);
+}
+
+/* no artwork: nothing to show instead, so the name stays visible */
+.noArt {
+	color: var(--foreground);
+}
+.noArt .content {
+	opacity: 1;
+	transform: none;
+}
+.noArt .detail {
+	color: var(--foreground-muted);
+}
+.noArt .scrim {
+	display: none;
 }

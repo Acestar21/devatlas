@@ -10,6 +10,8 @@ ALLOWED_CARDS = {
     "games": {"handles"},
 }
 
+LAYOUT_CARDS = {"github", "featured", "writing", "leetcode", "games"}
+
 GAMING_PLATFORMS = {"steam", "riot", "psn", "xbox", "epic", "discord", "other"}
 
 
@@ -96,10 +98,58 @@ class Post(BaseModel):
         return v
 
 
+class GameStats(BaseModel):
+    rank: Optional[str] = None
+    hours: Optional[float] = None
+    completion: Optional[int] = None  # 0-100
+    platform: Optional[str] = None
+    note: Optional[str] = None
+
+    @field_validator("rank", "platform", "note")
+    @classmethod
+    def trim(cls, v, info):
+        limit = {"rank": 30, "platform": 20, "note": 120}[info.field_name]
+        return (v or "").strip()[:limit] or None
+
+    @field_validator("hours")
+    @classmethod
+    def check_hours(cls, v):
+        if v is None:
+            return None
+        if not 0 <= v <= 100000:
+            raise ValueError("Hours must be between 0 and 100000")
+        return round(v, 1)
+
+    @field_validator("completion")
+    @classmethod
+    def check_completion(cls, v):
+        if v is None:
+            return None
+        if not 0 <= v <= 100:
+            raise ValueError("Completion must be 0-100")
+        return v
+
+
+IGDB_IMAGE_PREFIX = "https://images.igdb.com/"
+
+
 class Game(BaseModel):
     name: str
-    detail: Optional[str] = None  # rank, hours, anything short
+    detail: Optional[str] = None  # legacy free-text rank/hours; kept for old data
     url: Optional[str] = None
+    igdb_id: Optional[int] = None
+    cover_url: Optional[str] = None  # IGDB image only (never arbitrary hosts)
+    stats: Optional[GameStats] = None
+
+    @field_validator("cover_url")
+    @classmethod
+    def check_cover(cls, v):
+        v = (v or "").strip()
+        if not v:
+            return None
+        if not v.startswith(IGDB_IMAGE_PREFIX) or len(v) > 300:
+            raise ValueError("Cover must be an IGDB image URL")
+        return v
 
     @field_validator("name")
     @classmethod
@@ -210,6 +260,17 @@ class LeetcodeResponse(BaseModel):
     hard: int
     total: int
 
+class ProfileLayout(BaseModel):
+    main: list[str] = Field(default_factory=list)
+
+    @field_validator("main")
+    @classmethod
+    def check_main(cls, v):
+        if len(v) > len(LAYOUT_CARDS) or len(set(v)) != len(v) or not set(v) <= LAYOUT_CARDS:
+            raise ValueError("Unknown or duplicate card in layout")
+        return v
+
+
 class ModerationInfo(BaseModel):
     suspended: bool
     reason: Optional[str] = None
@@ -232,6 +293,7 @@ class ProfileResponse(BaseModel):
     is_owner: bool
     section_visibility: SectionVisibility
     card_visibility: dict[str, dict[str, bool]] = Field(default_factory=dict)
+    layout: ProfileLayout = Field(default_factory=ProfileLayout)
     moderation: Optional[ModerationInfo] = None  # only for the owner and staff
     viewer_role: str = "anonymous"  # the VIEWER's role: anonymous | user | moderator | admin
 
@@ -254,6 +316,7 @@ class ProfileUpdate(BaseModel):
     posts: Optional[list[Post]] = None
     games: Optional[list[Game]] = None
     gaming_handles: Optional[list[GamingHandle]] = None
+    layout: Optional[ProfileLayout] = None
 
     @field_validator("card_visibility")
     @classmethod

@@ -1,0 +1,124 @@
+.page {
+	min-height: 100vh;
+	background: var(--background);
+	color: var(--foreground);
+}
+.topBar {
+	height: 72px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 6.5vw;
+	border-bottom: 1px solid var(--border);
+	background: var(--card-bg);
+}
+.brand {
+	color: var(--foreground);
+	font: 700 1.7rem var(--font-display, sans-serif);
+}
+.topActions {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+}
+.topLink {
+	padding: 0.4rem 0.65rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	color: var(--foreground-muted);
+	font-size: 0.7rem;
+}
+.topLink:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.viewerAvatar {
+	width: 40px;
+	height: 40px;
+	border: 1px solid var(--border);
+	border-radius: 50%;
+	background: var(--secondary-bg);
+	object-fit: cover;
+}
+
+/* left padding keeps content clear of the fixed notch rail (52px wide) */
+.shell {
+	width: min(100%, 1320px);
+	margin: 0 auto;
+	padding: 1.75rem 1.25rem 0 4.75rem;
+}
+
+.footer {
+	width: min(100%, 1320px);
+	margin: 2.5rem auto 0;
+	padding: 0 1.25rem 1.5rem 4.75rem;
+	color: var(--foreground-dimmed);
+	font-size: 0.7rem;
+}
+.divider {
+	height: 1px;
+	margin-bottom: 0.9rem;
+	background: var(--border-muted);
+}
+.footerRow {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1.5rem;
+}
+.footerText {
+	min-width: 0;
+}
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1rem;
+	margin-bottom: 0.7rem;
+}
+.links a {
+	color: var(--foreground-muted);
+}
+.links a:hover {
+	color: var(--primary);
+}
+.disclaimer {
+	max-width: 760px;
+	line-height: 1.5;
+}
+.meta {
+	margin-top: 0.55rem;
+}
+.badge {
+	flex: 0 0 260px;
+	width: 260px;
+}
+
+@media (max-width: 900px) {
+	/* the notch moves to the bottom edge: leave room for it */
+	.page {
+		padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+	}
+	.shell {
+		padding: 1rem 0.75rem 0;
+	}
+	.footer {
+		padding: 0 0.75rem 1rem;
+		margin-top: 1.5rem;
+	}
+	.footerRow {
+		flex-direction: column;
+	}
+	.badge {
+		flex-basis: auto;
+		width: min(100%, 360px);
+	}
+}
+@media (max-width: 720px) {
+	.topBar {
+		height: 58px;
+		padding: 0 0.85rem;
+	}
+	.brand {
+		font-size: 1.35rem;
+	}
+}

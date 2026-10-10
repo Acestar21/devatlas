@@ -5,7 +5,8 @@
 .box {
 	min-width: calc(var(--weeks) * 13px + 60px);
 	padding: 0.6rem 0.8rem;
-	border: 1px solid var(--border);
+	border: 1px solid var(--border-muted);
+	border-radius: var(--card-radius);
 }
 .months,
 .body {

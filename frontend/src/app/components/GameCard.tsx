@@ -1,27 +1,30 @@
 import { GameEntry } from "@/types";
-import styles from "./GameCard.module.css";
 import { gameArtUrl } from "@/lib/game-art";
+import styles from "./GameCard.module.css";
 
-export default function GameCard({
-	game,
-	compact = false,
-}: {
-	game: GameEntry;
-	compact?: boolean;
-}) {
-	const art = gameArtUrl(game.name);
-	const content = (
-		<>
-			<strong className={styles.name}>{game.name}</strong>
-			{game.detail && (
-				<span className={styles.detail}>{game.detail}</span>
-			)}
-			{game.url && !compact && (
-				<span className={styles.link}>Open profile ↗</span>
-			)}
-		</>
-	);
-	const className = `${styles.card} ${compact ? styles.compact : ""}`;
+export function gameArt(game: GameEntry): string | null {
+	return game.cover_url || gameArtUrl(game.name);
+}
+
+/** Short chips shown on hover, e.g. "Diamond · 420h · 88%". */
+export function gameChips(game: GameEntry): string[] {
+	const s = game.stats;
+	return [
+		s?.rank || game.detail,
+		typeof s?.hours === "number" ? `${s.hours}h` : null,
+		typeof s?.completion === "number" ? `${s.completion}%` : null,
+	].filter((v): v is string => Boolean(v));
+}
+
+/**
+ * Art tile. At rest you only see the artwork; the name (and stats) fade in on
+ * hover / keyboard focus. Games with no artwork keep the name visible, since
+ * there would otherwise be nothing to look at.
+ */
+export default function GameCard({ game }: { game: GameEntry }) {
+	const art = gameArt(game);
+	const chips = gameChips(game);
+	const className = `${styles.card} ${art ? styles.hasArt : styles.noArt}`;
 
 	const body = (
 		<>
@@ -30,20 +33,20 @@ export default function GameCard({
 				<img src={art} alt="" loading="lazy" className={styles.art} />
 			)}
 			<div className={styles.scrim} aria-hidden="true" />
-			<div className={styles.content}>{content}</div>
+			<div className={styles.content}>
+				<strong className={styles.name}>{game.name}</strong>
+				{chips.length > 0 && <span className={styles.detail}>{chips.join(" · ")}</span>}
+			</div>
 		</>
 	);
-	// .card is already position: relative; overflow: hidden.
+
 	return game.url ? (
-		<a
-			href={game.url}
-			target="_blank"
-			rel="noreferrer"
-			className={className}
-		>
+		<a href={game.url} target="_blank" rel="noreferrer" className={className} aria-label={game.name}>
 			{body}
 		</a>
 	) : (
-		<div className={className}>{body}</div>
+		<div className={className} tabIndex={0} role="img" aria-label={game.name}>
+			{body}
+		</div>
 	);
 }

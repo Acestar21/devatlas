@@ -1,0 +1,32 @@
+.wrap {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.55rem;
+}
+.list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	list-style: none;
+}
+.chip {
+	padding: 0.25rem 0.65rem;
+	border: 1px solid var(--border-muted);
+	border-radius: calc(var(--control-radius) * 2);
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
+	font: 0.72rem var(--font-mono, monospace);
+	overflow-wrap: anywhere;
+}
+.toggle {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font: 0.7rem var(--font-mono, monospace);
+}
+.toggle:hover {
+	color: var(--primary);
+}

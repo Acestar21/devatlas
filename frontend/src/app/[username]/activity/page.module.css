@@ -1,36 +1,21 @@
-.card {
-	padding: 1.25rem 1.5rem;
-	border: 1px solid var(--border);
-	border-radius: var(--card-radius);
-	background: var(--card-bg);
+.pair {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+	gap: 1rem; /* default align-items: stretch -> equal heights */
 }
-.muted {
-	opacity: 0.48;
-	filter: saturate(0.45);
-}
-.label {
-	color: var(--primary);
-	font: 0.68rem var(--font-mono, monospace);
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
+.single {
+	display: grid;
 }
 .empty {
-	margin-top: 0.6rem;
 	color: var(--foreground-muted);
 	font-size: 0.78rem;
 }
 .postList {
 	display: grid;
 	gap: 0.8rem;
-	margin-top: 0.9rem;
 }
-
-@media (max-width: 720px) {
-	.card {
-		padding: 0.85rem 0.8rem;
-	}
-	.postList {
-		gap: 0.6rem;
-		margin-top: 0.65rem;
+@media (max-width: 900px) {
+	.pair {
+		grid-template-columns: 1fr;
 	}
 }

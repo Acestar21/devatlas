@@ -1,0 +1,135 @@
+.card {
+	overflow: hidden;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius-lg);
+	background: var(--card-bg);
+	box-shadow: var(--shadow-card);
+}
+.banner {
+	position: relative;
+	height: 112px;
+	background: var(--banner);
+}
+.banner::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--surface-pattern);
+	opacity: 0.45;
+	mix-blend-mode: soft-light;
+}
+.head {
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	gap: 0.85rem;
+	margin-top: -42px;
+	padding: 0 1.25rem;
+}
+.avatar {
+	flex: none;
+	width: 88px;
+	height: 88px;
+	border: 4px solid var(--card-bg);
+	border-radius: 50%;
+	background: var(--secondary-bg);
+	box-shadow: 0 0 0 1px var(--border);
+	object-fit: cover;
+}
+.identity {
+	min-width: 0;
+	padding-bottom: 0.3rem;
+}
+.identity h1 {
+	font-size: 1.3rem;
+	letter-spacing: -0.02em;
+	overflow-wrap: anywhere;
+}
+.identity p {
+	margin-top: 0.15rem;
+	color: var(--foreground-muted);
+	font: 0.78rem var(--font-mono, monospace);
+	overflow-wrap: anywhere;
+}
+.bio {
+	margin: 1rem 1.25rem 0;
+	padding: 0.8rem 0.95rem;
+	border: 1px solid var(--border-muted);
+	border-radius: var(--card-radius);
+	background: var(--accent-bg);
+	color: var(--foreground);
+	font-size: 0.84rem;
+	line-height: 1.55;
+}
+.section {
+	margin-top: 1rem;
+	padding: 1rem 1.25rem 0;
+	border-top: 1px solid var(--border-muted);
+}
+.section:last-child {
+	padding-bottom: 1.25rem;
+}
+.section h2,
+.sectionHead h2 {
+	margin-bottom: 0.65rem;
+	color: var(--foreground-muted);
+	font: 600 0.68rem var(--font-mono, monospace);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.sectionHead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.muted {
+	opacity: 0.5;
+	filter: saturate(0.5);
+}
+.empty {
+	color: var(--foreground-dimmed);
+	font-size: 0.76rem;
+}
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	list-style: none;
+}
+.links a {
+	display: inline-block;
+	padding: 0.32rem 0.75rem;
+	border: 1px solid var(--primary);
+	border-radius: 999px;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font: 0.72rem var(--font-mono, monospace);
+	transition: filter 0.15s, transform 0.15s;
+}
+.links a:hover {
+	filter: brightness(1.1);
+	transform: translateY(-1px);
+}
+.footer {
+	display: flex;
+	margin-top: 1rem;
+	padding: 0.85rem 1.25rem;
+	border-top: 1px solid var(--border-muted);
+	font: 0.7rem var(--font-mono, monospace);
+}
+.footer a {
+	color: var(--foreground-muted);
+}
+.footer a:hover {
+	color: var(--primary);
+}
+
+/* On phones the Stack and Interests tab already shows these; keep the card short so tabs stay near the top. */
+@media (max-width: 900px) {
+	.hideMobile {
+		display: none;
+	}
+	.banner {
+		height: 84px;
+	}
+}

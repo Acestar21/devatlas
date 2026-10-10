@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
+import GameDetailCard from "@/app/components/GameDetailCard";
+import Panel from "@/app/components/Panel";
 import SectionPlaceholder from "@/app/components/SectionPlaceholder";
-import GameCard from "@/app/components/GameCard";
-import styles from "./page.module.css";
 import { loadProfile } from "@/lib/profile-api";
+import styles from "./page.module.css";
 
 const HANDLE_LABEL: Record<string, string> = {
 	steam: "Steam",
@@ -20,50 +21,37 @@ export default async function GamesPage({
 	params: Promise<{ username: string }>;
 }) {
 	const { username } = await params;
-
 	const profile = await loadProfile(username);
-	if (profile.section_visibility?.games === false && !profile.is_owner)
-		notFound();
+	if (profile.section_visibility?.games === false && !profile.is_owner) notFound();
 
 	const games = profile.games ?? [];
 	const handles = profile.gaming_handles ?? [];
 	const sectionMuted = profile.section_visibility?.games === false;
-	const handlesMuted =
-		sectionMuted || profile.card_visibility?.games?.handles === false;
+	const handlesMuted = sectionMuted || profile.card_visibility?.games?.handles === false;
 	const showHandles = handles.length > 0 || profile.is_owner;
 
 	return (
 		<SectionPlaceholder profile={profile} title="Games">
-			<section
-				className={`${styles.card}${sectionMuted ? ` ${styles.muted}` : ""}`}
-			>
-				<p className={styles.label}>Games</p>
+			<Panel label="Games" gearSection="games" gearLabel="Edit games" muted={sectionMuted}>
 				{games.length ? (
 					<div className={styles.grid}>
 						{games.map((game, i) => (
-							<GameCard key={`${game.name}-${i}`} game={game} />
+							<GameDetailCard key={`${game.name}-${i}`} game={game} />
 						))}
 					</div>
 				) : (
 					<p className={styles.empty}>
-						{profile.is_owner
-							? "No games yet — use Edit settings to add some."
-							: "Nothing here yet."}
+						{profile.is_owner ? "No games yet. Use the gear to add some." : "Nothing here yet."}
 					</p>
 				)}
-			</section>
+			</Panel>
 			{showHandles && (
-				<section
-					className={`${styles.card}${handlesMuted ? ` ${styles.muted}` : ""}`}
-				>
-					<p className={styles.label}>Find me on</p>
+				<Panel label="Find me on" gearSection="games" gearLabel="Edit gaming handles" muted={handlesMuted}>
 					{handles.length ? (
 						<div className={styles.handles}>
 							{handles.map((h, i) => (
 								<span key={`${h.platform}-${i}`}>
-									<em>
-										{HANDLE_LABEL[h.platform] ?? h.platform}
-									</em>
+									<em>{HANDLE_LABEL[h.platform] ?? h.platform}</em>
 									{h.handle}
 								</span>
 							))}
@@ -71,7 +59,7 @@ export default async function GamesPage({
 					) : (
 						<p className={styles.empty}>No handles added yet.</p>
 					)}
-				</section>
+				</Panel>
 			)}
 		</SectionPlaceholder>
 	);

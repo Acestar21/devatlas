@@ -3,10 +3,17 @@ html {
 	color-scheme: light;
 }
 
-html,
-body {
+html {
 	max-width: 100vw;
 	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: var(--border) transparent;
+}
+
+/* `clip` (not `hidden`) so body does not become a scroll container, which would break position: sticky. */
+body {
+	max-width: 100vw;
+	overflow-x: clip;
 	scrollbar-width: thin;
 	scrollbar-color: var(--border) transparent;
 }
@@ -159,4 +166,19 @@ a {
 }
 .themeSwatchforest {
 	background: #267044;
+}
+
+
+:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
 }

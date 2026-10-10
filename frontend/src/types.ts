@@ -8,10 +8,21 @@ export interface StackTag {
   name: string;
 }
 
+export interface GameStats {
+  rank?: string | null;
+  hours?: number | null;
+  completion?: number | null; // 0-100
+  platform?: string | null;
+  note?: string | null;
+}
+
 export interface GameEntry {
   name: string;
   detail: string | null;
   url: string | null;
+  igdb_id?: number | null;
+  cover_url?: string | null; // https://images.igdb.com/... only
+  stats?: GameStats | null;
 }
 
 export interface GamingHandle {
@@ -76,6 +87,11 @@ export interface SectionVisibility {
 
 export type CardVisibility = Record<string, Record<string, boolean>>;
 
+/** Owner-chosen order of the cards on the main profile view. */
+export interface ProfileLayout {
+  main?: string[];
+}
+
 export interface LeetcodeStats {
   username: string;
   url: string;
@@ -112,6 +128,7 @@ export interface Profile {
   is_owner: boolean;
   section_visibility: SectionVisibility | null;
   card_visibility: CardVisibility;
+  layout?: ProfileLayout | null;
   moderation: { suspended: boolean; reason: string | null; until: string | null } | null;
   viewer_role: "anonymous" | "user" | "moderator" | "admin";
 }

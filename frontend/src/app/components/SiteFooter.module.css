@@ -1,0 +1,36 @@
+.footer {
+	width: min(100%, 1320px);
+	margin: 2.5rem auto 0;
+	padding: 0 1.25rem 1.5rem;
+	color: var(--foreground-dimmed);
+	font-size: 0.7rem;
+}
+.divider {
+	height: 1px;
+	margin-bottom: 0.8rem;
+	background: var(--border-muted);
+}
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1rem;
+	margin-bottom: 0.7rem;
+}
+.links a {
+	color: var(--foreground-muted);
+}
+.links a:hover {
+	color: var(--primary);
+}
+.disclaimer {
+	max-width: 760px;
+	line-height: 1.5;
+}
+.meta {
+	margin-top: 0.55rem;
+}
+@media (max-width: 900px) {
+	.footer {
+		padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+	}
+}

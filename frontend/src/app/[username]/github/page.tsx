@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
-import ProfileNav from "@/app/components/ProfileNav";
-import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 import ContributionGraph from "@/app/components/ContributionGraph";
-import styles from "./page.module.css";
-import { fetchViewer, getThemeCookie } from "@/lib/server-context";
+import Panel from "@/app/components/Panel";
+import ProjectCard from "@/app/components/ProjectCard";
+import ProfileFrame from "@/app/components/ProfileFrame";
+import { SettingsGear } from "@/app/components/SettingsProvider";
+import { withBanners } from "@/lib/pinned";
 import { loadProfile } from "@/lib/profile-api";
+import styles from "./page.module.css";
 
 export default async function GithubPage({
 	params,
@@ -15,8 +16,6 @@ export default async function GithubPage({
 }) {
 	const { username } = await params;
 	const profile = await loadProfile(username);
-	const viewer = await fetchViewer();
-	const themeCookie = await getThemeCookie();
 
 	if (
 		profile.stats === null ||
@@ -26,11 +25,11 @@ export default async function GithubPage({
 
 	const stats = profile.stats;
 	const e = stats.extra;
+	const projects = await withBanners(stats.pinned_repos);
 
 	const cv = profile.card_visibility?.github ?? {};
 	const show = (card: string) => (cv[card] ?? true) || profile.is_owner;
-	const dim = (card: string) =>
-		(cv[card] ?? true) ? "" : ` ${styles.hiddenSection}`;
+	const muted = (card: string) => !(cv[card] ?? true);
 
 	const metrics: [string, string | number][] = e
 		? [
@@ -50,180 +49,102 @@ export default async function GithubPage({
 		: [];
 
 	return (
-		<main className={styles.page}>
-			<header className={styles.topBar}>
-				<Link href="/directory" className={styles.brand}>
-					DevAtlas
-				</Link>
-				<div className={styles.topActions}>
-					<ThemeSwitcher
-						initialTheme={themeCookie || profile.theme}
-						mobileIcon
-					/>
-					<Link href="/directory" className={styles.topLink}>
-						/Directory
-					</Link>
-					{viewer ? (
-						<Link
-							href={`/${viewer.username}`}
-							aria-label="Open your profile"
-						>
+		<ProfileFrame profile={profile} active="github">
+			<div className={styles.container}>
+				<section className={styles.profileHeader}>
+					<div className={styles.headerRow}>
+						<div className={styles.identity}>
 							<Image
-								src={viewer.avatar_url || "/default-avatar.png"}
-								alt="Your profile"
-								width={40}
-								height={40}
+								src={profile.avatar_url || "/default-avatar.png"}
+								alt={profile.display_name || profile.username}
+								width={82}
+								height={82}
 								loading="eager"
-								className={styles.viewerAvatar}
+								className={styles.avatar}
 							/>
-						</Link>
-					) : (
-						<Link
-							href="/directory?login=1"
-							className={styles.topLink}
-						>
-							/login
-						</Link>
-					)}
-				</div>
-			</header>
-			<div className={styles.layout}>
-				<ProfileNav
-					username={profile.username}
-					showGithub
-					visibility={profile.section_visibility || undefined}
-					profile={profile}
-					activeSection="github"
-				/>
-				<div className={styles.container}>
-					<section className={styles.profileHeader}>
-						<div className={styles.headerRow}>
-							<div className={styles.identity}>
-								<Image
-									src={
-										profile.avatar_url ||
-										"/default-avatar.png"
-									}
-									alt={
-										profile.display_name || profile.username
-									}
-									width={82}
-									height={82}
-									loading="eager"
-									className={styles.avatar}
-								/>
-								<div>
-									<h1 className={styles.displayName}>
-										{profile.display_name ||
-											profile.username}
-									</h1>
-									<p className={styles.username}>
-										@{profile.username}
-									</p>
-								</div>
+							<div>
+								<h1 className={styles.displayName}>{profile.display_name || profile.username}</h1>
+								<p className={styles.username}>@{profile.username}</p>
 							</div>
+						</div>
+						<div className={styles.headerActions}>
 							<a
 								href={`https://github.com/${profile.username}`}
 								target="_blank"
 								rel="noreferrer"
 								className={styles.redirect}
 							>
-								Link Redirect ↗
+								View on GitHub ↗
 							</a>
+							<SettingsGear section="github" label="Edit GitHub card settings" />
 						</div>
-						{profile.stack_tags.length > 0 && (
-							<div className={styles.tagRow}>
-								{profile.stack_tags.map((tag) => (
-									<span className={styles.tag} key={tag.id}>
-										{tag.name}
-									</span>
+					</div>
+					{profile.stack_tags.length > 0 && (
+						<div className={styles.tagRow}>
+							{profile.stack_tags.map((tag) => (
+								<span className={styles.tag} key={tag.id}>
+									{tag.name}
+								</span>
+							))}
+						</div>
+					)}
+				</section>
+
+				{show("graph") && (
+					<Panel label="GitHub contribution graph" muted={muted("graph")}>
+						{stats.calendar?.length ? (
+							<ContributionGraph weeks={stats.calendar} />
+						) : (
+							<div className={styles.graphBox}>No data yet</div>
+						)}
+					</Panel>
+				)}
+
+				{show("stats") && (
+					<Panel label="GitHub statistics" muted={muted("stats")}>
+						{metrics.length ? (
+							<div className={styles.metricGrid}>
+								{metrics.map(([label, value]) => (
+									<div className={styles.metric} key={label}>
+										<span>{label}</span>
+										<strong>{value}</strong>
+									</div>
 								))}
 							</div>
+						) : (
+							<p className={styles.muted}>No data yet</p>
 						)}
-					</section>
+					</Panel>
+				)}
 
-					{show("graph") && (
-						<section className={`${styles.panel}${dim("graph")}`}>
-							<p className={styles.eyebrow}>
-								GitHub contribution graph
-							</p>
-							{stats.calendar?.length ? (
-								<ContributionGraph weeks={stats.calendar} />
-							) : (
-								<div className={styles.graphBox}>
-									No data yet
-								</div>
-							)}
-						</section>
-					)}
+				{show("pinned") && (
+					<Panel label="Pinned repos" muted={muted("pinned")}>
+						{projects.length ? (
+							<div className={styles.projectGrid}>
+								{projects.map((repo) => (
+									<ProjectCard
+										key={repo.name}
+										title={repo.name}
+										description={repo.description ?? ""}
+										link={repo.url}
+										imgSrc={repo.banner}
+										stars={repo.stars}
+									/>
+								))}
+							</div>
+						) : (
+							<p className={styles.muted}>No pinned repos</p>
+						)}
+					</Panel>
+				)}
 
-					{show("stats") && (
-						<section className={`${styles.panel}${dim("stats")}`}>
-							<p className={styles.sectionLabel}>
-								GitHub statistics
-							</p>
-							{metrics.length ? (
-								<div className={styles.metricGrid}>
-									{metrics.map(([label, value]) => (
-										<div
-											className={styles.metric}
-											key={label}
-										>
-											<span>{label}</span>
-											<strong>{value}</strong>
-										</div>
-									))}
-								</div>
-							) : (
-								<p className={styles.muted}>No data yet</p>
-							)}
-						</section>
-					)}
-
-					{show("pinned") && (
-						<section className={`${styles.panel}${dim("pinned")}`}>
-							<p className={styles.eyebrow}>Pinned repos</p>
-							{stats.pinned_repos?.length ? (
-								<div className={styles.repoScroller}>
-									{stats.pinned_repos.map((repo) => (
-										<a
-											key={repo.name}
-											href={repo.url}
-											target="_blank"
-											rel="noreferrer"
-											className={styles.repoCard}
-										>
-											<span className={styles.repoName}>
-												{repo.name}
-											</span>
-											<p className={styles.repoDesc}>
-												{repo.description ||
-													"No description"}
-											</p>
-											<span className={styles.repoStars}>
-												★ {repo.stars}
-											</span>
-										</a>
-									))}
-								</div>
-							) : (
-								<p className={styles.muted}>No pinned repos</p>
-							)}
-						</section>
-					)}
-
+				<div className={styles.pair}>
 					{show("languages") && (
-						<section
-							className={`${styles.panel}${dim("languages")}`}
-						>
-							<p className={styles.sectionLabel}>Top languages</p>
+						<Panel label="Top languages" muted={muted("languages")}>
 							{stats.top_languages?.length ? (
 								<div className={styles.languageList}>
 									{stats.top_languages.map((language) => (
-										<span
-											key={language}
-											className={styles.language}
-										>
+										<span key={language} className={styles.language}>
 											{language}
 										</span>
 									))}
@@ -231,84 +152,36 @@ export default async function GithubPage({
 							) : (
 								<p className={styles.muted}>No data yet</p>
 							)}
-						</section>
+						</Panel>
 					)}
 
 					{show("activity") && (
-						<section
-							className={`${styles.panel}${dim("activity")}`}
-						>
-							<p className={styles.sectionLabel}>
-								Recent activity
-							</p>
+						<Panel label="Recent activity" muted={muted("activity")}>
 							{stats.activity?.length ? (
 								<ul className={styles.activityList}>
-									{stats.activity
-										.slice(0, 5)
-										.map((item, i) => (
-											<li key={i}>
-												<a
-													className={
-														styles.activityItem
-													}
-													href={item.url}
-													target="_blank"
-													rel="noreferrer"
-												>
-													<span>
-														<strong>
-															{item.repo}
-														</strong>{" "}
-														· {item.text}
-													</span>
-													<span
-														className={
-															styles.activityDate
-														}
-													>
-														{new Date(
-															item.at,
-														).toLocaleDateString(
-															"en",
-															{
-																month: "short",
-																day: "numeric",
-															},
-														)}
-													</span>
-												</a>
-											</li>
-										))}
+									{stats.activity.slice(0, 5).map((item, i) => (
+										<li key={i}>
+											<a className={styles.activityItem} href={item.url} target="_blank" rel="noreferrer">
+												<span>
+													<strong>{item.repo}</strong> · {item.text}
+												</span>
+												<span className={styles.activityDate}>
+													{new Date(item.at).toLocaleDateString("en", {
+														month: "short",
+														day: "numeric",
+													})}
+												</span>
+											</a>
+										</li>
+									))}
 								</ul>
 							) : (
-								<p className={styles.muted}>
-									No recent public activity
-								</p>
+								<p className={styles.muted}>No recent public activity</p>
 							)}
-						</section>
+						</Panel>
 					)}
 				</div>
 			</div>
-			<footer className={styles.footer}>
-				<div className={styles.divider} />
-				<nav className={styles.links} aria-label="Footer navigation">
-					<a href="https://github.com/Acestar21/devatlas">github</a>
-					<Link href="/contribute">contribute</Link>
-					<Link href="/report-issue">report-issue</Link>
-					<Link href="/about">about</Link>
-					<Link href="/privacy">privacy</Link>
-					<Link href="/rules">rules</Link>
-				</nav>
-				<p className={styles.disclaimer}>
-					DevAtlas is an independent community project. Information
-					may be outdated or inaccurate; verify important information
-					with official sources. Running on free hosting - occasional
-					slow loads are expected.
-				</p>
-				<p className={styles.meta}>
-					© 2026 DevAtlas · Open source · Built for developers
-				</p>
-			</footer>
-		</main>
+		</ProfileFrame>
 	);
 }

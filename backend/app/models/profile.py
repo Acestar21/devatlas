@@ -15,3 +15,4 @@ class Profile(SQLModel, table=True):
     posts_json: str = Field(default="[]")            # JSON list of posts
     games_json: str = Field(default="[]")            # JSON list of {name, detail, url}
     gaming_handles_json: str = Field(default="[]")   # JSON list of {platform, handle}
+    layout_json: str = Field(default="{}")           # {"main": [card ids]} owner-chosen card order

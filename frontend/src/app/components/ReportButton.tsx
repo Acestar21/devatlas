@@ -14,7 +14,15 @@ const CATEGORIES: [string, string][] = [
 	["other", "Something else"],
 ];
 
-export default function ReportButton({ username }: { username: string }) {
+export default function ReportButton({
+	username,
+	iconOnly = false,
+	className,
+}: {
+	username: string;
+	iconOnly?: boolean;
+	className?: string;
+}) {
 	const [open, setOpen] = useState(false);
 	const [category, setCategory] = useState(CATEGORIES[0][0]);
 	const [details, setDetails] = useState("");
@@ -51,8 +59,20 @@ export default function ReportButton({ username }: { username: string }) {
 
 	return (
 		<>
-			<button className={styles.button} onClick={() => setOpen(true)}>
-				Report
+			<button
+				type="button"
+				className={className ?? styles.button}
+				onClick={() => setOpen(true)}
+				aria-label="Report this profile"
+				title="Report this profile"
+			>
+				{iconOnly ? (
+					<svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+						<path d="M5 21V4m0 0h11l-1.5 4L16 12H5" />
+					</svg>
+				) : (
+					"Report"
+				)}
 			</button>
 			{open &&
 				createPortal(

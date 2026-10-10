@@ -1,0 +1,141 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	min-width: 0;
+}
+.toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+.hint {
+	margin-right: auto;
+	color: var(--foreground-muted);
+	font: 0.7rem var(--font-mono, monospace);
+}
+.ghost,
+.primary {
+	padding: 0.38rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font-size: 0.7rem;
+}
+.ghost:hover:not(:disabled) {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.primary {
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+.ghost:disabled,
+.primary:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+.error {
+	color: #b34d4d;
+	font-size: 0.72rem;
+}
+
+/* align-items: stretch (default) is what makes neighbouring cards equal height */
+.grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+}
+.cell {
+	position: relative;
+	display: flex;
+	min-width: 0;
+}
+.full {
+	grid-column: 1 / -1;
+}
+.content {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+}
+.content > * {
+	flex: 1;
+	min-width: 0;
+}
+
+.editing .cell {
+	cursor: grab;
+	outline: 2px dashed var(--border);
+	outline-offset: 3px;
+	border-radius: var(--card-radius);
+}
+.editing .content {
+	pointer-events: none; /* links inside cards must not fire while rearranging */
+	user-select: none;
+}
+.dragging {
+	opacity: 0.45;
+	cursor: grabbing;
+}
+.over {
+	outline-color: var(--primary);
+}
+.controls {
+	position: absolute;
+	top: 0.55rem;
+	left: 0.55rem;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.2rem 0.3rem;
+	border: 1px solid var(--primary);
+	border-radius: var(--control-radius);
+	background: var(--card-bg);
+	color: var(--primary);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+.grip {
+	display: grid;
+	place-items: center;
+}
+.name {
+	padding: 0 0.2rem;
+	font: 0.66rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+.controls button {
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: transparent;
+	color: var(--foreground);
+	cursor: pointer;
+}
+.controls button:hover:not(:disabled) {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.controls button:disabled {
+	opacity: 0.3;
+	cursor: default;
+}
+
+@media (max-width: 720px) {
+	.grid {
+		grid-template-columns: 1fr;
+	}
+	.full {
+		grid-column: auto;
+	}
+}

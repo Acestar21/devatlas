@@ -1,32 +1,4 @@
-.card {
-	padding: 1.25rem 1.5rem;
-	border: 1px solid var(--border);
-	border-radius: var(--card-radius);
-	background: var(--card-bg);
-}
-
-@media (max-width: 720px) {
-	.card {
-		padding: 0.85rem 0.8rem;
-	}
-	.grid,
-	.handles {
-		gap: 0.45rem;
-		margin-top: 0.65rem;
-	}
-}
-.muted {
-	opacity: 0.48;
-	filter: saturate(0.45);
-}
-.label {
-	color: var(--primary);
-	font: 0.68rem var(--font-mono, monospace);
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-}
 .empty {
-	margin-top: 0.6rem;
 	color: var(--foreground-muted);
 	font-size: 0.78rem;
 }
@@ -34,7 +6,6 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.55rem;
-	margin-top: 0.9rem;
 }
 .chips span {
 	padding: 0.45rem 0.8rem;

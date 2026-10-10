@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { getSteamGameNames, gameArtUrl } from "@/lib/game-art";
 import {
 	ContentLink,
 	GameEntry,
@@ -16,6 +15,7 @@ import {
 import { proxyFetch } from "@/lib/api-client";
 import TagEditor from "./TagEditor";
 import DeleteAccount from "./DeleteAccount";
+import GamesEditor, { GamesDraft } from "./GamesEditor";
 import styles from "./EditProfileModal.module.css";
 
 const DEFAULT_VISIBILITY: SectionVisibility = {
@@ -36,16 +36,6 @@ const CARD_LABELS: Record<string, Record<string, string>> = {
 	activity: { leetcode: "LeetCode stats", posts: "Writing / blog posts" },
 	games: { handles: "Gaming handles" },
 };
-
-const HANDLE_PLATFORMS: [string, string][] = [
-	["steam", "Steam"],
-	["riot", "Riot ID"],
-	["psn", "PSN"],
-	["xbox", "Xbox"],
-	["epic", "Epic"],
-	["discord", "Discord"],
-	["other", "Other"],
-];
 
 export default function EditProfileModal({
 	profile,
@@ -119,15 +109,10 @@ export default function EditProfileModal({
 	);
 	const [lcHard, setLcHard] = useState(String(profile.leetcode?.hard ?? 0));
 	const [games, setGames] = useState<GameEntry[]>(profile.games ?? []);
-	const [gameSearchOpen, setGameSearchOpen] = useState(false);
-	const [gName, setGName] = useState("");
-	const [gDetail, setGDetail] = useState("");
-	const [gUrl, setGUrl] = useState("");
 	const [handles, setHandles] = useState<GamingHandle[]>(
 		profile.gaming_handles ?? [],
 	);
-	const [hPlatform, setHPlatform] = useState("steam");
-	const [hHandle, setHHandle] = useState("");
+	const gamesDraft = useRef<GamesDraft | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -218,16 +203,6 @@ export default function EditProfileModal({
 		setResults([]);
 		setUnmatchedTokens([]);
 	};
-	const filteredGames = gName.trim()
-		? getSteamGameNames()
-				.filter((name) => name.includes(gName.trim().toLowerCase()))
-				.filter(
-					(name) =>
-						!games.some((game) => game.name.toLowerCase() === name),
-				)
-				.slice(0, 8)
-		: [];
-
 	const addPost = () => {
 		if (!postTitle.trim() || !postUrl.trim()) return;
 		const minutes = Number(postMinutes);
@@ -276,48 +251,14 @@ export default function EditProfileModal({
 		];
 	};
 
-	const addGame = () => {
-		if (!gName.trim()) return;
-		setGames((current) => [
-			...current,
-			{
-				name: gName.trim(),
-				detail: gDetail.trim() || null,
-				url: gUrl.trim() || null,
-			},
-		]);
-		setGName("");
-		setGDetail("");
-		setGUrl("");
-		setGameSearchOpen(false);
-	};
-
-	const addHandle = () => {
-		if (!hHandle.trim()) return;
-		setHandles((current) => [
-			...current,
-			{ platform: hPlatform, handle: hHandle.trim() },
-		]);
-		setHHandle("");
-	};
-
 	const gamesForSave = () => {
-		const name = gName.trim();
-		if (!name || games.length >= 12) return games;
-		return [
-			...games,
-			{
-				name,
-				detail: gDetail.trim() || null,
-				url: gUrl.trim() || null,
-			},
-		];
+		const draft = gamesDraft.current?.game();
+		return draft && games.length < 12 ? [...games, draft] : games;
 	};
 
 	const handlesForSave = () => {
-		const handle = hHandle.trim();
-		if (!handle || handles.length >= 8) return handles;
-		return [...handles, { platform: hPlatform, handle }];
+		const draft = gamesDraft.current?.handle();
+		return draft && handles.length < 8 ? [...handles, draft] : handles;
 	};
 
 	const saveLeetcode = () =>
@@ -410,15 +351,47 @@ export default function EditProfileModal({
 		}
 	};
 
+	const pressedBackdrop = useRef(false);
+
+	useEffect(() => {
+		const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
+		document.addEventListener("keydown", onKey);
+		const previous = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+		return () => {
+			document.removeEventListener("keydown", onKey);
+			document.body.style.overflow = previous;
+		};
+	}, [onClose]);
+
 	if (typeof document === "undefined") return null;
+
+	/*
+	 * React bubbles events from a portal to the *React* parents of the component
+	 * that rendered it. Stop them here so nothing underneath (menus, cards,
+	 * click-outside handlers) ever sees clicks that happen inside this dialog.
+	 * The backdrop closes only when the press STARTED and ENDED on it, so
+	 * selecting text and releasing outside the window no longer dismisses it.
+	 */
+	const stop = (event: React.SyntheticEvent) => event.stopPropagation();
 
 	return createPortal(
 		<div
 			className={styles.backdrop}
 			role="presentation"
-			onMouseDown={(event) =>
-				event.target === event.currentTarget && onClose()
-			}
+			onClick={(event) => {
+				event.stopPropagation();
+				if (pressedBackdrop.current && event.target === event.currentTarget) onClose();
+				pressedBackdrop.current = false;
+			}}
+			onMouseDown={(event) => {
+				event.stopPropagation();
+				pressedBackdrop.current = event.target === event.currentTarget;
+			}}
+			onMouseUp={stop}
+			onPointerDown={stop}
+			onTouchStart={stop}
+			onKeyDown={stop}
 		>
 			<section
 				className={styles.modal}
@@ -639,199 +612,13 @@ export default function EditProfileModal({
 				)}
 
 				{isGames && (
-					<>
-						<div className={styles.linkList}>
-							{games.map((game, index) => (
-								<div
-									className={styles.linkEditor}
-									key={`${game.name}-${index}`}
-								>
-									<span>
-										{game.name}
-										<small>
-											{[game.detail, game.url]
-												.filter(Boolean)
-												.join(" · ")}
-										</small>
-									</span>
-									<button
-										onClick={() =>
-											setGames((current) =>
-												current.filter(
-													(_, i) => i !== index,
-												),
-											)
-										}
-									>
-										×
-									</button>
-								</div>
-							))}
-						</div>
-						{games.length < 12 && (
-							<>
-								<div className={styles.grid}>
-									<label className={styles.field}>
-										Game
-										<input
-											maxLength={60}
-											value={gName}
-											placeholder="Search games..."
-											autoComplete="off"
-											onFocus={() =>
-												setGameSearchOpen(true)
-											}
-											onChange={(event) => {
-												setGName(event.target.value);
-												setGameSearchOpen(true);
-											}}
-											onKeyDown={(event) => {
-												if (event.key === "Escape") {
-													setGameSearchOpen(false);
-												}
-											}}
-										/>
-										{gameSearchOpen &&
-											filteredGames.length > 0 && (
-												<div className={styles.results}>
-													{filteredGames.map(
-														(name) => {
-															const art =
-																gameArtUrl(
-																	name,
-																);
-
-															return (
-																<button
-																	type="button"
-																	key={name}
-																	onClick={() => {
-																		setGName(
-																			name,
-																		);
-																		setGameSearchOpen(
-																			false,
-																		);
-																	}}
-																>
-																	{art && (
-																		// eslint-disable-next-line
-																		<img
-																			src={
-																				art
-																			}
-																			alt=""
-																			width={
-																				64
-																			}
-																			loading="lazy"
-																		/>
-																	)}
-																	{name}
-																</button>
-															);
-														},
-													)}
-												</div>
-											)}
-									</label>
-								</div>
-								<div className={styles.grid}>
-									<label className={styles.field}>
-										Link (optional)
-										<input
-											placeholder="https://..."
-											value={gUrl}
-											onChange={(event) =>
-												setGUrl(event.target.value)
-											}
-										/>
-									</label>
-									<button
-										className={styles.addLink}
-										onClick={addGame}
-										
-									>
-										Add game to list
-									</button>
-								</div>
-							</>
-						)}
-						<p className={styles.help}>
-							Any game works, no platform needed. Up to 12. Click
-							“Add game to list” or leave it entered and click
-							“Save settings”.
-						</p>
-
-						<div className={styles.linkList}>
-							{handles.map((h, index) => (
-								<div
-									className={styles.linkEditor}
-									key={`${h.platform}-${index}`}
-								>
-									<span>
-										{HANDLE_PLATFORMS.find(
-											([key]) => key === h.platform,
-										)?.[1] ?? h.platform}
-										<small>{h.handle}</small>
-									</span>
-									<button
-										onClick={() =>
-											setHandles((current) =>
-												current.filter(
-													(_, i) => i !== index,
-												),
-											)
-										}
-									>
-										×
-									</button>
-								</div>
-							))}
-						</div>
-						{handles.length < 8 && (
-							<div className={styles.grid}>
-								<label className={styles.field}>
-									Platform
-									<select
-										value={hPlatform}
-										onChange={(event) =>
-											setHPlatform(event.target.value)
-										}
-									>
-										{HANDLE_PLATFORMS.map(
-											([key, label]) => (
-												<option key={key} value={key}>
-													{label}
-												</option>
-											),
-										)}
-									</select>
-								</label>
-								<label className={styles.field}>
-									Username / ID
-									<input
-										maxLength={40}
-										value={hHandle}
-										onChange={(event) =>
-											setHHandle(event.target.value)
-										}
-									/>
-								</label>
-								<button
-									className={styles.addLink}
-									onClick={addHandle}
-								>
-									Add handle to list
-								</button>
-							</div>
-						)}
-						<p className={styles.help}>
-							Shown as plain text so people can find you. Up to 8.
-							Click “Add handle to list” or leave it entered and
-							click “Save settings”.
-						</p>
-					</>
+					<GamesEditor
+						games={games}
+						setGames={setGames}
+						handles={handles}
+						setHandles={setHandles}
+						draftRef={gamesDraft}
+					/>
 				)}
 
 				{isInterests && (

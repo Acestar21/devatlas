@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { Profile } from "@/types";
 import { backendFetch } from "@/lib/backend";
 
@@ -11,8 +12,8 @@ export async function getThemeCookie(): Promise<string | null> {
 }
 
 /** The logged-in visitor's own profile, or null when logged out. */
-export async function fetchViewer(): Promise<Profile | null> {
+export const fetchViewer = cache(async (): Promise<Profile | null> => {
 	if (!(await getSessionCookieValue())) return null;
 	const response = await backendFetch("profiles/me");
 	return response.ok ? response.json() : null;
-}
+});
