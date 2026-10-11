@@ -596,7 +596,7 @@ export default function EditProfileModal({
 									/>
 								</label>
 								<button
-									className={styles.addLink}
+									className={`${styles.addLink} ${styles.actionButton}`}
 									onClick={addPost}
 								>
 									Add post to list
@@ -769,7 +769,7 @@ export default function EditProfileModal({
 											/>
 										</label>
 										<button
-											className={styles.addLink}
+											className={`${styles.addLink} ${styles.actionButton}`}
 											onClick={() => {
 												if (
 													newLinkLabel &&
@@ -837,9 +837,12 @@ export default function EditProfileModal({
 							{results.length > 0 && (
 								<div className={styles.results}>
 									{search.includes(",") && (
-										<button onClick={addAllStackMatches}>
-											Add all matching tags
-										</button>
+											<button
+												className={`${styles.actionButton} ${styles.resultAction}`}
+												onClick={addAllStackMatches}
+											>
+												Add all matching tags
+											</button>
 									)}
 									{results.map((tag) => (
 										<button
@@ -853,7 +856,7 @@ export default function EditProfileModal({
 							)}
 							{unmatchedTokens.length > 0 && (
 								<button
-									className={styles.submitNewButton}
+									className={`${styles.actionButton} ${styles.submitNewButton}`}
 									onClick={submitStack}
 								>
 									Submit unmatched tags for review

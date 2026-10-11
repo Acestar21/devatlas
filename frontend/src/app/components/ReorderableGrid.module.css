@@ -10,6 +10,14 @@
 	justify-content: flex-end;
 	gap: 0.5rem;
 }
+.toolbar > :first-child {
+	margin-right: 0;
+}
+.toolbarAddon {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
 .hint {
 	margin-right: auto;
 	color: var(--foreground-muted);

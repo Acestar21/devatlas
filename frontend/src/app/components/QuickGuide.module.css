@@ -1,8 +1,5 @@
 .guide {
-	position: absolute;
-	top: 0;
-	right: calc(100% + 0.75rem);
-	width: 180px;
+	margin-top: 0.75rem;
 	padding: 1rem 1.1rem;
 	border: 1px solid var(--border);
 	border-radius: var(--card-radius-lg);
@@ -106,9 +103,28 @@
 }
 
 .collapsed {
+	display: flex;
+	justify-content: flex-start;
+	margin-top: 0.75rem;
+}
+
+.topbarGuide {
 	position: absolute;
-	top: 0.5rem;
-	right: calc(100% + 0.75rem);
+	top: calc(100% + 0.75rem);
+	right: 0;
+	z-index: 40;
+	width: min(360px, calc(100vw - 2rem));
+	max-height: calc(100dvh - var(--topbar-h) - 1.5rem);
+	overflow-y: auto;
+	margin-top: 0;
+}
+
+.topbarCollapsed {
+	margin-top: 0;
+}
+
+.mobileGuide {
+	display: none;
 }
 
 .infoButton {
@@ -120,14 +136,38 @@
 
 @media (max-width: 900px) {
 	.guide {
-		position: static;
-		width: auto;
 		margin-top: 0.5rem;
 	}
 	.collapsed {
-		position: static;
-		display: flex;
-		justify-content: flex-end;
 		margin-top: 0.5rem;
+	}
+}
+
+@media (max-width: 720px) {
+	.topbarGuide {
+		right: -0.5rem;
+		width: min(360px, calc(100vw - 1rem));
+	}
+}
+
+@media (max-width: 559px) {
+	.mobileGuide {
+		position: relative;
+		display: flex;
+		margin: 0;
+	}
+	.mobileGuide.guide {
+		position: fixed;
+		display: block;
+		top: calc(var(--topbar-h) + 0.5rem);
+		right: 1rem;
+		z-index: 40;
+		width: min(300px, calc(100vw - 2rem));
+		max-height: min(60dvh, 420px);
+		overflow-y: auto;
+		margin: 0;
+	}
+	.mobileGuide.collapsed {
+		margin: 0;
 	}
 }

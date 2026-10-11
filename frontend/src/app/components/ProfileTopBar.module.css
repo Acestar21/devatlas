@@ -21,9 +21,20 @@
 }
 
 .actions {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: 0.6rem;
+}
+.guideSlot {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+@media (max-width: 559px) {
+	.guideSlot {
+		display: none;
+	}
 }
 .pill {
 	padding: 0.42rem 0.8rem;

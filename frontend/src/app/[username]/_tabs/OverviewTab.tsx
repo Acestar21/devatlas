@@ -4,6 +4,7 @@ import FeaturedProject from "@/app/components/FeaturedProject";
 import GameCard from "@/app/components/GameCard";
 import PostCard from "@/app/components/PostCard";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
+import QuickGuide from "@/app/components/QuickGuide";
 import ReorderableGrid, { GridCard } from "@/app/components/ReorderableGrid";
 import { withBanners } from "@/lib/pinned";
 import { currentStreakRange, joinedAgo } from "@/lib/streak";
@@ -177,6 +178,7 @@ export default async function OverviewTab({ profile }: { profile: Profile }) {
 			cards={cards}
 			savedOrder={saved.length ? saved : DEFAULT_ORDER}
 			canEdit={profile.is_owner}
+			toolbarAddon={profile.is_owner ? <QuickGuide mobile /> : undefined}
 		/>
 	);
 }

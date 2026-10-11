@@ -26,10 +26,12 @@ export default function ReorderableGrid({
 	cards,
 	savedOrder,
 	canEdit,
+	toolbarAddon,
 }: {
 	cards: GridCard[];
 	savedOrder: string[];
 	canEdit: boolean;
+	toolbarAddon?: React.ReactNode;
 }) {
 	const router = useRouter();
 	const [order, setOrder] = useState<string[]>(savedOrder);
@@ -106,10 +108,15 @@ export default function ReorderableGrid({
 							</button>
 						</>
 					) : (
-						<button type="button" className={styles.ghost} onClick={() => setEditing(true)}>
-							Rearrange cards
-						</button>
-					)}
+							<>
+								{toolbarAddon && (
+									<div className={styles.toolbarAddon}>{toolbarAddon}</div>
+								)}
+								<button type="button" className={styles.ghost} onClick={() => setEditing(true)}>
+									Rearrange cards
+								</button>
+							</>
+						)}
 				</div>
 			)}
 			{error && (

@@ -252,7 +252,11 @@ export default function GamesEditor({
 							<input placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
 						</label>
 					</div>
-					<button type="button" className={styles.addLink} onClick={addGame}>
+					<button
+						type="button"
+						className={`${styles.addLink} ${styles.actionButton}`}
+						onClick={addGame}
+					>
 						Add game to list
 					</button>
 				</>
@@ -295,7 +299,11 @@ export default function GamesEditor({
 						Username / ID
 						<input maxLength={40} value={hHandle} onChange={(e) => setHHandle(e.target.value)} />
 					</label>
-					<button type="button" className={styles.addLink} onClick={addHandle}>
+					<button
+						type="button"
+						className={`${styles.addLink} ${styles.actionButton}`}
+						onClick={addHandle}
+					>
 						Add handle to list
 					</button>
 				</div>

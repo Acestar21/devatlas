@@ -87,11 +87,35 @@
 }
 .submitNewButton {
 	margin-top: 0.4rem;
-	border: 0;
-	background: none;
-	color: var(--primary);
+}
+.actionButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: fit-content;
+	min-height: 32px;
+	padding: 0.45rem 0.75rem;
+	border: 1px solid var(--primary);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
 	cursor: pointer;
 	font-size: 0.72rem;
+	font-weight: 600;
+	transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.actionButton:hover {
+	background: var(--accent-bg);
+	border-color: var(--primary);
+	color: var(--primary);
+	transform: translateY(-1px);
+}
+.actionButton:active {
+	transform: translateY(0);
+}
+.actionButton:focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
 }
 .grid {
 	display: grid;
@@ -147,12 +171,6 @@
 }
 .addLink {
 	align-self: end;
-	padding: 0.55rem 0.7rem;
-	border: 1px solid var(--border);
-	background: var(--secondary-bg);
-	color: var(--foreground);
-	cursor: pointer;
-	font-size: 0.72rem;
 }
 .results {
 	display: grid;
@@ -168,6 +186,12 @@
 	color: var(--foreground);
 	text-align: left;
 	cursor: pointer;
+}
+.results .resultAction {
+	border: 1px solid var(--primary);
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
+	font-weight: 600;
 }
 .visibility {
 	display: grid;

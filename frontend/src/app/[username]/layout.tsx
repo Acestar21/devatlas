@@ -3,7 +3,6 @@ import ModerationBanner from "@/app/components/ModerationBanner";
 import ProfileNav from "@/app/components/ProfileNav";
 import ProfileSidebar from "@/app/components/ProfileSidebar";
 import ProfileTopBar from "@/app/components/ProfileTopBar";
-import QuickGuide from "@/app/components/QuickGuide";
 import { SettingsProvider } from "@/app/components/SettingsProvider";
 import SiteFooter from "@/app/components/SiteFooter";
 import { findProfileBanner } from "@/lib/banners";
@@ -35,13 +34,16 @@ export default async function ProfileLayout({
 	return (
 		<SettingsProvider profile={profile}>
 			<div className={styles.shell}>
-				<ProfileTopBar viewer={viewer} theme={themeCookie || profile.theme} />
+				<ProfileTopBar
+					viewer={viewer}
+					theme={themeCookie || profile.theme}
+					showQuickGuide={profile.is_owner}
+				/>
 				<ProfileNav profile={profile} />
 				<div className={styles.grid}>
 					<aside className={styles.side} aria-label="Profile">
 						<div className={styles.sidebarContent}>
 							<ProfileSidebar profile={profile} banner={banner} />
-							<QuickGuide />
 						</div>
 					</aside>
 					<main className={styles.main}>

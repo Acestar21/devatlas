@@ -29,28 +29,118 @@ function getServerSnapshot() {
 
 const GUIDE_ITEMS = [
 	{
-		title: "GitHub banner",
-		question: "How do I add a GitHub banner?",
+		title: "Profile banner",
+		question: "How do I add a profile banner?",
+		content: (
+			<>
+				<p>
+					Open your GitHub repository named after your username
+					(e.g. <code>github.com/username/username</code>).
+				</p>
+				<p>
+					Create the folder <code>&apos;devatlas/&apos;</code> in that repo then add an image inside named <code>&apos;banner.jpg&apos;</code>, <code>&apos;banner.png&apos;</code>, or{" "}
+					<code>&apos;banner.webp&apos;</code>.
+				</p>
+				<p>
+					Commit the image to the repositor&apos;s default branch.
+					DevAtlas checks for the banner automatically; updates may
+					take up to 6 hours to appear.
+				</p>
+			</>
+		),
+	},
+	{
+		title: "Project banner",
+		question: "How do I add a project banner?",
+		content: (
+			<>
+				<p>
+					Open your GitHub pinned project repository
+					(e.g. <code>github.com/username/repo</code>).
+				</p>
+				<p>
+					Create the folder <code>&apos;devatlas/&apos;</code> in that repo at root, then add an image inside named <code>&apos;banner.jpg&apos;</code>, <code>&apos;banner.png&apos;</code>, or{" "}
+					<code>&apos;banner.webp&apos;</code>.
+				</p>
+				<p>
+					Commit the image to the repository&apos;s default branch.
+					DevAtlas checks for the banner automatically; updates may
+					take up to 6 hours to appear.
+				</p>
+			</>
+		),
 	},
 	{
 		title: "Tags",
 		question: "How do I add stack tags or interests?",
+		content: (
+			<>
+				<p>
+					Use the profile settings gear to manage your stack tags and
+					interests. Stack tags describe the technologies you work with;
+					interests describe topics and hobbies you care about. Search
+					for available tags and select the ones that fit you. These
+					also help other developers discover shared interests.
+				</p>
+				<p>
+					If there are tags that doesn&apos;t exist and you need them for your profile, {" "}
+					Submit them for review after typing the tag you want and the admin will approve it if valid.
+				</p>
+			</>
+		),
 	},
 	{
 		title: "Supported values",
-		question: "Which values and formats are supported?",
+		question: "What should I enter in profile fields?",
+		content: (
+			<p>
+				Use the format expected by each field. For example, links
+				should point to the relevant website or project, and game
+				entries should identify the game you play. For tag-based
+				fields, choose from the available tags rather than inventing
+				a new spelling. If a value isn&apos;t accepted, check the field&apos;s
+				label and validation message.
+			</p>
+		),
 	},
 	{
 		title: "Customization",
 		question: "How do I customize my profile?",
+		content: (
+			<p>
+				Use the profile settings gear to edit supported profile
+				details, and the theme switcher to change the appearance.
+				Add a bio, stack tags, interests, links, and other available
+				details to make your profile more useful to people viewing it.
+			</p>
+		),
 	},
 	{
 		title: "Visibility controls",
 		question: "How do I hide a section or card?",
+		content: (
+			<>
+			<p>
+				Open profile settings and look for the relevant visibility
+				controls. You can hide supported sections or individual
+				cards from other visitors. Check the public profile after
+				changing visibility to confirm what other people can see.
+			</p>	
+			<p>
+				Cards whose visiblity are turned off will be greyed out for the owner. 
+			</p>
+			</>
+		),
 	},
 ];
 
-export default function QuickGuide() {
+export default function QuickGuide({
+	topbar = false,
+	mobile = false,
+}: {
+	topbar?: boolean;
+	mobile?: boolean;
+}) {
 	const dismissed = useSyncExternalStore(
 		subscribe,
 		getSnapshot,
@@ -69,7 +159,11 @@ export default function QuickGuide() {
 
 	if (dismissed) {
 		return (
-			<div className={styles.collapsed}>
+			<div
+				className={`${styles.collapsed} ${topbar ? styles.topbarCollapsed : ""} ${
+					mobile ? styles.mobileGuide : ""
+				}`}
+			>
 				<button
 					type="button"
 					className={styles.infoButton}
@@ -84,7 +178,12 @@ export default function QuickGuide() {
 	}
 
 	return (
-		<section className={styles.guide} aria-labelledby="profile-guide-title">
+		<section
+			className={`${styles.guide} ${topbar ? styles.topbarGuide : ""} ${
+				mobile ? styles.mobileGuide : ""
+			}`}
+			aria-labelledby="profile-guide-title"
+		>
 			<div className={styles.header}>
 				<div>
 					<p className={styles.eyebrow}>Quick guide</p>
@@ -105,7 +204,7 @@ export default function QuickGuide() {
 						<strong>{item.title}</strong>
 						<details>
 							<summary>{item.question}</summary>
-							<p>Placeholder: add your instructions here.</p>
+							<div>{item.content}</div>
 						</details>
 					</li>
 				))}

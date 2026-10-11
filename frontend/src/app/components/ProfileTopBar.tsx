@@ -2,16 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { Profile } from "@/types";
 import ThemeSwitcher from "./ThemeSwitcher";
+import QuickGuide from "./QuickGuide";
 import styles from "./ProfileTopBar.module.css";
 
 export default function ProfileTopBar({
 	viewer,
 	theme,
 	active,
+	showQuickGuide = false,
 }: {
 	viewer: Profile | null;
 	theme: string;
 	active?: "directory";
+	showQuickGuide?: boolean;
 }) {
 	return (
 		<header className={styles.bar}>
@@ -19,6 +22,11 @@ export default function ProfileTopBar({
 				DevAtlas<span aria-hidden="true">_</span>
 			</Link>
 			<div className={styles.actions}>
+				{showQuickGuide && (
+					<div className={styles.guideSlot}>
+						<QuickGuide topbar />
+					</div>
+				)}
 				<ThemeSwitcher initialTheme={theme} mobileIcon />
 				<Link
 					href="/directory"
