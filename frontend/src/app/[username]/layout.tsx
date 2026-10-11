@@ -46,7 +46,7 @@ export default async function ProfileLayout({
 					</main>
 				</div>
 				{/* Only the profile's owner sees the badge; everyone else gets the plain footer. */}
-				<SiteFooter badge={profile.is_owner ? <BadgeEmbed username={profile.username} /> : undefined} />
+				<SiteFooter clearRail badge={profile.is_owner ? <BadgeEmbed username={profile.username} /> : undefined} />
 			</div>
 		</SettingsProvider>
 	);

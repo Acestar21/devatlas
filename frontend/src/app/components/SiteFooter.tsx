@@ -1,9 +1,16 @@
 import Link from "next/link";
 import styles from "./SiteFooter.module.css";
 
-export default function SiteFooter({ badge }: { badge?: React.ReactNode }) {
+export default function SiteFooter({
+	badge,
+	clearRail = false,
+}: {
+	badge?: React.ReactNode;
+	/** profile pages: leave room for the fixed notch nav on the left edge */
+	clearRail?: boolean;
+}) {
 	return (
-		<footer className={styles.footer}>
+		<footer className={`${styles.footer} ${clearRail ? styles.rail : ""}`}>
 			<div className={styles.divider} />
 			<div className={styles.row}>
 				<div className={styles.text}>

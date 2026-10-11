@@ -40,9 +40,10 @@ export async function GET(request: NextRequest) {
 		return fail(request, "failed");
 	}
 
+	// /welcome decides: blank profile -> onboarding, otherwise straight on to the directory
 	const { session_token } = await exchangeRes.json();
 
-	const response = NextResponse.redirect(new URL(`/directory`, request.url));
+	const response = NextResponse.redirect(new URL(`/welcome`, request.url));
 
 	response.cookies.set(SESSION_COOKIE_NAME, session_token, {
 		httpOnly: true,

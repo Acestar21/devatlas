@@ -3,18 +3,6 @@
 	background: var(--background);
 	color: var(--foreground);
 }
-.top {
-	height: 72px;
-	display: flex;
-	align-items: center;
-	padding: 0 6.5vw;
-	border-bottom: 1px solid var(--border);
-	background: var(--card-bg);
-}
-.brand {
-	color: var(--foreground);
-	font: 700 1.7rem var(--font-display, sans-serif);
-}
 .body {
 	width: min(100%, 720px);
 	margin: 0 auto;

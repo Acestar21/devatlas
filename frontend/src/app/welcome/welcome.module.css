@@ -1,0 +1,178 @@
+.page {
+	min-height: 100vh;
+	background: var(--background);
+	color: var(--foreground);
+}
+.wrap {
+	display: grid;
+	place-items: start center;
+	padding: 3rem 1rem 4rem;
+}
+.card {
+	width: min(100%, 560px);
+	padding: 1.4rem 1.6rem 1.5rem;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius);
+	background: var(--card-bg);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.1);
+}
+.top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1.6rem;
+}
+.dots {
+	list-style: none;
+	display: flex;
+	gap: 0.4rem;
+}
+.dots li {
+	width: 26px;
+	height: 5px;
+	border-radius: 999px;
+	background: var(--border);
+	transition: background 0.3s;
+}
+.dots .dotOn {
+	background: var(--primary);
+}
+.skip {
+	border: 0;
+	background: none;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font: 0.72rem var(--font-mono, monospace);
+}
+.skip:hover {
+	color: var(--primary);
+}
+
+/* each step fades/slides in (key= remounts it) */
+.step {
+	display: grid;
+	gap: 0.9rem;
+	min-height: 230px;
+	align-content: start;
+	animation: enter 0.3s ease both;
+}
+@keyframes enter {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
+.step h1 {
+	font-size: 1.5rem;
+}
+.step p {
+	color: var(--foreground-muted);
+	font-size: 0.85rem;
+	line-height: 1.6;
+}
+.avatar {
+	width: 84px;
+	height: 84px;
+	border: 3px solid var(--card-bg);
+	outline: 2px solid var(--primary);
+	border-radius: 50%;
+	object-fit: cover;
+	animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pop {
+	from {
+		transform: scale(0.6);
+		opacity: 0;
+	}
+}
+.input {
+	width: 100%;
+	padding: 0.65rem 0.8rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--input-bg);
+	color: var(--foreground);
+	font: 0.85rem var(--font-body, sans-serif);
+	resize: vertical;
+}
+.input:focus {
+	outline: none;
+	border-color: var(--primary);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+.chips button {
+	padding: 0.3rem 0.65rem;
+	border: 1px dashed var(--border);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font: 0.7rem var(--font-mono, monospace);
+}
+.chips button:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.count {
+	justify-self: end;
+	color: var(--foreground-muted);
+	font: 0.68rem var(--font-mono, monospace);
+}
+.linkRow {
+	display: grid;
+	grid-template-columns: 150px minmax(0, 1fr);
+	gap: 0.6rem;
+}
+.error {
+	margin-top: 0.8rem;
+	color: #b34d4d;
+	font-size: 0.78rem;
+}
+.actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 1.4rem;
+}
+.back,
+.next {
+	padding: 0.55rem 1.1rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font: 600 0.78rem var(--font-body, sans-serif);
+}
+.next {
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+.next:hover:not(:disabled) {
+	opacity: 0.88;
+}
+.next:disabled,
+.back:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+@media (max-width: 560px) {
+	.card {
+		padding: 1.1rem;
+	}
+	.linkRow {
+		grid-template-columns: 1fr;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.step,
+	.avatar {
+		animation: none;
+	}
+}

@@ -1,9 +1,12 @@
 .footer {
 	width: min(100%, 1320px);
 	margin: 2.5rem auto 0;
-	padding: 0 1.25rem 1.5rem 4.5rem;
+	padding: 0 1.25rem 1.5rem;
 	color: var(--foreground-dimmed);
 	font-size: 0.7rem;
+}
+.rail {
+	padding-left: 4.5rem;
 }
 .divider {
 	height: 1px;

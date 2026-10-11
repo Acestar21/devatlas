@@ -1,4 +1,6 @@
 import Link from "next/link";
+import SiteFooter from "./SiteFooter";
+import SiteTopBar from "./SiteTopBar";
 import styles from "./StaticPage.module.css";
 
 export default function StaticPage({
@@ -10,11 +12,7 @@ export default function StaticPage({
 }) {
 	return (
 		<main className={styles.page}>
-			<header className={styles.top}>
-				<Link href="/directory" className={styles.brand}>
-					DevAtlas
-				</Link>
-			</header>
+			<SiteTopBar />
 			<article className={styles.body}>
 				<h1>{title}</h1>
 				{children}
@@ -22,6 +20,7 @@ export default function StaticPage({
 					<Link href="/directory">← Back to directory</Link>
 				</p>
 			</article>
+			<SiteFooter />
 		</main>
 	);
 }

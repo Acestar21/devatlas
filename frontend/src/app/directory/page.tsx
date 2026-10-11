@@ -1,26 +1,12 @@
 import { DirectoryResponse } from "@/types-directory";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import DirectoryControls from "./DirectoryControls";
 import LoginModal from "@/app/components/LoginModal";
-import ThemeSwitcher from "@/app/components/ThemeSwitcher";
+import SiteFooter from "@/app/components/SiteFooter";
+import SiteTopBar from "@/app/components/SiteTopBar";
 import styles from "./page.module.css";
-import { fetchViewer, getThemeCookie } from "@/lib/server-context";
 import { backendFetch } from "@/lib/backend";
-
-async function getCurrentUser(): Promise<{
-	username: string;
-	avatar_url: string | null;
-} | null> {
-	try {
-		const viewer = await fetchViewer();
-		return viewer
-			? { username: viewer.username, avatar_url: viewer.avatar_url }
-			: null;
-	} catch {
-		return null;
-	}
-}
 
 async function fetchDirectory(params: {
 	search?: string;
@@ -38,6 +24,19 @@ async function fetchDirectory(params: {
 	const res = await backendFetch(`directory?${qs.toString()}`);
 	if (!res.ok) throw new Error(`Directory API returned ${res.status}`);
 	return res.json();
+}
+
+/**
+ * Directory banners are NOT checked or stored. The card just points a CSS background at
+ * <user>/<user>/devatlas/banner.jpg; if the file doesn't exist the browser paints nothing for
+ * that layer and the theme gradient underneath shows. GitHub usernames are [A-Za-z0-9-], and we
+ * validate anyway before building the URL.
+ */
+function bannerStyle(username: string): React.CSSProperties | undefined {
+	if (!/^[A-Za-z0-9-]{1,39}$/.test(username)) return undefined;
+	return {
+		["--banner-img" as string]: `url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpg")`,
+	};
 }
 
 const HINT_PREFIX: Record<string, string> = {
@@ -82,6 +81,19 @@ function bioPreview(value: string, limit = 112): string {
 	return `${shortened.slice(0, lastSpace > 60 ? lastSpace : shortened.length)}...`;
 }
 
+/** 1 … 4 5 6 … 12 — never more than 7 slots. */
+function pageWindow(current: number, total: number): (number | "…")[] {
+	if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+	const pages = new Set([1, total, current - 1, current, current + 1]);
+	const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((x, y) => x - y);
+	const out: (number | "…")[] = [];
+	sorted.forEach((p, i) => {
+		if (i > 0 && p - sorted[i - 1] > 1) out.push("…");
+		out.push(p);
+	});
+	return out;
+}
+
 export default async function DirectoryPage({
 	searchParams,
 }: {
@@ -100,152 +112,134 @@ export default async function DirectoryPage({
 	const { login_error: loginError, wait, deleted, ...listParams } = params;
 	const notice = noticeFor({ login_error: loginError, wait, deleted });
 	const data = await fetchDirectory(listParams);
-	const user = await getCurrentUser();
-	const themeCookie = await getThemeCookie();
+	const filtered = Boolean(listParams.search || listParams.stack);
+	const pageHref = (page: number) =>
+		`/directory?${new URLSearchParams({ ...listParams, page: String(page) } as Record<string, string>)}`;
 
 	return (
 		<main className={styles.page}>
-			<div className={styles.topBar}>
-				<div className={styles.topBarInner}>
-					<div>
-						<Link href="/" className={styles.brand}>
-							DevAtlas
-						</Link>
-					</div>
-					<div className={styles.topActions}>
-						<ThemeSwitcher
-							initialTheme={themeCookie || "terminal"}
-							mobileIcon
-						/>
-						<Link href="/directory" className={styles.topLink}>
-							/Directory
-						</Link>
-						{user ? (
-							<Link
-								href={`/${user.username}`}
-								aria-label="Open your profile"
-							>
-								<Image
-									src={
-										user.avatar_url || "/default-avatar.png"
-									}
-									alt="Your profile"
-									width={40}
-									height={40}
-									loading="eager"
-									className={styles.headerAvatar}
-								/>
-							</Link>
-						) : (
-							<Link
-								href="/directory?login=1"
-								className={styles.topLink}
-							>
-								/login
-							</Link>
-						)}
-					</div>
-				</div>
-			</div>
+			<SiteTopBar active="directory" />
 			<div className={styles.container}>
 				{notice && (
 					<p className={styles.notice} role="alert">
 						{notice}
 					</p>
 				)}
+				<header className={styles.header}>
+					<h1>Directory</h1>
+					<p className={styles.subtitle}>
+						{filtered
+							? `${data.total} ${data.total === 1 ? "developer matches" : "developers match"} your filters`
+							: `${data.total} ${data.total === 1 ? "developer" : "developers"} building in public`}
+					</p>
+				</header>
 				<DirectoryControls
+					key={`${params.search ?? ""}|${params.stack ?? ""}|${params.sort ?? ""}`}
 					initialSearch={params.search || ""}
 					initialStack={params.stack || ""}
 					initialSort={params.sort || "newest"}
 				/>
 
 				{data.results.length === 0 ? (
-					<p className={styles.empty}>No profiles match yet.</p>
+					<div className={styles.empty}>
+						<p className={styles.emptyTitle}>
+							{filtered ? "No profiles match those filters." : "No profiles yet."}
+						</p>
+						<p>
+							{filtered
+								? "Try a different name or stack."
+								: "Log in with GitHub to be the first."}
+						</p>
+						<Link
+							href={filtered ? "/directory" : "/directory?login=1"}
+							className={styles.emptyAction}
+						>
+							{filtered ? "Clear filters" : "Log in with GitHub"}
+						</Link>
+					</div>
 				) : (
-					<div className={styles.grid}>
+					<ul className={styles.grid}>
 						{data.results.map((card) => (
-							<a
-								key={card.username}
-								href={`/${card.username}`}
-								className={styles.card}
-							>
-								<div className={styles.cardHeader}>
+							<li key={card.username}>
+								<Link href={`/${card.username}`} className={styles.card}>
+									<div
+										className={styles.banner}
+										style={bannerStyle(card.username)}
+										aria-hidden="true"
+									/>
 									<Image
-										src={
-											card.avatar_url ||
-											"/default-avatar.png"
-										}
-										alt={card.username}
-										width="46"
-										height="46"
+										src={card.avatar_url || "/default-avatar.png"}
+										alt=""
+										width={56}
+										height={56}
 										className={styles.cardAvatar}
 									/>
-									<div>
+									<div className={styles.cardBody}>
 										<p className={styles.displayName}>
 											{card.display_name || card.username}
 										</p>
-										<p className={styles.username}>
-											@{card.username}
-										</p>
+										<p className={styles.username}>@{card.username}</p>
+										{card.bio && (
+											<p className={styles.bio}>{bioPreview(card.bio)}</p>
+										)}
+										{card.stack_tags.length > 0 && (
+											<div className={styles.tagRow}>
+												{card.stack_tags.slice(0, 4).map((t) => (
+													<span key={t} className={styles.tag}>
+														{t}
+													</span>
+												))}
+											</div>
+										)}
 									</div>
-								</div>
-
-								{card.bio && (
-									<p className={styles.bio}>
-										{bioPreview(card.bio)}
-									</p>
-								)}
-
-								{card.stack_tags.length > 0 && (
-									<div className={styles.tagRow}>
-										{card.stack_tags
-											.slice(0, 4)
-											.map((t) => (
-												<span
-													key={t}
-													className={styles.tag}
-												>
-													{t}
-												</span>
-											))}
+									<div className={styles.cardFooter}>
+										{card.contributions !== null && (
+											<span>{card.contributions} contributions</span>
+										)}
+										{card.hint && (
+											<span className={styles.hint}>
+												{HINT_PREFIX[card.hint.type]}: {card.hint.name}
+											</span>
+										)}
 									</div>
-								)}
-
-								<div className={styles.cardFooter}>
-									{card.contributions !== null && (
-										<span className={styles.contributions}>
-											{card.contributions} contributions
-										</span>
-									)}
-									{card.hint && (
-										<span className={styles.hint}>
-											{HINT_PREFIX[card.hint.type]}:{" "}
-											{card.hint.name}
-										</span>
-									)}
-								</div>
-							</a>
+								</Link>
+							</li>
 						))}
-					</div>
+					</ul>
 				)}
 
 				{data.total_pages > 1 && (
-					<div className={styles.pagination}>
-						{Array.from(
-							{ length: data.total_pages },
-							(_, i) => i + 1,
-						).map((p) => (
-							<a
-								key={p}
-								href={`?${new URLSearchParams({ ...listParams, page: String(p) } as Record<string, string>).toString()}`}
-								className={`${styles.pageLink} ${p === data.page ? styles.pageActive : ""}`}
-							>
-								{p}
-							</a>
-						))}
-					</div>
+					<nav className={styles.pagination} aria-label="Pagination">
+						{data.page > 1 && (
+							<Link href={pageHref(data.page - 1)} className={styles.pageLink} aria-label="Previous page">
+								←
+							</Link>
+						)}
+						{pageWindow(data.page, data.total_pages).map((p, i) =>
+							p === "…" ? (
+								<span key={`gap-${i}`} className={styles.pageGap} aria-hidden="true">
+									…
+								</span>
+							) : (
+								<Link
+									key={p}
+									href={pageHref(p)}
+									className={`${styles.pageLink} ${p === data.page ? styles.pageActive : ""}`}
+									aria-current={p === data.page ? "page" : undefined}
+								>
+									{p}
+								</Link>
+							),
+						)}
+						{data.page < data.total_pages && (
+							<Link href={pageHref(data.page + 1)} className={styles.pageLink} aria-label="Next page">
+								→
+							</Link>
+						)}
+					</nav>
 				)}
 			</div>
+			<SiteFooter />
 			{params.login === "1" && <LoginModal />}
 		</main>
 	);

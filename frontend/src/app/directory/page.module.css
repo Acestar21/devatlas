@@ -1,205 +1,284 @@
 .page {
 	min-height: 100vh;
-	padding-bottom: 4rem;
 	background: var(--background);
 	color: var(--foreground);
 }
-.topBar {
-	height: 72px;
-	border-bottom: 1px solid var(--border);
-	background: var(--card-bg);
-}
-.topBarInner {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 100%;
-	height: 100%;
-	margin: 0 auto;
-	padding: 0 6.5vw;
-}
-.brand {
-	color: var(--foreground);
-	font: 700 1.7rem var(--font-display, sans-serif);
-}
-.subtitle {
-	margin-top: 0.3rem;
-	color: var(--foreground-muted);
-	font-size: 0.8rem;
-}
-.topActions {
-	display: flex;
-	align-items: center;
-	gap: 0.65rem;
-}
-.topActions select {
-	padding: 0.35rem 0.55rem;
-	border: 1px solid var(--border);
-	border-radius: var(--control-radius);
-	background: var(--card-bg);
-	color: var(--foreground-muted);
-	font: 0.7rem var(--font-mono, monospace);
-	text-transform: capitalize;
-}
-.topLink {
-	padding: 0.4rem 0.65rem;
-	border: 1px solid var(--border);
-	border-radius: var(--control-radius);
-	background: var(--card-bg);
-	color: var(--foreground-muted);
-	font-size: 0.7rem;
-}
-.topLink:hover,
-.applyButton:hover {
-	border-color: var(--primary);
-	color: var(--primary);
-}
-.cornerLink {
-	padding: 0.55rem 0.8rem;
-	border: 1px solid var(--border);
-	border-radius: var(--control-radius);
-	background: var(--card-bg);
-	color: var(--foreground-muted);
-	font-size: 0.75rem;
-}
-.headerAvatar {
-	width: 40px;
-	height: 40px;
-	border: 1px solid var(--border);
-	border-radius: 50%;
-	object-fit: cover;
-}
+/* same 1320px frame as the top bar, so brand and content share one left edge */
 .container {
-	width: min(100%, 1200px);
+	width: min(100%, 1320px);
 	margin: 0 auto;
 	padding: 2rem 1.25rem 0;
 }
+
+.header {
+	margin-bottom: 1.25rem;
+}
+.header h1 {
+	font-size: 2rem;
+}
+.subtitle {
+	margin-top: 0.35rem;
+	color: var(--foreground-muted);
+	font: 0.8rem var(--font-mono, monospace);
+}
+
+.notice {
+	margin-bottom: 1rem;
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--primary);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	font-size: 0.8rem;
+	line-height: 1.5;
+}
+
+/* ---- controls ---- */
 .controls {
 	display: grid;
-	grid-template-columns: 2fr 1.4fr auto auto;
-	gap: 0.65rem;
-	margin-bottom: 2rem;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) auto auto;
+	gap: 0.6rem;
+	margin-bottom: 1.5rem;
+	padding: 0.6rem;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius);
+	background: var(--card-bg);
 }
-.searchInput,
+.searchField {
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-width: 0;
+}
+.searchField input,
 .stackInput,
 .sortSelect {
+	width: 100%;
 	min-height: 40px;
-	padding: 0.55rem 0.7rem;
+	padding: 0.55rem 0.8rem;
 	border: 1px solid var(--border);
 	border-radius: var(--control-radius);
 	background: var(--input-bg);
 	color: var(--foreground);
-	font: 0.76rem var(--font-body, sans-serif);
+	font: 0.78rem var(--font-body, sans-serif);
+	transition: border-color 0.15s, box-shadow 0.15s;
 }
-.applyButton {
+.searchField input {
+	padding-left: 2.2rem;
+	padding-right: 2.2rem;
+}
+.searchField input:focus,
+.stackInput:focus,
+.sortSelect:focus {
+	outline: none;
+	border-color: var(--primary);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.searchIcon {
+	position: absolute;
+	left: 0.75rem;
+	width: 15px;
+	height: 15px;
+	fill: none;
+	stroke: var(--foreground-muted);
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	pointer-events: none;
+}
+.searchField kbd {
+	position: absolute;
+	right: 0.6rem;
+	padding: 0.05rem 0.4rem;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	color: var(--foreground-muted);
+	font: 0.66rem var(--font-mono, monospace);
+	pointer-events: none;
+}
+.searchField input:focus ~ kbd {
+	display: none;
+}
+.controlButtons {
+	display: flex;
+	gap: 0.5rem;
+}
+.applyButton,
+.clearButton {
 	min-height: 40px;
-	padding: 0.55rem 0.8rem;
+	padding: 0.55rem 1rem;
 	border: 1px solid var(--primary);
 	border-radius: var(--control-radius);
 	background: var(--primary);
 	color: var(--primary-foreground);
 	cursor: pointer;
-	font: 0.76rem var(--font-body, sans-serif);
+	font: 600 0.76rem var(--font-body, sans-serif);
+	transition: opacity 0.15s;
 }
-.applyButton:hover {
-	border-color: var(--primary-foreground);
-	background: var(--primary-foreground);
+.applyButton:hover:not(:disabled) {
+	opacity: 0.88;
+}
+.applyButton:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+.clearButton {
+	border-color: var(--border);
+	background: transparent;
+	color: var(--foreground-muted);
+	font-weight: 500;
+}
+.clearButton:hover {
+	border-color: var(--primary);
 	color: var(--primary);
 }
-.empty {
-	padding: 4rem 0;
-	color: var(--foreground-muted);
-	text-align: center;
-}
+
+/* ---- grid + cards ---- */
 .grid {
+	list-style: none;
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
 	gap: 1rem;
 }
+.grid li {
+	display: flex;
+}
+/* banner + avatar + name: the same anatomy as the profile sidebar */
 .card {
-	display: block;
-	min-height: 0;
-	padding: 0.85rem;
-	padding: 1.25rem;
+	position: relative;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+	overflow: hidden;
 	border: 1px solid var(--border);
 	border-radius: var(--card-radius);
 	background: var(--card-bg);
 	color: inherit;
+	transition: transform 0.25s ease, border-color 0.2s, box-shadow 0.25s;
 }
-.card:hover {
+.card:hover,
+.card:focus-visible {
+	transform: translateY(-3px);
 	border-color: var(--primary);
+	box-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
+	outline: none;
 }
-.cardHeader {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	margin-bottom: 0.9rem;
-}
-.cardHeader > div {
-	min-width: 0;
+/*
+ * Same 3:1 box for every card, with or without an image, so rows never look uneven
+ * (matches a 1200x400 banner). The image is layer 1; the theme gradient is the fallback
+ * layer, visible whenever the file doesn't exist.
+ */
+.banner {
+	aspect-ratio: 3 / 1;
+	background-color: var(--card-bg);
+	background-image: var(--banner-img, none), var(--banner);
+	background-position: center;
+	background-size: cover;
+	background-repeat: no-repeat;
+	border-bottom: 1px solid var(--border-muted);
 }
 .cardAvatar {
+	position: relative;
+	z-index: 1;
 	display: block;
-	flex: 0 0 46px;
-	width: 46px;
-	max-width: 46px;
-	height: 46px;
-	max-height: 46px;
-	border: 1px solid var(--border);
+	width: 56px;
+	height: 56px;
+	margin: -28px 0 0 1.1rem; /* overlaps the banner edge */
+	border: 3px solid var(--card-bg);
+	outline: 1px solid var(--border);
 	border-radius: 50%;
+	background: var(--card-bg);
 	object-fit: cover;
 }
+.cardBody {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 0.7rem 1.1rem 1rem;
+}
 .displayName {
-	color: var(--foreground);
-	font-size: 0.95rem;
+	font-size: 1rem;
+	font-weight: 600;
 	overflow-wrap: anywhere;
 }
 .username {
-	margin-top: 0.2rem;
+	margin-top: -0.35rem;
 	color: var(--foreground-muted);
 	font: 0.72rem var(--font-mono, monospace);
 	overflow-wrap: anywhere;
 }
 .bio {
-	min-height: 3.6em;
-	max-height: 3.6em;
-	margin-bottom: 0.8rem;
+	display: -webkit-box;
 	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
 	color: var(--foreground-muted);
-	font-size: 0.78rem;
+	font-size: 0.8rem;
 	line-height: 1.5;
 }
 .tagRow {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.35rem;
-	margin-bottom: 1rem;
 }
 .tag {
-	padding: 0.22rem 0.5rem;
+	padding: 0.2rem 0.55rem;
 	border: 1px solid var(--border);
-	border-radius: var(--control-radius);
+	border-radius: 999px;
 	background: var(--secondary-bg);
 	color: var(--secondary-fg);
-	font-size: 0.68rem;
+	font: 0.68rem var(--font-mono, monospace);
 }
+/* pinned to the bottom so cards with and without a bio still line up */
 .cardFooter {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
-	gap: 0.5rem;
-	padding-top: 0.7rem;
+	gap: 0.4rem 0.8rem;
+	min-height: 2.6rem;
+	margin-top: auto;
+	padding: 0.7rem 1.1rem;
 	border-top: 1px solid var(--border-muted);
 	color: var(--foreground-muted);
-	font: 0.66rem var(--font-mono, monospace);
+	font: 0.68rem var(--font-mono, monospace);
 }
-.contributions,
 .hint {
 	min-width: 0;
 	overflow-wrap: anywhere;
 }
+
+/* ---- empty + pagination ---- */
+.empty {
+	display: grid;
+	justify-items: center;
+	gap: 0.5rem;
+	padding: 4rem 1rem;
+	border: 1px dashed var(--border);
+	border-radius: var(--card-radius);
+	color: var(--foreground-muted);
+	font-size: 0.85rem;
+	text-align: center;
+}
+.emptyTitle {
+	color: var(--foreground);
+	font-size: 1rem;
+	font-weight: 600;
+}
+.emptyAction {
+	margin-top: 0.6rem;
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--primary);
+	border-radius: var(--control-radius);
+	color: var(--primary);
+	font-size: 0.78rem;
+}
+.emptyAction:hover {
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
 .pagination {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: center;
 	gap: 0.4rem;
 	margin-top: 2rem;
@@ -207,57 +286,51 @@
 .pageLink {
 	display: grid;
 	place-items: center;
-	width: 32px;
-	height: 32px;
+	min-width: 34px;
+	height: 34px;
+	padding: 0 0.5rem;
 	border: 1px solid var(--border);
 	border-radius: var(--control-radius);
 	color: var(--foreground-muted);
-	font-size: 0.75rem;
+	font-size: 0.78rem;
 }
-.pageActive {
+.pageLink:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.pageActive,
+.pageActive:hover {
+	border-color: var(--primary);
 	background: var(--primary);
 	color: var(--primary-foreground);
 }
-.notice {
-	margin-bottom: 1rem;
-	padding: 0.75rem 1rem;
-	border: 1px solid var(--primary);
-	background: var(--secondary-bg);
-	color: var(--foreground);
-	font-size: 0.8rem;
-	line-height: 1.5;
+.pageGap {
+	display: grid;
+	place-items: center;
+	min-width: 24px;
+	color: var(--foreground-muted);
 }
 
-@media (max-width: 760px) {
-	.topBarInner {
-		padding: 0 1rem;
-	}
-	.brand {
-		font-size: 1.4rem;
-	}
-	.topActions {
-		gap: 0.4rem;
-	}
-	.topActions select {
-		min-width: 0;
-		max-width: 78px;
-	}
-	.topActions a.topLink:first-of-type {
-		display: none;
-	}
-	.container {
-		padding: 0.85rem 0.65rem 0;
-	}
+@media (max-width: 900px) {
 	.controls {
-		grid-template-columns: 1fr;
-		gap: 0.45rem;
-		margin-bottom: 0.85rem;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+	.searchField,
+	.controlButtons {
+		grid-column: 1 / -1;
+	}
+	.controlButtons > * {
+		flex: 1;
+	}
+}
+@media (max-width: 720px) {
+	.container {
+		padding: 1.25rem 0.85rem 0;
+	}
+	.header h1 {
+		font-size: 1.6rem;
 	}
 	.grid {
 		grid-template-columns: 1fr;
-	}
-	.card {
-		min-height: 0;
-		padding: 0.85rem;
 	}
 }

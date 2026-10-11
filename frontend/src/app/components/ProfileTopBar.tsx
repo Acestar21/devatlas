@@ -7,9 +7,11 @@ import styles from "./ProfileTopBar.module.css";
 export default function ProfileTopBar({
 	viewer,
 	theme,
+	active,
 }: {
 	viewer: Profile | null;
 	theme: string;
+	active?: "directory";
 }) {
 	return (
 		<header className={styles.bar}>
@@ -18,7 +20,11 @@ export default function ProfileTopBar({
 			</Link>
 			<div className={styles.actions}>
 				<ThemeSwitcher initialTheme={theme} mobileIcon />
-				<Link href="/directory" className={styles.pill}>
+				<Link
+					href="/directory"
+					className={`${styles.pill} ${active === "directory" ? styles.pillActive : ""}`}
+					aria-current={active === "directory" ? "page" : undefined}
+				>
 					/Directory
 				</Link>
 				{viewer ? (
