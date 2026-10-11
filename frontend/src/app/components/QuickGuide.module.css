@@ -1,0 +1,133 @@
+.guide {
+	position: absolute;
+	top: 0;
+	right: calc(100% + 0.75rem);
+	width: 180px;
+	padding: 1rem 1.1rem;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius-lg);
+	background: var(--card-bg);
+	box-shadow: var(--shadow-card);
+}
+
+.header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.eyebrow {
+	margin-bottom: 0.25rem;
+	color: var(--primary);
+	font: 0.62rem var(--font-mono, monospace);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.header h2 {
+	font-size: 0.95rem;
+	letter-spacing: -0.01em;
+}
+
+.dismiss,
+.infoButton {
+	display: inline-grid;
+	place-items: center;
+	border: 1px solid var(--border);
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.dismiss {
+	width: 1.6rem;
+	height: 1.6rem;
+	border-radius: var(--control-radius);
+	font-size: 1.15rem;
+	line-height: 1;
+}
+
+.dismiss:hover,
+.infoButton:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+	transform: translateY(-1px);
+}
+
+.list {
+	display: grid;
+	gap: 0.7rem;
+	margin: 0.9rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.item {
+	display: grid;
+	gap: 0.18rem;
+	padding-top: 0.7rem;
+	border-top: 1px solid var(--border-muted);
+	color: var(--foreground);
+	font-size: 0.75rem;
+}
+
+.item strong {
+	font-size: 0.78rem;
+}
+
+.item details {
+	color: var(--foreground-muted);
+}
+
+.item summary {
+	width: fit-content;
+	color: var(--primary);
+	cursor: pointer;
+	font-size: 0.7rem;
+}
+
+.item summary:focus-visible,
+.dismiss:focus-visible,
+.infoButton:focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
+}
+
+.item details p {
+	margin: 0.45rem 0 0;
+	padding: 0.55rem 0.65rem;
+	border-left: 2px solid var(--border);
+	background: var(--accent-bg);
+	color: var(--foreground-muted);
+	font-size: 0.68rem;
+	line-height: 1.45;
+}
+
+.collapsed {
+	position: absolute;
+	top: 0.5rem;
+	right: calc(100% + 0.75rem);
+}
+
+.infoButton {
+	width: 1.8rem;
+	height: 1.8rem;
+	border-radius: 50%;
+	font: 600 0.85rem var(--font-mono, monospace);
+}
+
+@media (max-width: 900px) {
+	.guide {
+		position: static;
+		width: auto;
+		margin-top: 0.5rem;
+	}
+	.collapsed {
+		position: static;
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 0.5rem;
+	}
+}
