@@ -5,9 +5,6 @@ from slowapi.errors import RateLimitExceeded
 from app.rate_limit import limiter
 from app.routers import auth, profiles, profile_tags, badge, tags, directory, leetcode, account, reports, mod, mfa, games, journal
 from app.config import settings
-from fastapi import Request
-from app.config import settings
-from app.rate_limit import client_key, forwarded_client_ip
 
 app = FastAPI(title="DevCard")
 app.state.limiter = limiter
@@ -26,16 +23,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-@app.get("/_debug/ip", include_in_schema=False)
-def debug_ip(request: Request):
-    return {
-        "xff_raw": request.headers.get("x-forwarded-for"),
-        "x_real_ip": request.headers.get("x-real-ip"),
-        "client": request.client.host if request.client else None,
-        "hops": settings.trusted_proxy_hops,
-        "forwarded_client_ip": forwarded_client_ip(request),
-        "key": client_key(request),
-    }
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health():
