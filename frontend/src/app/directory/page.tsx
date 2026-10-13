@@ -36,10 +36,10 @@ function bannerStyle(username: string): React.CSSProperties | undefined {
 	if (!/^[A-Za-z0-9-]{1,39}$/.test(username)) return undefined;
 	return {
 		["--banner-img" as string]: `
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpg")
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.webp")
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.png")
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpeg")
+			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpg"),
+			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.webp"),
+			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.png"),
+			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpeg"),
 			`,
 	};
 }
