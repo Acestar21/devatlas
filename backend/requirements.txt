@@ -33,5 +33,5 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.3
 uvicorn==0.52.4
-wrapt==2.4.0
+wrapt==2.5.0
 pyotp==2.10.0
