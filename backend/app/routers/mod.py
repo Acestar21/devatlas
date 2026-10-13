@@ -38,7 +38,7 @@ from app.moderation import (
     record,
 )
 from app.services.notify import notify_staff
-from app.time import iso_utc
+from app.time import iso_utc, utc_now
 
 router = APIRouter(prefix="/mod", tags=["moderation"], dependencies=[Depends(require_moderator)])
 
@@ -164,7 +164,7 @@ def _open_reports(db: Session, target_id: int) -> list[Report]:
 
 
 def _close_reports(db: Session, reports: list[Report], staff: User, status: str, note: str | None = None) -> None:
-    now = datetime.now(timezone.utc)
+    now = utc_now()
     for report in reports:
         report.status = status
         report.handled_by_user_id = staff.id
@@ -342,7 +342,7 @@ def suspend_user(
         limit = ADMIN_MAX_SUSPENSION_DAYS if is_admin else MOD_MAX_SUSPENSION_DAYS
         if not 1 <= body.days <= limit:
             raise HTTPException(status_code=400, detail=f"Duration must be between 1 and {limit} days.")
-        target.suspended_until = datetime.now(timezone.utc) + timedelta(days=body.days)
+        target.suspended_until = utc_now() + timedelta(days=body.days)
         duration = f"{body.days} day(s)"
 
     target.suspended = True
@@ -718,7 +718,7 @@ def end_elevation(user_id: int, admin: User = Depends(require_admin_role), db: S
     mfa = db.exec(select(StaffMfa).where(StaffMfa.user_id == target.id)).first()
     if mfa is None:
         raise HTTPException(status_code=400, detail="This user has no MFA session.")
-    mfa.elevation_revoked_at = datetime.now(timezone.utc)
+    mfa.elevation_revoked_at = utc_now()
     db.add(mfa)
     record(db, admin, "elevation_end", target=target)
     db.commit()

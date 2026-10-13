@@ -3,7 +3,7 @@ from sqlalchemy import text
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
-
+from app.time import utc_now
 from app.auth.dependencies import require_current_user
 from app.database import get_session
 from app.models.moderation import Report
@@ -47,7 +47,7 @@ def create_report(
     recent = db.exec(
         select(Report).where(
             Report.reporter_github_id == current_user.github_id,
-            Report.created_at > datetime.now(timezone.utc) - timedelta(hours=1),
+            Report.created_at > utc_now() - timedelta(hours=1),
         )
     ).all()
     if len(recent) >= MAX_REPORTS_PER_HOUR:

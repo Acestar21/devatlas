@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 import pyotp
-
+from app.time import utc_now
 from app.auth import mfa as mfa_lib
 from app.models.moderation import Report
 from app.models.staff_mfa import StaffMfa
@@ -12,7 +12,7 @@ from app.routers.mod import _reporter_info
 
 
 def enrolled_mfa(**overrides) -> StaffMfa:
-    fields = {"user_id": 1, "secret_encrypted": "x", "enrolled_at": datetime.now(timezone.utc)}
+    fields = {"user_id": 1, "secret_encrypted": "x", "enrolled_at": utc_now()}
     fields.update(overrides)
     return StaffMfa(**fields)
 

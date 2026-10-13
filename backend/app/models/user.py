@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
- 
+from app.time import utc_now
  
 class User(SQLModel, table=True):
     """A registered DevCard user, identified by their GitHub account.
@@ -26,5 +26,5 @@ class User(SQLModel, table=True):
     suspended: bool = Field(default=False)
     suspended_until: Optional[datetime] = None  # None while suspended=True means "until a moderator lifts it"
     suspension_reason: Optional[str] = None  # shown to the suspended user
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)

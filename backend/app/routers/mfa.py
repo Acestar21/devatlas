@@ -35,7 +35,7 @@ from app.models.staff_mfa import StaffMfa
 from app.models.user import User
 from app.moderation import effective_role, record
 from app.services.notify import notify_staff
-from app.time import as_utc, iso_utc, utc_now
+from app.time import as_utc, iso_utc, utc_now, from_unix
 
 router = APIRouter(prefix="/mfa", tags=["mfa"])
 
@@ -57,7 +57,7 @@ def _elevation_response(user: User) -> dict:
     now = int(time.time())
     return {
         "session_token": create_session_token(user.id, mfa_at=now),
-        "elevated_until": _iso(datetime.fromtimestamp(now + ELEVATION_SECONDS, timezone.utc)),
+        "elevated_until": _iso(from_unix(now + ELEVATION_SECONDS)),
     }
 
 
@@ -121,7 +121,7 @@ def mfa_enroll(
     plain, hashes = generate_recovery_codes()
     mfa.secret_encrypted = mfa.pending_secret_encrypted
     mfa.pending_secret_encrypted = None
-    mfa.enrolled_at = datetime.now(timezone.utc)
+    mfa.enrolled_at = utc_now()
     mfa.last_step = step
     mfa.failed_attempts = 0
     mfa.locked_until = None

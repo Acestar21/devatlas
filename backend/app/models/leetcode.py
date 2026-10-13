@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
+from app.time import utc_now
 
 
 class LeetcodeStats(SQLModel, table=True):
@@ -10,4 +11,4 @@ class LeetcodeStats(SQLModel, table=True):
     easy: int = 0
     medium: int = 0
     hard: int = 0
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=utc_now)

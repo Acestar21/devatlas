@@ -14,3 +14,6 @@ def as_utc(value: datetime) -> datetime:
 
 def iso_utc(value: datetime | None) -> str | None:
     return as_utc(value).isoformat().replace("+00:00", "Z") if value else None
+
+def from_unix(timestamp: int | float) -> datetime:
+    return datetime.fromtimestamp(timestamp, timezone.utc)

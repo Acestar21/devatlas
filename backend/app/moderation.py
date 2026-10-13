@@ -96,7 +96,7 @@ def suspension_active_clause():
     """SQL twin of is_suspended(). Keep the two in sync."""
     return and_(
         User.suspended.is_(True),
-        or_(User.suspended_until.is_(None), User.suspended_until > datetime.now(timezone.utc)),
+        or_(User.suspended_until.is_(None), User.suspended_until > utc_now()),
     )
 
 

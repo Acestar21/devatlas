@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Index, text
-
+from app.time import utc_now
 
 class Tag(SQLModel, table=True):
     __table_args__ = (Index("ix_tag_category_lower_name", "category", text("lower(name)"), unique=True),)
@@ -11,4 +11,4 @@ class Tag(SQLModel, table=True):
     category: str  # "stack" | "game" | "interest" — plain string, no enum needed at this scale
     status: str = Field(default="pending")  # "pending" | "approved"
     submitted_by_user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=utc_now)

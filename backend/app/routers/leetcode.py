@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
-
+from app.time import utc_now
 from app.database import get_session
 from app.models.user import User
 from app.models.leetcode import LeetcodeStats
@@ -39,7 +39,7 @@ def save_leetcode(
         row = LeetcodeStats(user_id=current_user.id, username=username)
     row.username = username
     row.easy, row.medium, row.hard = update.easy, update.medium, update.hard
-    row.updated_at = datetime.now(timezone.utc)
+    row.updated_at = utc_now()
     db.add(row)
     db.commit()
     return {"message": "Saved"}
