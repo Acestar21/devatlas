@@ -6,6 +6,20 @@ import ActivityTab from "./_tabs/ActivityTab";
 import InCommonTab from "./_tabs/InCommonTab";
 import InterestsTab from "./_tabs/InterestsTab";
 import OverviewTab from "./_tabs/OverviewTab";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
+	const { username } = await params;
+	const p = await loadProfile(username);
+	const title = `${p.display_name || p.username} (@${p.username}) · DevAtlas`;
+	const description = p.bio?.slice(0, 160) || `${p.username}'s developer profile on DevAtlas`;
+	return {
+		title,
+		description,
+		openGraph: { title, description, type: "profile", url: `/${p.username}`, images: p.avatar_url ? [p.avatar_url] : undefined },
+		twitter: { card: "summary", title, description },
+	};
+}
 
 export default async function ProfilePage({
 	params,

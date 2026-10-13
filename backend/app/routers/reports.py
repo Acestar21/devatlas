@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import text
+from sqlalchemy import text, func
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -33,7 +33,7 @@ def create_report(
     if body.category not in REPORT_CATEGORIES:
         raise HTTPException(status_code=400, detail="Pick a valid report category.")
 
-    target = db.exec(select(User).where(User.github_username == body.username)).first()
+    target = db.exec(select(User).where(func.lower(User.github_username) == body.username.lower())).first()
     if target is None:
         raise HTTPException(status_code=404, detail="User not found")
     if target.id == current_user.id:

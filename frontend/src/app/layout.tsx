@@ -22,6 +22,7 @@ const inter = Inter({
 
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://devatlas-cyan.vercel.app'),
   title: 'DevAtlas',
   description: 'The identity layer for developers',
 };
@@ -46,3 +47,4 @@ export default function RootLayout({
     </html>
   );
 }
+

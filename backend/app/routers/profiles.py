@@ -15,6 +15,7 @@ from app.services.github import is_stale, refresh_stats_in_background
 from fastapi import BackgroundTasks
 from app.services.journal import active_entries
 from app.time import iso_utc
+from sqlalchemy import func
 from app.moderation import can_view_profile, effective_role, is_staff, moderation_info
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -206,7 +207,7 @@ def get_profile(
     db: Session = Depends(get_session),
     viewer: User | None = Depends(get_current_user_optional),
 ):
-    user = db.exec(select(User).where(User.github_username == username)).first()
+    user = db.exec(select(User).where(func.lower(User.github_username) == username.lower())).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

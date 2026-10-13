@@ -1,6 +1,7 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from sqlmodel import Session, select
+from sqlalchemy import func
 from app.rate_limit import limiter
 from app.database import get_session
 from html import escape
@@ -46,7 +47,7 @@ def get_badge(
     username: str,
     db: Session = Depends(get_session),
 ):
-    user = db.exec(select(User).where(User.github_username == username)).first()
+    user = db.exec(select(User).where(func.lower(User.github_username) == username.lower())).first()
     profile = (
         db.exec(select(Profile).where(Profile.user_id == user.id)).first() if user else None
     )

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gameArtUrl, getSteamGameNames } from "@/lib/game-art";
 import { GameEntry, GamingHandle } from "@/types";
+import { proxyFetch } from "@/lib/api-client";
 import styles from "./EditProfileModal.module.css";
 
 export const HANDLE_PLATFORMS: [string, string][] = [
@@ -27,7 +28,7 @@ export interface GamesDraft {
 	handle: () => GamingHandle | null;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+
 
 /**
  * Game search: IGDB through our backend (/games/search) when it is configured,
@@ -35,11 +36,8 @@ const API = process.env.NEXT_PUBLIC_API_URL;
  */
 async function searchGames(query: string, signal: AbortSignal): Promise<SearchHit[]> {
 	try {
-		const response = await fetch(`${API}/games/search?q=${encodeURIComponent(query)}`, { signal });
-		if (response.ok) {
-			const hits = (await response.json()) as SearchHit[];
-			if (Array.isArray(hits) && hits.length > 0) return hits;
-		}
+		const hits = await proxyFetch<SearchHit[]>(`games/search?q=${encodeURIComponent(query)}`, { signal });
+		if (Array.isArray(hits) && hits.length > 0) return hits;
 	} catch (caught) {
 		if ((caught as Error).name === "AbortError") throw caught;
 	}

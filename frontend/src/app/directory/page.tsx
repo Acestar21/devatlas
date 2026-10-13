@@ -8,6 +8,8 @@ import SiteTopBar from "@/app/components/SiteTopBar";
 import styles from "./page.module.css";
 import { backendFetch } from "@/lib/backend";
 
+const BANNER_EXTS = ["jpg", "webp", "png" ] as const;
+
 async function fetchDirectory(params: {
 	search?: string;
 	stack?: string;
@@ -34,14 +36,10 @@ async function fetchDirectory(params: {
  */
 function bannerStyle(username: string): React.CSSProperties | undefined {
 	if (!/^[A-Za-z0-9-]{1,39}$/.test(username)) return undefined;
-	return {
-		["--banner-img" as string]: `
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpg"),
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.webp"),
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.png"),
-			url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.jpeg"),
-			`,
-	};
+	const layers = BANNER_EXTS.map(
+		(ext) => `url("https://raw.githubusercontent.com/${username}/${username}/HEAD/devatlas/banner.${ext}")`,
+	).join(", ");
+	return { ["--banner-img" as string]: layers };
 }
 
 const HINT_PREFIX: Record<string, string> = {
