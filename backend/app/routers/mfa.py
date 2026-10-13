@@ -152,7 +152,6 @@ def mfa_verify(
     if locked_until and locked_until > now:
         minutes = int((locked_until - now).total_seconds() // 60) + 1
         raise HTTPException(status_code=429, detail=f"Too many attempts. Try again in {minutes} minute(s).")
-        message = "Invalid code. If this keeps happening, make sure your device's clock is set automatically."
         
     ok = False
     used_recovery = False

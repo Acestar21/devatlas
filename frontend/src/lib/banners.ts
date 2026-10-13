@@ -8,7 +8,7 @@
  * layout jump or browser 404 noise.
  */
 
-const EXTENSIONS = ["jpg", "png", "webp"] as const;
+const EXTENSIONS = ["jpg", "png", "webp", "jpeg"] as const;
 const REVALIDATE_SECONDS = 6 * 60 * 60; // same cadence as the GitHub stats cache
 
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]{1,100}$/;
