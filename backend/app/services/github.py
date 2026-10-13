@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import httpx
+from cryptography.fernet import InvalidToken
 from sqlmodel import Session, select
 
 from app.models.user import User
@@ -22,6 +23,22 @@ query($login: String!) {
     followers { totalCount }
     pullRequests { totalCount }
     contributionsCollection {
+      commitContributionsByRepository(maxRepositories: 25) {
+        repository { nameWithOwner url isPrivate stargazerCount owner { login __typename } }
+        contributions(first: 100) { nodes { commitCount } }
+      }
+      pullRequestContributionsByRepository(maxRepositories: 25) {
+        repository { nameWithOwner url isPrivate stargazerCount owner { login __typename } }
+        contributions { totalCount }
+      }
+      issueContributionsByRepository(maxRepositories: 25) {
+        repository { nameWithOwner url isPrivate stargazerCount owner { login __typename } }
+        contributions { totalCount }
+      }
+      pullRequestReviewContributionsByRepository(maxRepositories: 25) {
+        repository { nameWithOwner url isPrivate stargazerCount owner { login __typename } }
+        contributions { totalCount }
+      }
       totalCommitContributions
       totalPullRequestContributions
       totalIssueContributions
@@ -71,7 +88,7 @@ class GithubTokenInvalid(Exception):
 
 
 async def _run_graphql_query(access_token: str, username: str) -> httpx.Response:
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10) as client:
         return await client.post(
             GITHUB_GRAPHQL_URL,
             json={"query": STATS_QUERY, "variables": {"login": username}},
@@ -80,6 +97,48 @@ async def _run_graphql_query(access_token: str, username: str) -> httpx.Response
                 "Content-Type": "application/json",
             },
         )
+
+
+MAX_EXTERNAL_REPOS = 12
+
+
+def summarize_external(cc: dict, login: str) -> list[dict]:
+    """Contributions to PUBLIC repositories the user does not own, merged per repository.
+
+    "Actual contributions": every number comes from GitHub's contribution data (commits, pull
+    requests, issues, reviews), so a repo the user merely owns, forks or has access to never
+    appears unless they really contributed. Repos owned by the user themself are dropped, and
+    private repos are always dropped (names must never leak). Organisation-owned repos count as
+    external: the user doesn't personally own them.
+    """
+    me = (login or "").lower()
+    repos: dict[str, dict] = {}
+
+    def add(items, field, count):
+        for item in items or []:
+            repo = item.get("repository") or {}
+            owner = repo.get("owner") or {}
+            owner_login = owner.get("login") or ""
+            if repo.get("isPrivate") or not owner_login or owner_login.lower() == me:
+                continue
+            row = repos.setdefault(repo["nameWithOwner"], {
+                "repo": repo["nameWithOwner"], "url": repo.get("url") or "",
+                "owner": owner_login, "is_org": owner.get("__typename") == "Organization",
+                "stars": repo.get("stargazerCount") or 0,
+                "commits": 0, "pull_requests": 0, "issues": 0, "reviews": 0,
+            })
+            row[field] += count(item)
+
+    nodes = lambda item: (item.get("contributions") or {}).get("nodes") or []
+    total = lambda item: (item.get("contributions") or {}).get("totalCount") or 0
+    add(cc.get("commitContributionsByRepository"), "commits", lambda i: sum(n.get("commitCount") or 0 for n in nodes(i)))
+    add(cc.get("pullRequestContributionsByRepository"), "pull_requests", total)
+    add(cc.get("issueContributionsByRepository"), "issues", total)
+    add(cc.get("pullRequestReviewContributionsByRepository"), "reviews", total)
+
+    rows = [r for r in repos.values() if r["commits"] + r["pull_requests"] + r["issues"] + r["reviews"] > 0]
+    rows.sort(key=lambda r: (-(r["commits"] + r["pull_requests"] + r["issues"] + r["reviews"]), r["repo"]))
+    return rows[:MAX_EXTERNAL_REPOS]
 
 
 def _streaks(days: list[dict]) -> tuple[int, int]:
@@ -153,19 +212,24 @@ async def fetch_and_cache_stats(user: User, db: Session) -> GithubStatsCache:
     if the token is rejected — caller should catch this and fall back to
     serving stale cached data instead of erroring the whole page.
     """
-    access_token = decrypt_token(user.encrypted_github_token)
-
-    response, events = await asyncio.gather(
-        _run_graphql_query(access_token, user.github_username),
-        _fetch_events(access_token, user.github_username),
-    )
+    if not user.encrypted_github_token:
+        raise GithubTokenInvalid("No stored GitHub token")
+    try:
+        access_token = decrypt_token(user.encrypted_github_token)
+        response, events = await asyncio.gather(
+            _run_graphql_query(access_token, user.github_username),
+            _fetch_events(access_token, user.github_username),
+        )
+    except (InvalidToken, httpx.HTTPError) as exc:
+        # key rotated / GitHub unreachable or slow: callers already degrade to the stale cache
+        raise GithubTokenInvalid(f"GitHub fetch failed: {type(exc).__name__}") from exc
 
     if response.status_code != 200:
         raise GithubTokenInvalid(
             f"GitHub API call failed with status {response.status_code}"
         )
 
-    data = response.json()
+    data = response.json() or {}
     gh_user = (data.get("data") or {}).get("user")
     if gh_user is None:
         logger.warning("Unexpected GraphQL response for %s: %s", user.github_username, data)
@@ -220,6 +284,7 @@ async def fetch_and_cache_stats(user: User, db: Session) -> GithubStatsCache:
     cache.pinned_repos_json = json.dumps(pinned)
     cache.calendar_json = json.dumps(weeks)
     cache.extra_stats_json = json.dumps(extra)
+    cache.external_json = json.dumps(summarize_external(cc, user.github_username))
     if events is not None:
         cache.activity_json = json.dumps(events)
     cache.last_fetched_at = utc_now()
@@ -236,3 +301,25 @@ def is_stale(cache: GithubStatsCache | None) -> bool:
 
     age = utc_now() - as_utc(cache.last_fetched_at)
     return age.total_seconds() > STALE_AFTER_HOURS * 3600
+
+
+async def refresh_stats_in_background(user_id: int, db_engine=None) -> None:
+    """Refresh a user's cached stats AFTER the response has been sent.
+
+    Uses its own DB session (the request's session is closed by then). If GitHub or the stored
+    token fails, bump last_fetched_at as a back-off so a revoked token isn't retried on every view.
+    """
+    from app.database import engine
+
+    with Session(db_engine or engine) as db:
+        user = db.get(User, user_id)
+        if user is None:
+            return
+        try:
+            await fetch_and_cache_stats(user, db)
+        except GithubTokenInvalid:
+            cache = db.exec(select(GithubStatsCache).where(GithubStatsCache.user_id == user_id)).first()
+            if cache:
+                cache.last_fetched_at = utc_now()
+                db.add(cache)
+                db.commit()

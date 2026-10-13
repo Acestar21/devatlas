@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from app.database import get_session
@@ -34,7 +35,11 @@ def add_stack_tag(
         return {"message": "Already added"}
 
     db.add(StackTag(user_id=current_user.id, tag_id=tag_id))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:  # two requests raced past the check above; the DB constraint caught it
+        db.rollback()
+        return {"message": "Already added"}
     return {"message": "Stack tag added"}
 
 
@@ -72,7 +77,11 @@ def add_interest(
         return {"message": "Already added"}
 
     db.add(UserInterest(user_id=current_user.id, tag_id=tag_id))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return {"message": "Already added"}
     return {"message": "Interest added"}
 
 

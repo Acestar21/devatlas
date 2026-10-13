@@ -2,6 +2,7 @@ import logging
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, update
+from app.models.journal import JournalEntry
 from sqlmodel import Session
 from app.moderation import is_suspended
 from app.auth.crypto import decrypt_token
@@ -63,7 +64,7 @@ async def delete_account(
     db.execute(update(Tag).where(Tag.submitted_by_user_id == uid, Tag.status == "approved").values(submitted_by_user_id=None))
     db.execute(delete(Tag).where(Tag.submitted_by_user_id == uid, Tag.status != "approved"))
 
-    for model in (StackTag, UserInterest, UserGame, UserProject, LeetcodeStats, GithubStatsCache, Profile):
+    for model in (StackTag, UserInterest, UserGame, UserProject, LeetcodeStats, GithubStatsCache, JournalEntry, Profile):
         db.execute(delete(model).where(model.user_id == uid))
     db.execute(delete(User).where(User.id == uid))
     db.commit()

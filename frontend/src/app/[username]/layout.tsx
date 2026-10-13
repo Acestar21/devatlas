@@ -7,7 +7,7 @@ import { SettingsProvider } from "@/app/components/SettingsProvider";
 import SiteFooter from "@/app/components/SiteFooter";
 import { findProfileBanner } from "@/lib/banners";
 import { loadProfile } from "@/lib/profile-api";
-import { fetchViewer, getThemeCookie } from "@/lib/server-context";
+import { fetchViewerSummary, getThemeCookie } from "@/lib/server-context";
 import styles from "./layout.module.css";
 
 /**
@@ -26,7 +26,7 @@ export default async function ProfileLayout({
 	const { username } = await params;
 	const [profile, viewer, themeCookie] = await Promise.all([
 		loadProfile(username),
-		fetchViewer(),
+		fetchViewerSummary(),
 		getThemeCookie(),
 	]);
 	const banner = await findProfileBanner(profile.username);
@@ -34,17 +34,11 @@ export default async function ProfileLayout({
 	return (
 		<SettingsProvider profile={profile}>
 			<div className={styles.shell}>
-				<ProfileTopBar
-					viewer={viewer}
-					theme={themeCookie || profile.theme}
-					showQuickGuide={profile.is_owner}
-				/>
+				<ProfileTopBar viewer={viewer} theme={themeCookie || profile.theme} />
 				<ProfileNav profile={profile} />
 				<div className={styles.grid}>
 					<aside className={styles.side} aria-label="Profile">
-						<div className={styles.sidebarContent}>
-							<ProfileSidebar profile={profile} banner={banner} />
-						</div>
+						<ProfileSidebar profile={profile} banner={banner} />
 					</aside>
 					<main className={styles.main}>
 						<ModerationBanner profile={profile} />

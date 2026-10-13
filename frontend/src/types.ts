@@ -76,6 +76,7 @@ export interface GithubStats {
   calendar?: CalendarDay[][] | null;
   extra?: ExtraStats | null;
   activity?: ActivityItem[] | null;
+  external?: ExternalContribution[]; // contributions to repos the user does NOT own
 }
 
 export interface SectionVisibility {
@@ -86,6 +87,34 @@ export interface SectionVisibility {
 }
 
 export type CardVisibility = Record<string, Record<string, boolean>>;
+
+export type CurrentlyKind = "tech" | "project" | "game" | "hobby" | "other";
+
+export interface CurrentlyItem {
+  text: string;
+  kind?: CurrentlyKind | null;
+}
+
+/** An ACTIVE temporary-journal entry (the backend never returns expired/ended ones). */
+export interface JournalEntry {
+  id: number;
+  body: string;
+  genre: string | null;
+  created_at: string; // ISO UTC
+  expires_at: string; // ISO UTC
+}
+
+export interface ExternalContribution {
+  repo: string; // "owner/name"
+  url: string;
+  owner: string;
+  is_org: boolean;
+  stars: number;
+  commits: number;
+  pull_requests: number;
+  issues: number;
+  reviews: number;
+}
 
 /** Owner-chosen order of the cards on the main profile view. */
 export interface ProfileLayout {
@@ -129,6 +158,8 @@ export interface Profile {
   section_visibility: SectionVisibility | null;
   card_visibility: CardVisibility;
   layout?: ProfileLayout | null;
+  currently?: CurrentlyItem[];
+  journal?: JournalEntry[]; // active entries only
   moderation: { suspended: boolean; reason: string | null; until: string | null } | null;
   viewer_role: "anonymous" | "user" | "moderator" | "admin";
 }

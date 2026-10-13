@@ -18,5 +18,6 @@ class GithubStatsCache(SQLModel, table=True):
     calendar_json: str = "[]"        # weeks -> days [{date, count}]
     extra_stats_json: str = "{}"     # commits, PRs, streaks, followers, etc.
     activity_json: str = "[]"        # recent public events
+    external_json: str = "[]"        # contributions to repos the user does NOT own (public only)
 
     last_fetched_at: datetime = Field(default_factory=utc_now)

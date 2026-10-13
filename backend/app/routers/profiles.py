@@ -11,7 +11,10 @@ from app.models.tag import Tag
 from app.models.tags_relations import StackTag, UserInterest
 from app.auth.dependencies import get_current_user_optional, require_current_user
 from app.schemas.profile import ProfileResponse, ProfileUpdate, ProfileUpdateResponse
-from app.services.github import is_stale, fetch_and_cache_stats, GithubTokenInvalid
+from app.services.github import is_stale, refresh_stats_in_background
+from fastapi import BackgroundTasks
+from app.services.journal import active_entries
+from app.time import iso_utc
 from app.moderation import can_view_profile, effective_role, is_staff, moderation_info
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -19,8 +22,8 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 DEFAULT_VISIBILITY = {"github": True, "leetcode": True, "games": True, "interests": True}
 
 DEFAULT_CARD_VISIBILITY = {
-    "github": {"graph": True, "stats": True, "pinned": True, "languages": True, "activity": True},
-    "activity": {"leetcode": True, "posts": True},
+    "github": {"graph": True, "stats": True, "pinned": True, "languages": True, "activity": True, "external": True},
+    "activity": {"leetcode": True, "posts": True, "currently": True},
     "games": {"handles": True},
 }
 
@@ -31,11 +34,13 @@ CARD_STATS_KEYS = {
     "pinned": ["pinned_repos"],
     "languages": ["top_languages"],
     "activity": ["activity"],
+    "external": ["external"],
 }
 
 MAX_GAMES = 12
 MAX_HANDLES = 8
 MAX_POSTS = 10
+MAX_CURRENTLY = 6
 
 
 def _card_visibility(profile: Profile | None) -> dict:
@@ -87,6 +92,7 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
             "calendar": json.loads(cache.calendar_json),
             "extra": json.loads(cache.extra_stats_json) or None,
             "activity": json.loads(cache.activity_json),
+            "external": json.loads(cache.external_json or "[]"),
         }
         # Hidden cards never leave the server for non-owners.
         if not is_owner:
@@ -126,6 +132,16 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
     if is_owner or card_vis["activity"]["posts"]:
         posts = json.loads(profile.posts_json) if profile else []
 
+    currently = []
+    if is_owner or card_vis["activity"]["currently"]:
+        currently = json.loads(profile.currently_json) if profile and profile.currently_json else []
+
+    journal = [
+        {"id": e.id, "body": e.body, "genre": e.genre,
+         "created_at": iso_utc(e.created_at), "expires_at": iso_utc(e.expires_at)}
+        for e in active_entries(db, user.id)
+    ]
+
     return {
         "username": user.github_username,
         "display_name": user.display_name,
@@ -144,6 +160,8 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
         "section_visibility": visibility,
         "card_visibility": card_vis,
         "layout": json.loads(profile.layout_json) if profile and profile.layout_json else {},
+        "currently": currently,
+        "journal": journal,
         "moderation": moderation_info(user) if (is_owner or is_staff(viewer)) else None,
         "viewer_role": effective_role(viewer),
     }
@@ -153,8 +171,19 @@ def _build_profile_payload(user: User, viewer: User | None, db: Session, cache) 
 # FastAPI matches routes in registration order, and /{username} is a
 # catch-all path param that would otherwise swallow "/me" as if it were
 # a literal username.
+@router.get("/me/summary")
+def my_summary(current_user: User = Depends(require_current_user)):
+    """Just what the page header needs: no GitHub fetch, no profile payload."""
+    return {
+        "username": current_user.github_username,
+        "avatar_url": current_user.avatar_url,
+        "viewer_role": effective_role(current_user),
+    }
+
+
 @router.get("/me", response_model=ProfileResponse)
-async def get_my_profile(
+def get_my_profile(
+    background: BackgroundTasks,
     current_user: User = Depends(require_current_user),
     db: Session = Depends(get_session),
 ):
@@ -163,18 +192,16 @@ async def get_my_profile(
     ).first()
 
     if is_stale(cache):
-        try:
-            cache = await fetch_and_cache_stats(current_user, db)
-        except GithubTokenInvalid:
-            pass
+        background.add_task(refresh_stats_in_background, current_user.id)
 
     return _build_profile_payload(current_user, current_user, db, cache)
 
 
 @router.get("/{username}", response_model=ProfileResponse)
 @limiter.limit("30/minute")
-async def get_profile(
+def get_profile(
     request: Request,
+    background: BackgroundTasks,
     username: str,
     db: Session = Depends(get_session),
     viewer: User | None = Depends(get_current_user_optional),
@@ -192,10 +219,8 @@ async def get_profile(
     ).first()
 
     if is_stale(cache):
-        try:
-            cache = await fetch_and_cache_stats(user, db)
-        except GithubTokenInvalid:
-            pass  # degrade gracefully — fall through, serve stale cache if any exists
+        # Serve what we have right now; refresh after the response so nobody waits on GitHub.
+        background.add_task(refresh_stats_in_background, user.id)
 
     return _build_profile_payload(user, viewer, db, cache)
 
@@ -251,6 +276,11 @@ def update_profile(
         if len(update.gaming_handles) > MAX_HANDLES:
             raise HTTPException(status_code=400, detail=f"Up to {MAX_HANDLES} handles allowed.")
         profile.gaming_handles_json = json.dumps([h.model_dump() for h in update.gaming_handles])
+
+    if update.currently is not None:
+        if len(update.currently) > MAX_CURRENTLY:
+            raise HTTPException(status_code=400, detail=f"Up to {MAX_CURRENTLY} items allowed.")
+        profile.currently_json = json.dumps([c.model_dump() for c in update.currently])
 
     if update.layout is not None:
         profile.layout_json = update.layout.model_dump_json()

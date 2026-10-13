@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import ContributionGraph from "@/app/components/ContributionGraph";
 import Card from "@/app/components/Card";
+import ExternalContributions from "@/app/components/ExternalContributions";
 import ProjectCard from "@/app/components/ProjectCard";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
 import SubpageHeader from "@/app/components/SubpageHeader";
@@ -105,6 +106,17 @@ export default async function GithubPage({
 						) : (
 							<p className={styles.muted}>No pinned repos</p>
 						)}
+					</Card>
+				)}
+
+				{/* invisible when there is nothing to show; otherwise visible, and the owner can hide it */}
+				{show("external") && (stats.external?.length ?? 0) > 0 && (
+					<Card
+						title="Contributions to other repos"
+						muted={muted("external")}
+						action={<ProfileEditButton section="github" />}
+					>
+						<ExternalContributions items={stats.external ?? []} />
 					</Card>
 				)}
 

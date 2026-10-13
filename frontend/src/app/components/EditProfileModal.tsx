@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
 	ContentLink,
+	CurrentlyItem,
 	GameEntry,
 	GamingHandle,
 	Post,
@@ -25,6 +26,18 @@ const DEFAULT_VISIBILITY: SectionVisibility = {
 	interests: true,
 };
 
+const CURRENTLY_KINDS: [string, string][] = [
+	["", "No label"],
+	["tech", "Tech"],
+	["project", "Project"],
+	["game", "Game"],
+	["hobby", "Hobby"],
+	["other", "Other"],
+];
+const MAX_CURRENTLY = 6;
+
+const SECTION_TITLES: Record<string, string> = { currently: "Currently into" };
+
 const CARD_LABELS: Record<string, Record<string, string>> = {
 	github: {
 		graph: "Contribution graph",
@@ -32,8 +45,13 @@ const CARD_LABELS: Record<string, Record<string, string>> = {
 		pinned: "Pinned repos",
 		languages: "Top languages",
 		activity: "Recent activity",
+		external: "Contributions to other repos",
 	},
-	activity: { leetcode: "LeetCode stats", posts: "Writing / blog posts" },
+	activity: {
+		leetcode: "LeetCode stats",
+		posts: "Writing / blog posts",
+		currently: "Currently into",
+	},
 	games: { handles: "Gaming handles" },
 };
 
@@ -54,10 +72,11 @@ export default function EditProfileModal({
 	const isLeetcode = section === "leetcode";
 	const isGames = section === "games";
 	const isInterests = section === "interests";
+	const isCurrently = section === "currently";
 	const canEditLinks = isProfileSettings || isLinksSettings;
 	const canSave =
-		canEditLinks || isGithub || isActivity || isLeetcode || isGames;
-	const page = isActivity ? "activity" : isGames ? "games" : "github";
+		canEditLinks || isGithub || isActivity || isLeetcode || isGames || isCurrently;
+	const page = isActivity || isCurrently ? "activity" : isGames ? "games" : "github";
 
 	const github = profile.content_links.find(
 		(link) => link.label.toLowerCase() === "github",
@@ -66,7 +85,7 @@ export default function EditProfileModal({
 		(link) => link.label.toLowerCase() === "linkedin",
 	);
 	const portfolio = profile.content_links.find(
-		(link) => !["github", "linkedin"].includes(link.label.toLowerCase()),
+		(link) => link.label.toLowerCase() === "portfolio",
 	);
 	const [displayName, setDisplayName] = useState(profile.display_name || "");
 	const [bio, setBio] = useState(profile.bio || "");
@@ -112,17 +131,26 @@ export default function EditProfileModal({
 	const [handles, setHandles] = useState<GamingHandle[]>(
 		profile.gaming_handles ?? [],
 	);
+	const [currently, setCurrently] = useState<CurrentlyItem[]>(profile.currently ?? []);
+	const [curText, setCurText] = useState("");
+	const [curKind, setCurKind] = useState("");
 	const gamesDraft = useRef<GamesDraft | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const searchStack = async (value: string) => {
+	const stackTimer = useRef<number | undefined>(undefined);
+	// typing updates the box instantly; the request waits until typing pauses (300ms)
+	const searchStack = (value: string) => {
 		setSearch(value);
+		window.clearTimeout(stackTimer.current);
 		if (!value) {
 			setResults([]);
 			setUnmatchedTokens([]);
 			return;
 		}
+		stackTimer.current = window.setTimeout(() => void runStackSearch(value), 300);
+	};
+	const runStackSearch = async (value: string) => {
 		const tokens = value
 			.split(",")
 			.map((token) => token.trim())
@@ -156,9 +184,13 @@ export default function EditProfileModal({
 	};
 
 	const addStackTag = async (tag: StackTag) => {
-		await fetch(`/api/proxy/profiles/me/stack/${tag.id}`, {
-			method: "POST",
-		});
+		try {
+			await proxyFetch(`profiles/me/stack/${tag.id}`, { method: "POST" });
+		} catch (caught) {
+			// don't show a tag that was never saved
+			setError(caught instanceof Error ? caught.message : "Could not add tag.");
+			return;
+		}
 		setStackTags((current) =>
 			current.some((item) => item.id === tag.id)
 				? current
@@ -170,7 +202,12 @@ export default function EditProfileModal({
 	};
 
 	const removeStackTag = async (id: number) => {
-		await fetch(`/api/proxy/profiles/me/stack/${id}`, { method: "DELETE" });
+		try {
+			await proxyFetch(`profiles/me/stack/${id}`, { method: "DELETE" });
+		} catch (caught) {
+			setError(caught instanceof Error ? caught.message : "Could not remove tag.");
+			return;
+		}
 		setStackTags((current) => current.filter((tag) => tag.id !== id));
 	};
 
@@ -261,6 +298,19 @@ export default function EditProfileModal({
 		return draft && handles.length < 8 ? [...handles, draft] : handles;
 	};
 
+	const currentlyForSave = (): CurrentlyItem[] => {
+		const text = curText.trim();
+		if (!text || currently.length >= MAX_CURRENTLY) return currently;
+		return [...currently, { text, kind: (curKind || null) as CurrentlyItem["kind"] }];
+	};
+	const addCurrently = () => {
+		const next = currentlyForSave();
+		if (next === currently) return;
+		setCurrently(next);
+		setCurText("");
+		setCurKind("");
+	};
+
 	const saveLeetcode = () =>
 		proxyFetch("profiles/me/leetcode", {
 			method: "POST",
@@ -276,6 +326,18 @@ export default function EditProfileModal({
 		setSaving(true);
 		setError(null);
 		try {
+			if (isCurrently) {
+				await proxyFetch("profiles/me", {
+					method: "PATCH",
+					body: JSON.stringify({
+						currently: currentlyForSave(),
+						card_visibility: { activity: { currently: cards.currently ?? true } },
+					}),
+				});
+				router.refresh();
+				onClose();
+				return;
+			}
 			if (isLeetcode) {
 				await saveLeetcode();
 				router.refresh();
@@ -301,30 +363,17 @@ export default function EditProfileModal({
 				onClose();
 				return;
 			}
-			const contentLinks: ContentLink[] = isProfileSettings
-				? [
-						...(githubUrl
-							? [{ label: "GitHub", url: githubUrl }]
-							: []),
-						...(linkedinUrl
-							? [{ label: "LinkedIn", url: linkedinUrl }]
-							: []),
-						...(portfolioUrl
-							? [{ label: "Portfolio", url: portfolioUrl }]
-							: []),
-					]
-				: [
-						...(github?.url
-							? [{ label: "GitHub", url: github.url }]
-							: []),
-						...(linkedin?.url
-							? [{ label: "LinkedIn", url: linkedin.url }]
-							: []),
-						...(portfolio?.url
-							? [{ label: "Portfolio", url: portfolio.url }]
-							: []),
-						...additionalLinks,
-					].slice(0, 13);
+			// Keep the user's extra links in BOTH modes: only the three named slots are replaced.
+			const slot = (label: string, edited: string, existing?: ContentLink): ContentLink[] => {
+				const url = isProfileSettings ? edited : existing?.url;
+				return url ? [{ label, url }] : [];
+			};
+			const contentLinks: ContentLink[] = [
+				...slot("GitHub", githubUrl, github),
+				...slot("LinkedIn", linkedinUrl, linkedin),
+				...slot("Portfolio", portfolioUrl, portfolio),
+				...additionalLinks,
+			].slice(0, 13);
 			await proxyFetch("profiles/me", {
 				method: "PATCH",
 				body: JSON.stringify({
@@ -404,7 +453,9 @@ export default function EditProfileModal({
 						<p className={styles.eyebrow}>
 							Owner settings · {section}
 						</p>
-						<h2 id="edit-profile-title">Edit {section} settings</h2>
+						<h2 id="edit-profile-title">
+							Edit {SECTION_TITLES[section] ?? section} settings
+						</h2>
 					</div>
 					<button
 						className={styles.close}
@@ -421,7 +472,13 @@ export default function EditProfileModal({
 							Visible cards — hidden ones are muted for you and
 							invisible to everyone else
 						</span>
-						{Object.entries(CARD_LABELS[page]).map(
+						{Object.entries(CARD_LABELS[page])
+							.filter(
+								([key]) =>
+									key !== "external" ||
+									(profile.stats?.external?.length ?? 0) > 0,
+							)
+							.map(
 							([key, label]) => (
 								<label key={key}>
 									<input
@@ -596,7 +653,7 @@ export default function EditProfileModal({
 									/>
 								</label>
 								<button
-									className={`${styles.addLink} ${styles.actionButton}`}
+									className={styles.addLink}
 									onClick={addPost}
 								>
 									Add post to list
@@ -619,6 +676,73 @@ export default function EditProfileModal({
 						setHandles={setHandles}
 						draftRef={gamesDraft}
 					/>
+				)}
+
+				{isCurrently && (
+					<>
+						<p className={styles.help}>
+							A snapshot of what you&apos;re into right now: a tool, a project, a
+							game, a hobby. Up to {MAX_CURRENTLY}. Unlike a journal entry it stays
+							until you change it.
+						</p>
+						<div className={styles.linkList}>
+							{currently.map((item, index) => (
+								<div className={styles.linkEditor} key={`${item.text}-${index}`}>
+									<span>
+										{item.text}
+										{item.kind && <small>{item.kind}</small>}
+									</span>
+									<button
+										type="button"
+										onClick={() =>
+											setCurrently((current) => current.filter((_, i) => i !== index))
+										}
+										aria-label={`Remove ${item.text}`}
+									>
+										×
+									</button>
+								</div>
+							))}
+						</div>
+						{currently.length < MAX_CURRENTLY && (
+							<div className={styles.grid}>
+								<label className={styles.field}>
+									Currently into
+									<input
+										maxLength={40}
+										value={curText}
+										placeholder="Rust, Elden Ring, bouldering..."
+										onChange={(event) => setCurText(event.target.value)}
+									/>
+								</label>
+								<label className={styles.field}>
+									Label (optional)
+									<select value={curKind} onChange={(event) => setCurKind(event.target.value)}>
+										{CURRENTLY_KINDS.map(([value, label]) => (
+											<option key={value} value={value}>
+												{label}
+											</option>
+										))}
+									</select>
+								</label>
+								<button type="button" className={styles.addLink} onClick={addCurrently}>
+									Add
+								</button>
+							</div>
+						)}
+						<div className={styles.visibility}>
+							<label>
+								<input
+									type="checkbox"
+									checked={cards.currently ?? true}
+									onChange={(event) =>
+										setCards((current) => ({ ...current, currently: event.target.checked }))
+									}
+								/>
+								Show &quot;Currently into&quot; on my profile
+							</label>
+						</div>
+					</>
 				)}
 
 				{isInterests && (
@@ -769,7 +893,7 @@ export default function EditProfileModal({
 											/>
 										</label>
 										<button
-											className={`${styles.addLink} ${styles.actionButton}`}
+											className={styles.addLink}
 											onClick={() => {
 												if (
 													newLinkLabel &&
@@ -837,12 +961,9 @@ export default function EditProfileModal({
 							{results.length > 0 && (
 								<div className={styles.results}>
 									{search.includes(",") && (
-											<button
-												className={`${styles.actionButton} ${styles.resultAction}`}
-												onClick={addAllStackMatches}
-											>
-												Add all matching tags
-											</button>
+										<button onClick={addAllStackMatches}>
+											Add all matching tags
+										</button>
 									)}
 									{results.map((tag) => (
 										<button
@@ -856,7 +977,7 @@ export default function EditProfileModal({
 							)}
 							{unmatchedTokens.length > 0 && (
 								<button
-									className={`${styles.actionButton} ${styles.submitNewButton}`}
+									className={styles.submitNewButton}
 									onClick={submitStack}
 								>
 									Submit unmatched tags for review

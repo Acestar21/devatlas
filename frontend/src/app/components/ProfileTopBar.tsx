@@ -1,20 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Profile } from "@/types";
 import ThemeSwitcher from "./ThemeSwitcher";
-import QuickGuide from "./QuickGuide";
 import styles from "./ProfileTopBar.module.css";
 
 export default function ProfileTopBar({
 	viewer,
 	theme,
 	active,
-	showQuickGuide = false,
 }: {
-	viewer: Profile | null;
+	viewer: { username: string; avatar_url: string | null } | null;
 	theme: string;
-	active?: "directory";
-	showQuickGuide?: boolean;
+	active?: "directory" | "journal";
 }) {
 	return (
 		<header className={styles.bar}>
@@ -22,11 +18,6 @@ export default function ProfileTopBar({
 				DevAtlas<span aria-hidden="true">_</span>
 			</Link>
 			<div className={styles.actions}>
-				{showQuickGuide && (
-					<div className={styles.guideSlot}>
-						<QuickGuide topbar />
-					</div>
-				)}
 				<ThemeSwitcher initialTheme={theme} mobileIcon />
 				<Link
 					href="/directory"
@@ -34,6 +25,13 @@ export default function ProfileTopBar({
 					aria-current={active === "directory" ? "page" : undefined}
 				>
 					/Directory
+				</Link>
+				<Link
+					href="/journal"
+					className={`${styles.pill} ${active === "journal" ? styles.pillActive : ""}`}
+					aria-current={active === "journal" ? "page" : undefined}
+				>
+					/Journal
 				</Link>
 				{viewer ? (
 					<Link

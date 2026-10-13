@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { proxyFetch } from "@/lib/api-client";
 import styles from "./EditProfileModal.module.css";
@@ -31,9 +31,20 @@ export default function TagEditor({
 		setUnmatched([]);
 	};
 
-	const runSearch = async (value: string) => {
+	const searchTimer = useRef<number | undefined>(undefined);
+	// typing updates the box instantly; the request waits until typing pauses (300ms)
+	const runSearch = (value: string) => {
 		setSearch(value);
 		setMessage(null);
+		window.clearTimeout(searchTimer.current);
+		if (!value.trim()) {
+			setResults([]);
+			setUnmatched([]);
+			return;
+		}
+		searchTimer.current = window.setTimeout(() => void fetchMatches(value), 300);
+	};
+	const fetchMatches = async (value: string) => {
 		const tokens = value
 			.split(",")
 			.map((t) => t.trim())

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlmodel import Session, select
 from sqlalchemy import func
 from app.sqlutil import escape_like
 from app.database import get_session
+from app.rate_limit import limiter
 from app.models.tag import Tag
 from app.models.user import User
 from app.auth.dependencies import require_current_user
@@ -29,9 +30,11 @@ def _canonical_search(category: str, value: str) -> str:
 
 
 @router.get("")
+@limiter.limit("120/minute")
 def search_tags(
+    request: Request,
     category: str = Query(..., description="stack | game | interest"),
-    search: str = Query("", description="partial name match, case-insensitive"),
+    search: str = Query("", max_length=50, description="partial name match, case-insensitive"),
     db: Session = Depends(get_session),
 ):
     if category not in VALID_CATEGORIES:
@@ -47,9 +50,11 @@ def search_tags(
 
 
 @router.post("")
+@limiter.limit("10/minute")
 def submit_tag(
-    name: str,
-    category: str,
+    request: Request,
+    name: str = Query(..., max_length=50),
+    category: str = Query(...),
     current_user: User = Depends(require_current_user),
     db: Session = Depends(get_session),
 ):

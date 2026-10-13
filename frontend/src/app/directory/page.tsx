@@ -51,6 +51,10 @@ const LOGIN_ERRORS: Record<string, string> = {
 	backend:
 		"The DevAtlas server didn't respond (free hosting can take a minute to wake up). Please try again.",
 	config: "Login isn't configured correctly. Please try again later.",
+	github_unreachable: "GitHub didn't respond. Please try again in a moment.",
+	username_conflict:
+		"That GitHub username is already linked to another DevAtlas account. Please contact us via report-issue.",
+	reserved_username: "That GitHub username matches a reserved DevAtlas page, so it can't sign up yet. Please contact us via report-issue.",
 	failed: "Login failed. Please try again.",
 };
 

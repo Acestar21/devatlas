@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field, field_validator
 ALLOWED_URL_SCHEMES = ("http://", "https://")
 
 ALLOWED_CARDS = {
-    "github": {"graph", "stats", "pinned", "languages", "activity"},
-    "activity": {"leetcode", "posts"},
+    "github": {"graph", "stats", "pinned", "languages", "activity", "external"},
+    "activity": {"leetcode", "posts", "currently"},
     "games": {"handles"},
 }
 
@@ -21,9 +21,22 @@ def validate_url(url: str) -> str:
     return url
 
 
+THEMES = {"default", "terminal", "coffee", "forest"}
+MAX_BIO = 500
+MAX_LINKS = 13
+
+
 class ContentLink(BaseModel):
     label: str
     url: str
+
+    @field_validator("label")
+    @classmethod
+    def check_label(cls, v: str) -> str:
+        v = (v or "").strip()
+        if not v or len(v) > 30:
+            raise ValueError("Link labels must be 1-30 characters")
+        return v
 
     @field_validator("url")
     @classmethod
@@ -236,6 +249,18 @@ class ActivityItem(BaseModel):
     url: str
 
 
+class ExternalContribution(BaseModel):
+    repo: str  # "owner/name"
+    url: str
+    owner: str
+    is_org: bool = False
+    stars: int = 0
+    commits: int = 0
+    pull_requests: int = 0
+    issues: int = 0
+    reviews: int = 0
+
+
 class GithubStatsResponse(BaseModel):
     available: bool
     reason: Optional[str] = None
@@ -245,6 +270,7 @@ class GithubStatsResponse(BaseModel):
     calendar: Optional[list[list[CalendarDay]]] = None
     extra: Optional[ExtraStats] = None
     activity: Optional[list[ActivityItem]] = None
+    external: list[ExternalContribution] = Field(default_factory=list)
 
 
 class TagResponse(BaseModel):
@@ -259,6 +285,40 @@ class LeetcodeResponse(BaseModel):
     medium: int
     hard: int
     total: int
+
+CURRENTLY_KINDS = {"tech", "project", "game", "hobby", "other"}
+
+
+class CurrentlyItem(BaseModel):
+    """One thing the user is into right now (a snapshot, unlike the 24h journal)."""
+    text: str
+    kind: Optional[str] = None
+
+    @field_validator("text")
+    @classmethod
+    def check_text(cls, v: str) -> str:
+        v = " ".join((v or "").split())
+        if not v or len(v) > 40:
+            raise ValueError("Each item must be 1-40 characters")
+        return v
+
+    @field_validator("kind")
+    @classmethod
+    def check_kind(cls, v):
+        if v in (None, ""):
+            return None
+        if v not in CURRENTLY_KINDS:
+            raise ValueError("Unknown kind")
+        return v
+
+
+class JournalEntryOut(BaseModel):
+    id: int
+    body: str
+    genre: Optional[str] = None
+    created_at: str
+    expires_at: str
+
 
 class ProfileLayout(BaseModel):
     main: list[str] = Field(default_factory=list)
@@ -294,6 +354,8 @@ class ProfileResponse(BaseModel):
     section_visibility: SectionVisibility
     card_visibility: dict[str, dict[str, bool]] = Field(default_factory=dict)
     layout: ProfileLayout = Field(default_factory=ProfileLayout)
+    currently: list[CurrentlyItem] = Field(default_factory=list)
+    journal: list[JournalEntryOut] = Field(default_factory=list)  # ACTIVE entries only
     moderation: Optional[ModerationInfo] = None  # only for the owner and staff
     viewer_role: str = "anonymous"  # the VIEWER's role: anonymous | user | moderator | admin
 
@@ -317,6 +379,33 @@ class ProfileUpdate(BaseModel):
     games: Optional[list[Game]] = None
     gaming_handles: Optional[list[GamingHandle]] = None
     layout: Optional[ProfileLayout] = None
+    currently: Optional[list[CurrentlyItem]] = None
+
+    @field_validator("theme")
+    @classmethod
+    def check_theme(cls, v):
+        if v is not None and v not in THEMES:
+            raise ValueError("Unknown theme")
+        return v
+
+    @field_validator("bio")
+    @classmethod
+    def check_bio(cls, v):
+        if v is not None and len(v) > MAX_BIO:
+            raise ValueError(f"Bio can be up to {MAX_BIO} characters")
+        return v
+
+    @field_validator("display_name")
+    @classmethod
+    def trim_display_name(cls, v):
+        return v if v is None else v.strip()[:100]
+
+    @field_validator("content_links")
+    @classmethod
+    def check_link_count(cls, v):
+        if v is not None and len(v) > MAX_LINKS:
+            raise ValueError(f"Up to {MAX_LINKS} links allowed")
+        return v
 
     @field_validator("card_visibility")
     @classmethod

@@ -17,3 +17,20 @@ export const fetchViewer = cache(async (): Promise<Profile | null> => {
 	const response = await backendFetch("profiles/me");
 	return response.ok ? response.json() : null;
 });
+
+export interface ViewerSummary {
+	username: string;
+	avatar_url: string | null;
+	viewer_role: string;
+}
+
+/** Header-only viewer lookup: a tiny endpoint, no GitHub fetch, no full profile payload. */
+export const fetchViewerSummary = cache(async (): Promise<ViewerSummary | null> => {
+	if (!(await getSessionCookieValue())) return null;
+	try {
+		const response = await backendFetch("profiles/me/summary");
+		return response.ok ? response.json() : null;
+	} catch {
+		return null;
+	}
+});

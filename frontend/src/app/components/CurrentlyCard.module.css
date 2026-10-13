@@ -1,0 +1,28 @@
+.list {
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.item {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.45rem;
+	padding: 0.4rem 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--secondary-bg);
+	color: var(--secondary-fg);
+	font-size: 0.8rem;
+}
+.item small {
+	color: var(--foreground-muted);
+	font: 0.62rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+.empty {
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+	line-height: 1.5;
+}

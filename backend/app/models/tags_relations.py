@@ -1,14 +1,17 @@
 from typing import Optional
+from sqlalchemy import UniqueConstraint
 from sqlmodel import SQLModel, Field
 
 
 class StackTag(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("user_id", "tag_id", name="uq_stacktag_user_tag"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
     tag_id: int = Field(foreign_key="tag.id", index=True)
 
 
 class UserGame(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("user_id", "tag_id", name="uq_usergame_user_tag"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
     tag_id: int = Field(foreign_key="tag.id", index=True)  # the game name, via Tag
@@ -18,6 +21,7 @@ class UserGame(SQLModel, table=True):
 
 
 class UserInterest(SQLModel, table=True):
+    __table_args__ = (UniqueConstraint("user_id", "tag_id", name="uq_userinterest_user_tag"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
     tag_id: int = Field(foreign_key="tag.id", index=True)

@@ -48,7 +48,7 @@ LOG_GITHUB_ID_RETENTION_DAYS = 365
 # Values of ModerationLog.action
 ACTIONS = (
     "suspend", "unsuspend",
-    "report_dismiss", "note",
+    "report_dismiss", "note", "journal_remove",
     "role_grant", "role_revoke",
     "tag_approve", "tag_reject", "tag_add","tag_merge", "tag_delete",
     "mfa_enroll", "mfa_verify", "mfa_recovery_used", "mfa_lockout",

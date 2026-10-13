@@ -1,10 +1,12 @@
 import secrets
 from datetime import datetime, timezone
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response, Request, Header
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, Request, Header
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 from app.rate_limit import limiter
+from app.services.github import refresh_stats_in_background
 from app.config import settings
 from app.database import get_session
 from app.models.user import User
@@ -24,6 +26,13 @@ GITHUB_USER_API_URL = "https://api.github.com/user"
 # GitHub account is younger than this. Only applies to brand-new DevAtlas
 # users — existing users are never re-checked or locked out retroactively.
 MIN_ACCOUNT_AGE_DAYS = 30
+
+# First path segments that are real pages. A GitHub user with one of these names would be
+# unreachable at /<username>, so we refuse the signup with a clear message instead.
+RESERVED_USERNAMES = {
+    "about", "api", "contribute", "directory", "journal", "mod", "privacy",
+    "report-issue", "rules", "settings", "welcome",
+}
 
 # Simple in-memory state store for CSRF protection on the OAuth callback.
 # Fine for a single-process dev setup. If you ever run multiple backend
@@ -48,6 +57,15 @@ def _state_is_valid(state: str) -> bool:
         return False
 
 
+def _commit_or_409(session: Session) -> None:
+    """A renamed GitHub user whose old handle now belongs to another row hits the unique index."""
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=409, detail={"code": "username_conflict"})
+
+
 @router.get("/login")
 @limiter.limit("10/minute")
 def github_login(request: Request):
@@ -63,6 +81,7 @@ def github_login(request: Request):
 @limiter.limit("20/minute")
 async def github_internal_exchange(
     request: Request,
+    background: BackgroundTasks,
     code: str,
     state: str,
     session: Session = Depends(get_session),
@@ -71,33 +90,42 @@ async def github_internal_exchange(
     if not _state_is_valid(state):
         raise HTTPException(status_code=400, detail={"code": "invalid_state"})
 
-    async with httpx.AsyncClient() as client:
-        # Exchange the temporary code for an access token
-        token_resp = await client.post(
-            GITHUB_TOKEN_URL,
-            data={
-                "client_id": settings.github_client_id,
-                "client_secret": settings.github_client_secret,
-                "code": code,
-                "redirect_uri": settings.github_oauth_callback_url,
-            },
-            headers={"Accept": "application/json"},
-        )
-        token_data = token_resp.json()
-        access_token = token_data.get("access_token")
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            # Exchange the temporary code for an access token
+            token_resp = await client.post(
+                GITHUB_TOKEN_URL,
+                data={
+                    "client_id": settings.github_client_id,
+                    "client_secret": settings.github_client_secret,
+                    "code": code,
+                    "redirect_uri": settings.github_oauth_callback_url,
+                },
+                headers={"Accept": "application/json"},
+            )
+            token_data = token_resp.json()
+            access_token = token_data.get("access_token")
 
-        if not access_token:
-            raise HTTPException(status_code=400, detail={"code": "github_failed"})
+            if not access_token:
+                raise HTTPException(status_code=400, detail={"code": "github_failed"})
 
-        # Fetch the user's public GitHub profile using that token
-        user_resp = await client.get(
-            GITHUB_USER_API_URL,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/vnd.github+json",
-            },
-        )
-        gh_user = user_resp.json()
+            # Fetch the user's public GitHub profile using that token
+            user_resp = await client.get(
+                GITHUB_USER_API_URL,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/vnd.github+json",
+                },
+            )
+            if user_resp.status_code != 200:
+                raise HTTPException(status_code=502, detail={"code": "github_failed"})
+            gh_user = user_resp.json()
+    except (httpx.HTTPError, ValueError):
+        # GitHub unreachable / slow / returned something that isn't JSON
+        raise HTTPException(status_code=502, detail={"code": "github_unreachable"})
+
+    if not isinstance(gh_user, dict) or "id" not in gh_user or "login" not in gh_user:
+        raise HTTPException(status_code=502, detail={"code": "github_failed"})
 
     github_id = gh_user["id"]
     github_username = gh_user["login"]
@@ -108,6 +136,9 @@ async def github_internal_exchange(
     # Anti-bot check — only for brand-new signups, never for existing users
     # logging back in. GitHub's user API returns created_at as an ISO 8601
     # string, e.g. "2019-05-14T12:34:56Z".
+    if existing is None and gh_user["login"].lower() in RESERVED_USERNAMES:
+        raise HTTPException(status_code=403, detail={"code": "reserved_username"})
+
     if existing is None:
         account_created_at = datetime.strptime(
             gh_user["created_at"], "%Y-%m-%dT%H:%M:%SZ"
@@ -131,7 +162,7 @@ async def github_internal_exchange(
         existing.avatar_url = gh_user.get("avatar_url")
         existing.encrypted_github_token = encrypted
         session.add(existing)
-        session.commit()
+        _commit_or_409(session)
         session.refresh(existing)
         user = existing
     else:
@@ -143,8 +174,10 @@ async def github_internal_exchange(
             encrypted_github_token=encrypted,
         )
         session.add(user)
-        session.commit()
+        _commit_or_409(session)
         session.refresh(user)
+        # a brand-new account has no cached stats yet: fetch them right after login completes
+        background.add_task(refresh_stats_in_background, user.id)
 
     session_token = create_session_token(user.id)
 
