@@ -119,6 +119,7 @@ export interface ExternalContribution {
 /** Owner-chosen order of the cards on the main profile view. */
 export interface ProfileLayout {
   main?: string[];
+  games_orientation?: "wide" | "tall";
 }
 
 export interface LeetcodeStats {

@@ -1,6 +1,6 @@
 import re
 import datetime as dt
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 
 ALLOWED_URL_SCHEMES = ("http://", "https://")
@@ -324,6 +324,7 @@ class JournalEntryOut(BaseModel):
 
 class ProfileLayout(BaseModel):
     main: list[str] = Field(default_factory=list)
+    games_orientation: Literal["wide", "tall"] = "tall"
 
     @field_validator("main")
     @classmethod

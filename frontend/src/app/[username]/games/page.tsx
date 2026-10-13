@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Card from "@/app/components/Card";
-import GameDetailCard from "@/app/components/GameDetailCard";
+import GamesGallery from "@/app/components/GamesGallery";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
 import SubpageHeader from "@/app/components/SubpageHeader";
 import { loadProfile } from "@/lib/profile-api";
@@ -36,11 +36,11 @@ export default async function GamesPage({
 			<SubpageHeader username={profile.username} title="Games" />
 			<Card title="Games" muted={sectionMuted} action={<ProfileEditButton section="games" />}>
 				{games.length ? (
-					<div className={styles.grid}>
-						{games.map((game, i) => (
-							<GameDetailCard key={`${game.name}-${i}`} game={game} />
-						))}
-					</div>
+					<GamesGallery
+						games={games}
+						canEdit={profile.is_owner}
+						initialOrientation={profile.layout?.games_orientation ?? "wide"}
+					/>
 				) : (
 					<p className={styles.empty}>
 						{profile.is_owner ? "No games yet. Use the gear to add some." : "Nothing here yet."}

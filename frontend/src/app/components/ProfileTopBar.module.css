@@ -26,6 +26,11 @@
 	align-items: center;
 	gap: 0.6rem;
 }
+.desktopActions {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
 .guideSlot {
 	position: relative;
 	display: flex;
@@ -63,11 +68,67 @@
 	object-fit: cover;
 	transition: border-color 0.15s;
 }
+.avatarButton {
+	display: block;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
+}
+.profileMenu {
+	position: relative;
+}
+.menu {
+	position: absolute;
+	top: calc(100% + 0.6rem);
+	right: 0;
+	z-index: 40;
+	display: grid;
+	min-width: 170px;
+	padding: 0.35rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--card-bg);
+	box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.18);
+}
+.menu a,
+.menuTheme {
+	display: flex;
+	align-items: center;
+	min-height: 36px;
+	padding: 0.45rem 0.6rem;
+	color: var(--foreground);
+	font-size: 0.76rem;
+	text-decoration: none;
+}
+.menu a + .menuTheme,
+.menuTheme + a {
+	border-top: 1px solid var(--border);
+}
+.menu a:hover {
+	background: var(--secondary-bg);
+	color: var(--primary);
+}
+.menuTheme :global(.themeSwitcher) {
+	width: 100%;
+}
+.menuTheme :global(.themeButton) {
+	width: 100%;
+	justify-content: space-between;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--foreground);
+}
 a:hover > .avatar {
 	border-color: var(--primary);
 }
 @media (max-width: 720px) {
 	.bar {
 		padding: 0 1rem;
+	}
+	.desktopActions {
+		display: none;
 	}
 }

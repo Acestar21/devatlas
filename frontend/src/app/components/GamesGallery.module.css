@@ -1,0 +1,96 @@
+.gallery {
+	display: grid;
+	gap: 0.9rem;
+}
+.toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.7rem 0.8rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: color-mix(in srgb, var(--secondary-bg) 72%, transparent);
+}
+.toolbar strong,
+.toolbar span {
+	display: block;
+}
+.toolbar strong {
+	font-size: 0.78rem;
+}
+.toolbar span {
+	margin-top: 0.2rem;
+	color: var(--foreground-muted);
+	font-size: 0.68rem;
+}
+.controls {
+	display: flex;
+	align-items: end;
+	gap: 0.65rem;
+}
+.segmented {
+	display: flex;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	overflow: hidden;
+}
+.segmented button {
+	padding: 0.4rem 0.6rem;
+	border: 0;
+	background: transparent;
+	color: var(--foreground-muted);
+	cursor: pointer;
+	font-size: 0.68rem;
+}
+.segmented .active {
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+.filter {
+	display: grid;
+	gap: 0.2rem;
+	color: var(--foreground-muted);
+	font-size: 0.62rem;
+}
+.filter select {
+	padding: 0.35rem 0.45rem;
+	border: 1px solid var(--border);
+	background: var(--input-bg);
+	color: var(--foreground);
+	font-size: 0.68rem;
+}
+.track {
+	display: flex;
+	overflow-x: auto;
+	gap: 0.9rem;
+	scroll-snap-type: x proximity;
+	padding-bottom: 0.3rem;
+}
+.track > * {
+	flex: 0 0 min(30vw, 300px);
+	scroll-snap-align: start;
+}
+.tall .track > * {
+	flex-basis: min(23vw, 230px);
+}
+.empty {
+	color: var(--foreground-muted);
+	font-size: 0.78rem;
+}
+@media (max-width: 600px) {
+	.toolbar {
+		align-items: stretch;
+		flex-direction: column;
+	}
+	.controls {
+		align-items: stretch;
+		justify-content: space-between;
+	}
+	.track > * {
+		flex: 0 0 min(82vw, 300px);
+	}
+	.tall .track > * {
+		flex-basis: min(70vw, 250px);
+	}
+}

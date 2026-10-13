@@ -6,7 +6,13 @@ import styles from "./GameDetailCard.module.css";
  * Generic "game details" template for the Games page. Every field is optional;
  * only the ones the owner filled in are rendered, so a bare game is still tidy.
  */
-export default function GameDetailCard({ game }: { game: GameEntry }) {
+export default function GameDetailCard({
+	game,
+	orientation = "wide",
+}: {
+	game: GameEntry;
+	orientation?: "wide" | "tall";
+}) {
 	const art = gameArt(game);
 	const s = game.stats;
 	const rows: [string, string][] = [
@@ -26,7 +32,7 @@ export default function GameDetailCard({ game }: { game: GameEntry }) {
 	);
 
 	return (
-		<article className={styles.card}>
+		<article className={`${styles.card}${orientation === "tall" ? ` ${styles.tall}` : ""}`}>
 			{game.url ? (
 				<a href={game.url} target="_blank" rel="noreferrer" aria-label={`${game.name} profile`}>
 					{header}

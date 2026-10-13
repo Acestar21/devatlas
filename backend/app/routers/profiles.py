@@ -284,7 +284,13 @@ def update_profile(
         profile.currently_json = json.dumps([c.model_dump() for c in update.currently])
 
     if update.layout is not None:
-        profile.layout_json = update.layout.model_dump_json()
+        current_layout = json.loads(profile.layout_json or "{}")
+        next_layout = update.layout.model_dump()
+        if "main" not in update.layout.model_fields_set:
+            next_layout["main"] = current_layout.get("main", [])
+        if "games_orientation" not in update.layout.model_fields_set:
+            next_layout["games_orientation"] = current_layout.get("games_orientation", "wide")
+        profile.layout_json = json.dumps(next_layout)
 
     db.add(profile)
     db.commit()

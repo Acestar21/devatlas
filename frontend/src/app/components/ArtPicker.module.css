@@ -5,11 +5,51 @@
 	border: 1px dashed var(--border);
 	border-radius: var(--control-radius);
 }
+.heading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
 .title {
 	color: var(--primary);
 	font: 0.68rem var(--font-mono, monospace);
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
+}
+.helper {
+	margin-top: 0.25rem;
+	color: var(--foreground-muted);
+	font-size: 0.72rem;
+	line-height: 1.4;
+}
+.confirmed {
+	padding: 0.45rem 0.55rem;
+	border: 1px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+	background: color-mix(in srgb, var(--primary) 10%, transparent);
+	color: var(--primary);
+	font-size: 0.72rem;
+}
+.openGallery {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	width: 100%;
+	padding: 0.7rem 0.8rem;
+	border: 1px solid var(--primary);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	color: var(--primary);
+	cursor: pointer;
+	text-align: left;
+}
+.openGallery span {
+	font-weight: 600;
+}
+.openGallery small {
+	color: var(--foreground-muted);
+	font-size: 0.68rem;
 }
 .hint {
 	color: var(--foreground-muted);
@@ -22,11 +62,24 @@
 }
 .grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
 	gap: 0.5rem;
 	max-height: 230px;
 	overflow-y: auto;
 	padding: 2px;
+}
+.filter {
+	display: grid;
+	gap: 0.2rem;
+	color: var(--foreground-muted);
+	font-size: 0.65rem;
+}
+.filter select {
+	padding: 0.35rem 0.45rem;
+	border: 1px solid var(--border);
+	background: var(--input-bg);
+	color: var(--foreground);
+	font: 0.68rem var(--font-body, sans-serif);
 }
 .option {
 	position: relative;
@@ -47,7 +100,8 @@
 	display: block;
 	width: 100%;
 	aspect-ratio: 16 / 9;
-	object-fit: cover;
+	object-fit: contain;
+	background: var(--surface-pattern);
 }
 .option span {
 	padding-bottom: 0.2rem;
@@ -89,4 +143,136 @@
 	color: var(--primary-foreground);
 	cursor: pointer;
 	font: 600 0.74rem var(--font-body, sans-serif);
+}
+.previewBackdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 10001;
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	background: rgba(0, 0, 0, 0.72);
+}
+.previewDialog {
+	width: min(100%, 700px);
+	max-height: calc(100dvh - 2rem);
+	overflow: auto;
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: var(--card-radius-lg);
+	background: var(--card-bg);
+	box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, 0.4);
+}
+.previewHeader,
+.previewActions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+.previewHeader {
+	margin-bottom: 0.8rem;
+}
+.close {
+	border: 0;
+	background: none;
+	color: var(--foreground-muted);
+	font-size: 1.4rem;
+	cursor: pointer;
+}
+.previewImage {
+	display: grid;
+	place-items: center;
+	min-height: 260px;
+	max-height: 60dvh;
+	overflow: hidden;
+	border: 1px solid var(--border);
+	background: var(--surface-pattern);
+}
+.previewImage img {
+	display: block;
+	width: 100%;
+	height: min(60dvh, 440px);
+	object-fit: contain;
+}
+.previewToolbar {
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.65rem;
+}
+.previewCount {
+	color: var(--foreground-muted);
+	font: 0.68rem var(--font-mono, monospace);
+}
+.previewRail {
+	display: flex;
+	gap: 0.45rem;
+	overflow-x: auto;
+	margin-top: 0.65rem;
+	padding: 0.2rem 0 0.35rem;
+	scroll-snap-type: x proximity;
+}
+.previewRail button {
+	flex: 0 0 112px;
+	height: 64px;
+	padding: 0;
+	border: 2px solid transparent;
+	border-radius: var(--control-radius);
+	overflow: hidden;
+	background: var(--surface-pattern);
+	cursor: pointer;
+	scroll-snap-align: start;
+}
+.previewRail button:hover,
+.previewRail .railSelected {
+	border-color: var(--primary);
+}
+.previewRail img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.previewActions {
+	justify-content: flex-end;
+	margin-top: 0.8rem;
+}
+.cancel,
+.confirm {
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	cursor: pointer;
+	font-size: 0.72rem;
+}
+.cancel {
+	background: transparent;
+	color: var(--foreground-muted);
+}
+.confirm {
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-weight: 600;
+}
+@media (max-width: 560px) {
+	.heading {
+		display: grid;
+	}
+	.filter,
+	.filter select {
+		width: 100%;
+	}
+	.previewBackdrop {
+		padding: 0.5rem;
+	}
+	.previewDialog {
+		max-height: calc(100dvh - 1rem);
+	}
+	.previewActions {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+	}
 }

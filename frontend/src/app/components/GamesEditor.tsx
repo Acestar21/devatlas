@@ -174,30 +174,33 @@ export default function GamesEditor({
 										.join(" · ")}
 								</small>
 							</span>
-							{game.igdb_id != null && (
+							<div className={styles.rowActions}>
+								{game.igdb_id != null && (
+									<button
+										type="button"
+										className={styles.artButton}
+										onClick={() => setArtFor(artFor === index ? null : index)}
+										aria-expanded={artFor === index}
+									>
+										{artFor === index ? "Close art selector" : "Select Art"}
+									</button>
+								)}
 								<button
 									type="button"
-									onClick={() => setArtFor(artFor === index ? null : index)}
-									aria-expanded={artFor === index}
+									className={styles.removeButton}
+									onClick={() => {
+										setArtFor(null);
+										setGames((current) => current.filter((_, i) => i !== index));
+									}}
+									aria-label={`Remove ${game.name}`}
 								>
-									Art
+									×
 								</button>
-							)}
-							<button
-								type="button"
-								onClick={() => {
-									setArtFor(null);
-									setGames((current) => current.filter((_, i) => i !== index));
-								}}
-								aria-label={`Remove ${game.name}`}
-							>
-								×
-							</button>
+							</div>
 						</div>
 						{artFor === index && game.igdb_id != null && (
 							<ArtPicker
 								igdbId={game.igdb_id}
-								current={game.cover_url ?? null}
 								onPick={(url) =>
 									setGames((current) =>
 										current.map((item, i) => (i === index ? { ...item, cover_url: url } : item)),
@@ -247,7 +250,7 @@ export default function GamesEditor({
 						</div>
 					)}
 
-					{igdbId !== null && <ArtPicker igdbId={igdbId} current={art} onPick={setArt} />}
+					{igdbId !== null && <ArtPicker igdbId={igdbId} onPick={setArt} />}
 
 					<div className={styles.grid}>
 						<label className={styles.field}>

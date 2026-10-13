@@ -163,11 +163,48 @@
 	color: var(--foreground-muted);
 	overflow-wrap: anywhere;
 }
+.rowActions {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	margin-left: auto;
+}
 .linkEditor button {
-	border: 0;
-	background: none;
+	flex: 0 0 auto;
+	min-height: 28px;
+	padding: 0.35rem 0.65rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
 	color: var(--foreground-muted);
 	cursor: pointer;
+}
+.linkEditor .artButton {
+	border-color: var(--primary);
+	color: var(--primary);
+	font-weight: 600;
+}
+.linkEditor .artButton:hover,
+.linkEditor .artButton:focus-visible {
+	background: var(--accent-bg);
+	color: var(--primary);
+}
+.linkEditor .removeButton {
+	min-width: 28px;
+	padding: 0.2rem;
+	border-color: transparent;
+	background: transparent;
+	font-size: 1rem;
+}
+.linkEditor .removeButton:hover,
+.linkEditor .removeButton:focus-visible {
+	border-color: var(--border);
+	background: var(--secondary-bg);
+	color: var(--foreground);
+}
+.linkEditor button:focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
 }
 .addLink {
 	align-self: end;
@@ -210,12 +247,15 @@
 	display: flex;
 	justify-content: flex-end;
 	gap: 0.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--border);
 	margin-top: 1.3rem;
 }
 .cancel,
 .save {
 	padding: 0.5rem 0.75rem;
 	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
 	cursor: pointer;
 	font-size: 0.72rem;
 }

@@ -1,7 +1,7 @@
 import Card from "@/app/components/Card";
 import ContributionGraph from "@/app/components/ContributionGraph";
 import FeaturedProject from "@/app/components/FeaturedProject";
-import GameCard from "@/app/components/GameCard";
+import GamesGallery from "@/app/components/GamesGallery";
 import PostCard from "@/app/components/PostCard";
 import ProfileEditButton from "@/app/components/ProfileEditButton";
 import QuickGuide from "@/app/components/QuickGuide";
@@ -146,11 +146,11 @@ export default async function OverviewTab({ profile }: { profile: Profile }) {
 					muted={!vis.games}
 				>
 					{profile.games?.length ? (
-						<div className={styles.gameGrid}>
-							{profile.games.slice(0, 4).map((game, i) => (
-								<GameCard key={`${game.name}-${i}`} game={game} />
-							))}
-						</div>
+						<GamesGallery
+							games={profile.games.slice(0, 4)}
+							canEdit={profile.is_owner}
+							initialOrientation={profile.layout?.games_orientation ?? "wide"}
+						/>
 					) : (
 						<p className={styles.empty}>Nothing added yet.</p>
 					)}
