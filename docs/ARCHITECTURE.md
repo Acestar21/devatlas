@@ -55,4 +55,4 @@ GitHub stats refresh on view when older than 6 hours (`services/github.py`); the
 - Rate-limit counters are per process. Run more than one backend instance and you need a shared store (Redis) in `rate_limit.py`.
 - The stats cache stores a year of daily counts per user (~12 KB each before compression). Fine for thousands of users; revisit at tens of thousands.
 - No email notifications; staff alerts go to a Discord webhook.
-- Free-tier hosting: cold starts after idle (a `/health` ping helps).
+- Free-tier hosting: cold starts after idle (see "Cold starts" in DEPLOYMENT.md for when pinging is worth it).

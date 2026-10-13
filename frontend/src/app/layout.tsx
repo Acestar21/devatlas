@@ -22,6 +22,7 @@ const inter = Inter({
 
 
 export const metadata = {
+  // Needed so relative Open Graph URLs resolve to absolute ones (LinkedIn/Slack/X ignore relative).
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://devatlas-cyan.vercel.app'),
   title: 'DevAtlas',
   description: 'The identity layer for developers',
@@ -47,4 +48,3 @@ export default function RootLayout({
     </html>
   );
 }
-

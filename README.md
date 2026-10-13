@@ -57,7 +57,7 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"                    
 ## Tests and checks
 
 ```bash
-cd backend && python -m unittest discover tests
+cd backend && python -m unittest discover -s tests -t .
 cd frontend && npm run typecheck && npm run lint
 ```
 

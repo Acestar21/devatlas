@@ -1,0 +1,92 @@
+.picker {
+	display: grid;
+	gap: 0.55rem;
+	padding: 0.8rem;
+	border: 1px dashed var(--border);
+	border-radius: var(--control-radius);
+}
+.title {
+	color: var(--primary);
+	font: 0.68rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.hint {
+	color: var(--foreground-muted);
+	font-size: 0.7rem;
+	line-height: 1.5;
+}
+.error {
+	color: #b34d4d;
+	font-size: 0.72rem;
+}
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+	gap: 0.5rem;
+	max-height: 230px;
+	overflow-y: auto;
+	padding: 2px;
+}
+.option {
+	position: relative;
+	display: grid;
+	gap: 0.2rem;
+	padding: 0;
+	border: 2px solid transparent;
+	border-radius: var(--control-radius);
+	background: var(--secondary-bg);
+	color: var(--foreground-muted);
+	cursor: pointer;
+	overflow: hidden;
+	font: 0.58rem var(--font-mono, monospace);
+	text-transform: uppercase;
+	text-align: center;
+}
+.option img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+}
+.option span {
+	padding-bottom: 0.2rem;
+}
+.option:hover {
+	border-color: var(--border);
+}
+.selected,
+.selected:hover {
+	border-color: var(--primary);
+	color: var(--primary);
+}
+.custom {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.5rem;
+}
+.custom label {
+	display: grid;
+	flex: 1;
+	gap: 0.25rem;
+	color: var(--foreground-muted);
+	font-size: 0.7rem;
+}
+.custom input {
+	width: 100%;
+	padding: 0.45rem 0.6rem;
+	border: 1px solid var(--border);
+	border-radius: var(--control-radius);
+	background: var(--input-bg);
+	color: var(--foreground);
+	font: 0.78rem var(--font-mono, monospace);
+}
+.custom button {
+	padding: 0.45rem 0.9rem;
+	border: 1px solid var(--primary);
+	border-radius: var(--control-radius);
+	background: var(--primary);
+	color: var(--primary-foreground);
+	cursor: pointer;
+	font: 600 0.74rem var(--font-body, sans-serif);
+}

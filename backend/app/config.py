@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     admin_github_id: int = 0
     seed_system_user_id: int | None = None
     # IGDB (via Twitch) for game search/art; optional - the editor falls back to a local list
+    # How many reverse proxies in front of us APPEND to X-Forwarded-For (Render: test with the curl in
+    # docs/DEPLOYMENT.md). 0 = ignore the header and use the socket address.
+    trusted_proxy_hops: int = 0
     twitch_client_id: str | None = None
     twitch_client_secret: str | None = None
 

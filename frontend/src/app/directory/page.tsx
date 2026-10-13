@@ -5,6 +5,7 @@ import DirectoryControls from "./DirectoryControls";
 import LoginModal from "@/app/components/LoginModal";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteTopBar from "@/app/components/SiteTopBar";
+import { fetchViewerSummary } from "@/lib/server-context";
 import styles from "./page.module.css";
 import { backendFetch } from "@/lib/backend";
 
@@ -118,6 +119,7 @@ export default async function DirectoryPage({
 	const params = await searchParams;
 	const { login_error: loginError, wait, deleted, ...listParams } = params;
 	const notice = noticeFor({ login_error: loginError, wait, deleted });
+	void fetchViewerSummary(); // start the header lookup now; cache() lets <SiteTopBar> reuse it
 	const data = await fetchDirectory(listParams);
 	const filtered = Boolean(listParams.search || listParams.stack);
 	const pageHref = (page: number) =>

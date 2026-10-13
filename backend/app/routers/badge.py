@@ -1,6 +1,6 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
-from sqlmodel import Session, select
+from sqlmodel import func, Session, select
 from sqlalchemy import func
 from app.rate_limit import limiter
 from app.database import get_session
@@ -41,7 +41,7 @@ def generate_badge_svg(username: str, stats: GithubStatsCache | None) -> str:
     </svg>'''
 
 @router.get("/{username}")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")  # README images are fetched via GitHub's shared image proxy
 def get_badge(
     request: Request,
     username: str,

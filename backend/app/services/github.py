@@ -303,23 +303,36 @@ def is_stale(cache: GithubStatsCache | None) -> bool:
     return age.total_seconds() > STALE_AFTER_HOURS * 3600
 
 
+_in_flight: set[int] = set()  # user ids being refreshed right now (this process)
+
+
 async def refresh_stats_in_background(user_id: int, db_engine=None) -> None:
     """Refresh a user's cached stats AFTER the response has been sent.
 
-    Uses its own DB session (the request's session is closed by then). If GitHub or the stored
-    token fails, bump last_fetched_at as a back-off so a revoked token isn't retried on every view.
+    Uses its own DB session (the request's session is closed by then). Only one refresh per user
+    runs at a time, so a burst of views of a stale profile doesn't fan out into many GitHub calls.
+    On ANY failure (revoked token, GitHub down, partial GraphQL reply) last_fetched_at is bumped as
+    a back-off, so it isn't retried on every single view.
     """
     from app.database import engine
 
-    with Session(db_engine or engine) as db:
-        user = db.get(User, user_id)
-        if user is None:
-            return
-        try:
-            await fetch_and_cache_stats(user, db)
-        except GithubTokenInvalid:
-            cache = db.exec(select(GithubStatsCache).where(GithubStatsCache.user_id == user_id)).first()
-            if cache:
-                cache.last_fetched_at = utc_now()
-                db.add(cache)
-                db.commit()
+    if user_id in _in_flight:
+        return
+    _in_flight.add(user_id)
+    try:
+        with Session(db_engine or engine) as db:
+            user = db.get(User, user_id)
+            if user is None:
+                return
+            try:
+                await fetch_and_cache_stats(user, db)
+            except Exception:
+                logging.getLogger(__name__).exception("stats refresh failed for user %s", user_id)
+                db.rollback()
+                cache = db.exec(select(GithubStatsCache).where(GithubStatsCache.user_id == user_id)).first()
+                if cache:
+                    cache.last_fetched_at = utc_now()
+                    db.add(cache)
+                    db.commit()
+    finally:
+        _in_flight.discard(user_id)

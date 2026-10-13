@@ -6,7 +6,6 @@ import { backendFetch } from "@/lib/backend";
  * future internal routes) is not reachable through this proxy even with the visitor's cookie.
  * Add a prefix here when a new client-side feature needs one.
  */
-
 const ALLOWED_PREFIXES = new Set(["profiles", "tags", "reports", "mod", "mfa", "journal", "games", "health"]);
 const SAFE_SEGMENT = /^[A-Za-z0-9_.-]+$/;
 

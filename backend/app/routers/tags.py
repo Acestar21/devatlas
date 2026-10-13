@@ -8,6 +8,8 @@ from app.models.tag import Tag
 from app.models.user import User
 from app.auth.dependencies import require_current_user
 
+MAX_PENDING_PER_USER = 10
+
 router = APIRouter(prefix="/tags", tags=["tags"])
 
 VALID_CATEGORIES = {"stack", "game", "interest"}
@@ -79,6 +81,17 @@ def submit_tag(
         # Already pending from someone else — don't create a duplicate,
         # just let this user know it's already awaiting review.
         return {"id": existing.id, "name": existing.name, "status": "pending"}
+
+    waiting = db.exec(
+        select(func.count()).select_from(Tag).where(
+            Tag.submitted_by_user_id == current_user.id, Tag.status == "pending"
+        )
+    ).one()
+    if waiting >= MAX_PENDING_PER_USER:
+        raise HTTPException(
+            status_code=429,
+            detail=f"You already have {MAX_PENDING_PER_USER} tags waiting for review. Please wait for those first.",
+        )
 
     tag = Tag(
         name=name,

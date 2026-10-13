@@ -1,3 +1,4 @@
+import re
 import datetime as dt
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
@@ -28,7 +29,7 @@ MAX_LINKS = 13
 
 class ContentLink(BaseModel):
     label: str
-    url: str
+    url: str = Field(max_length=500)
 
     @field_validator("label")
     @classmethod
@@ -46,7 +47,7 @@ class ContentLink(BaseModel):
 
 class Post(BaseModel):
     title: str
-    url: str
+    url: str = Field(max_length=500)
     description: Optional[str] = None
     date: Optional[str] = None            # YYYY-MM-DD
     read_minutes: Optional[int] = None
@@ -143,7 +144,8 @@ class GameStats(BaseModel):
         return v
 
 
-IGDB_IMAGE_PREFIX = "https://images.igdb.com/"
+# https://images.igdb.com/igdb/image/upload/<size>/<image_id>.jpg  (nothing else is accepted)
+IGDB_IMAGE_RE = re.compile(r"^https://images\.igdb\.com/igdb/image/upload/t_[a-z0-9_]{3,30}/[A-Za-z0-9]{4,40}\.(jpg|png|webp)$")
 
 
 class Game(BaseModel):
@@ -160,7 +162,7 @@ class Game(BaseModel):
         v = (v or "").strip()
         if not v:
             return None
-        if not v.startswith(IGDB_IMAGE_PREFIX) or len(v) > 300:
+        if not IGDB_IMAGE_RE.match(v):
             raise ValueError("Cover must be an IGDB image URL")
         return v
 

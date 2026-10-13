@@ -1,4 +1,4 @@
-"""Throwaway env vars so `import app` works on a fresh checkout. Runs before any test module imports app."""
+"""Throwaway env vars so `import app` works on a fresh checkout."""
 import os
 
 from cryptography.fernet import Fernet

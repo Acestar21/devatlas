@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gameArtUrl, getSteamGameNames } from "@/lib/game-art";
-import { GameEntry, GamingHandle } from "@/types";
 import { proxyFetch } from "@/lib/api-client";
+import { gameArtUrl, getSteamGameNames } from "@/lib/game-art";
+import ArtPicker from "./ArtPicker";
+import { GameEntry, GamingHandle } from "@/types";
 import styles from "./EditProfileModal.module.css";
 
 export const HANDLE_PLATFORMS: [string, string][] = [
@@ -27,8 +28,6 @@ export interface GamesDraft {
 	game: () => GameEntry | null;
 	handle: () => GamingHandle | null;
 }
-
-
 
 /**
  * Game search: IGDB through our backend (/games/search) when it is configured,
@@ -74,6 +73,7 @@ export default function GamesEditor({
 	const [open, setOpen] = useState(false);
 	const [hPlatform, setHPlatform] = useState("steam");
 	const [hHandle, setHHandle] = useState("");
+	const [artFor, setArtFor] = useState<number | null>(null); // index of the saved game whose art is being changed
 	const debounce = useRef<number | undefined>(undefined);
 	const aborter = useRef<AbortController | null>(null);
 
@@ -160,26 +160,51 @@ export default function GamesEditor({
 		<>
 			<div className={styles.linkList}>
 				{games.map((game, index) => (
-					<div className={styles.linkEditor} key={`${game.name}-${index}`}>
-						<span>
-							{game.name}
-							<small>
-								{[
-									game.stats?.rank || game.detail,
-									typeof game.stats?.hours === "number" ? `${game.stats.hours}h` : null,
-									typeof game.stats?.completion === "number" ? `${game.stats.completion}%` : null,
-								]
-									.filter(Boolean)
-									.join(" · ")}
-							</small>
-						</span>
-						<button
-							type="button"
-							onClick={() => setGames((current) => current.filter((_, i) => i !== index))}
-							aria-label={`Remove ${game.name}`}
-						>
-							×
-						</button>
+					<div key={`${game.name}-${index}`}>
+						<div className={styles.linkEditor}>
+							<span>
+								{game.name}
+								<small>
+									{[
+										game.stats?.rank || game.detail,
+										typeof game.stats?.hours === "number" ? `${game.stats.hours}h` : null,
+										typeof game.stats?.completion === "number" ? `${game.stats.completion}%` : null,
+									]
+										.filter(Boolean)
+										.join(" · ")}
+								</small>
+							</span>
+							{game.igdb_id != null && (
+								<button
+									type="button"
+									onClick={() => setArtFor(artFor === index ? null : index)}
+									aria-expanded={artFor === index}
+								>
+									Art
+								</button>
+							)}
+							<button
+								type="button"
+								onClick={() => {
+									setArtFor(null);
+									setGames((current) => current.filter((_, i) => i !== index));
+								}}
+								aria-label={`Remove ${game.name}`}
+							>
+								×
+							</button>
+						</div>
+						{artFor === index && game.igdb_id != null && (
+							<ArtPicker
+								igdbId={game.igdb_id}
+								current={game.cover_url ?? null}
+								onPick={(url) =>
+									setGames((current) =>
+										current.map((item, i) => (i === index ? { ...item, cover_url: url } : item)),
+									)
+								}
+							/>
+						)}
 					</div>
 				))}
 			</div>
@@ -222,6 +247,8 @@ export default function GamesEditor({
 						</div>
 					)}
 
+					{igdbId !== null && <ArtPicker igdbId={igdbId} current={art} onPick={setArt} />}
+
 					<div className={styles.grid}>
 						<label className={styles.field}>
 							Rank
@@ -250,11 +277,7 @@ export default function GamesEditor({
 							<input placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
 						</label>
 					</div>
-					<button
-						type="button"
-						className={`${styles.addLink} ${styles.actionButton}`}
-						onClick={addGame}
-					>
+					<button type="button" className={styles.addLink} onClick={addGame}>
 						Add game to list
 					</button>
 				</>
@@ -297,11 +320,7 @@ export default function GamesEditor({
 						Username / ID
 						<input maxLength={40} value={hHandle} onChange={(e) => setHHandle(e.target.value)} />
 					</label>
-					<button
-						type="button"
-						className={`${styles.addLink} ${styles.actionButton}`}
-						onClick={addHandle}
-					>
+					<button type="button" className={styles.addLink} onClick={addHandle}>
 						Add handle to list
 					</button>
 				</div>

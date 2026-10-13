@@ -8,7 +8,31 @@ import SiteFooter from "@/app/components/SiteFooter";
 import { findProfileBanner } from "@/lib/banners";
 import { loadProfile } from "@/lib/profile-api";
 import { fetchViewerSummary, getThemeCookie } from "@/lib/server-context";
+import type { Metadata } from "next";
 import styles from "./layout.module.css";
+
+export async function generateMetadata({
+	params,
+}: {
+	params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+	const { username } = await params;
+	const profile = await loadProfile(username); // cache()d: the layout below reuses this fetch
+	const name = profile.display_name || profile.username;
+	const title = `${name} (@${profile.username}) · DevAtlas`;
+	const description = profile.bio?.slice(0, 160) || "Developer profile on DevAtlas";
+	return {
+		title,
+		description,
+		openGraph: {
+			type: "profile",
+			title,
+			description,
+			images: profile.avatar_url ? [profile.avatar_url] : undefined,
+		},
+		twitter: { card: "summary", title, description },
+	};
+}
 
 /**
  * Shared shell for the profile and all of its subpages: sticky top bar, notch nav fixed to the

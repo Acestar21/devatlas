@@ -6,7 +6,7 @@ Thanks for helping. Bug fixes, UI polish and docs are all welcome; for larger fe
 See the README quick start. Run the checks before opening a PR:
 
 ```bash
-cd backend && python -m unittest discover tests
+cd backend && python -m unittest discover -s tests -t .
 cd frontend && npm run typecheck && npm run lint
 ```
 

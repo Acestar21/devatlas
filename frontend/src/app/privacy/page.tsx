@@ -27,6 +27,11 @@ export default function PrivacyPage() {
 				<li><code>devatlas-theme</code> and a matching local-storage entry: remember your theme (1 year).</li>
 			</ul>
 			<p>DevAtlas currently uses no advertising or analytics trackers.</p>
+			<p>
+				Some images are loaded directly by your browser from other services: profile banners from
+				raw.githubusercontent.com, avatars from GitHub, and game artwork from Steam&apos;s CDN or IGDB. Those
+				services can see your IP address when that happens, as with any image on the web.
+			</p>
 
 			<h2>Where it is processed</h2>
 			<p>The website runs on Vercel, the API on Render, and the database on Neon (Postgres). Stats come from the GitHub API.</p>

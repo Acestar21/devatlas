@@ -44,8 +44,26 @@ def signed_client_ip(request: Request) -> str | None:
         return None
 
 
+def forwarded_client_ip(request: Request) -> str | None:
+    """Client IP from X-Forwarded-For, counting back from the RIGHT by settings.trusted_proxy_hops.
+
+    Clients can put anything on the left of that header; only the entries our own proxies appended
+    (the right end) can be trusted. Off (None) unless TRUSTED_PROXY_HOPS is set.
+    """
+    hops = settings.trusted_proxy_hops
+    if hops <= 0:
+        return None
+    parts = [p.strip() for p in (request.headers.get("x-forwarded-for") or "").split(",") if p.strip()]
+    if len(parts) < hops:
+        return None
+    try:
+        return str(ipaddress.ip_address(parts[-hops]))
+    except ValueError:
+        return None
+
+
 def client_key(request: Request) -> str:
-    return signed_client_ip(request) or get_remote_address(request)
+    return signed_client_ip(request) or forwarded_client_ip(request) or get_remote_address(request)
 
 
 limiter = Limiter(key_func=client_key)
