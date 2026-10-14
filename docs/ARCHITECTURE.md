@@ -24,6 +24,7 @@ The raw internal secret is sent by exactly two places (the OAuth callback and `/
 2. GitHub redirects to `/api/auth/callback` on the frontend, which calls `POST /auth/github/internal/exchange` with the internal secret.
 3. The backend exchanges the code, applies the 30-day account-age rule for new signups, and returns a signed session token (itsdangerous, 14 days, claims: `user_id`, optional `mfa_at`).
 4. The frontend stores it in an httpOnly cookie on its own domain.
+5. The OAuth state is signed and expires, but is not bound to the browser session (login CSRF is possible, impact low).
 
 The GitHub token is stored Fernet-encrypted and is only used to refresh stats and to revoke the grant on account deletion.
 
@@ -36,6 +37,8 @@ Suspended profiles 404 for everyone except the owner and staff. Checklist for ne
 
 slowapi, in memory, keyed by visitor IP. Server-side Next.js calls would otherwise all look like Vercel's IPs, so Next forwards the visitor IP with an HMAC signature (`X-Client-IP`, `X-Client-IP-Signature`); `backend/app/rate_limit.py` trusts it only when the signature verifies. Assumption to re-check if you change host: Vercel sets `x-real-ip` / `x-forwarded-for` itself.
 
+Direct browser calls (login, badges, tags) are keyed by X-Forwarded-For counted from the right; see TRUSTED_PROXY_HOPS in DEPLOYMENT.md.
+
 ## Data
 
 | Table | Purpose |
@@ -45,6 +48,7 @@ slowapi, in memory, keyed by visitor IP. Server-side Next.js calls would otherwi
 | `tag`, `stacktag`, `userinterest` | Shared tag vocabulary and who uses it |
 | `leetcodestats` | Self-reported counts |
 | `report`, `moderationlog`, `staffmfa` | Moderation (see MODERATION.md) |
+| `journalentry` | A temporary journal for users to express their thoughts. Expires after 24 h.
 
 Rule: any new table referencing `user.id` needs an explicit `ondelete` (see `_user_fk` in `models/moderation.py`) so account deletion can't break.
 GitHub stats refresh on view when older than 6 hours (`services/github.py`); the directory never triggers a live fetch.
@@ -55,4 +59,4 @@ GitHub stats refresh on view when older than 6 hours (`services/github.py`); the
 - Rate-limit counters are per process. Run more than one backend instance and you need a shared store (Redis) in `rate_limit.py`.
 - The stats cache stores a year of daily counts per user (~12 KB each before compression). Fine for thousands of users; revisit at tens of thousands.
 - No email notifications; staff alerts go to a Discord webhook.
-- Free-tier hosting: cold starts after idle (see "Cold starts" in DEPLOYMENT.md for when pinging is worth it).
+- Free-tier hosting: an UptimeRobot monitor keeps the API warm; see Cold starts in DEPLOYMENT.md”

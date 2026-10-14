@@ -32,12 +32,40 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: devcard
+          POSTGRES_PASSWORD: devcard_ci_only
+          POSTGRES_DB: devcard
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U devcard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: alembic upgrade head
-      - run: pip install -r backend/requirements.txt
-      - run: python -m unittest discover -s backend/tests -t backend
-      - run: python -m compileall -q backend/app backend/tests
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Migrations apply cleanly to an empty database
+        run: |
+          export FERNET_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+          alembic upgrade head
+        env:
+          DATABASE_URL: postgresql+psycopg://devcard:devcard_ci_only@localhost:5432/devcard
+          GITHUB_CLIENT_ID: ci
+          GITHUB_CLIENT_SECRET: ci
+          GITHUB_OAUTH_CALLBACK_URL: http://localhost/cb
+          SECRET_KEY: ci-secret-key
+          INTERNAL_API_SECRET: ci-internal-secret
+      - run: python -m unittest discover -s tests -t .
+      - run: python -m compileall -q app tests
