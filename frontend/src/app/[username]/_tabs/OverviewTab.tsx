@@ -149,7 +149,7 @@ export default async function OverviewTab({ profile }: { profile: Profile }) {
 						<GamesGallery
 							games={profile.games.slice(0, 4)}
 							canEdit={profile.is_owner}
-							initialOrientation={profile.layout?.games_orientation ?? "wide"}
+							initialOrientation={profile.layout?.games_orientation ?? "tall"}
 						/>
 					) : (
 						<p className={styles.empty}>Nothing added yet.</p>

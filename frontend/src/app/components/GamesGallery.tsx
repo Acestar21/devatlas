@@ -16,7 +16,7 @@ function imageOrientation(game: GameEntry): "portrait" | "landscape" {
 export default function GamesGallery({
 	games,
 	canEdit = false,
-	initialOrientation = "wide",
+	initialOrientation = "tall",
 }: {
 	games: GameEntry[];
 	canEdit?: boolean;

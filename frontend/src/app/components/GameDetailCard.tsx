@@ -8,7 +8,7 @@ import styles from "./GameDetailCard.module.css";
  */
 export default function GameDetailCard({
 	game,
-	orientation = "wide",
+	orientation = "tall",
 }: {
 	game: GameEntry;
 	orientation?: "wide" | "tall";

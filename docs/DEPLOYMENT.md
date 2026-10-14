@@ -19,7 +19,7 @@ Homepage: your site URL. Authorization callback URL: `https://YOUR-SITE/api/auth
 | `ADMIN_GITHUB_ID` | Numeric GitHub ID of the owner; always admin |
 | `MOD_WEBHOOK_URL` | Optional Discord webhook for staff alerts. Use a private channel. |
 | `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` | Optional: IGDB game search and artwork (see "IGDB" below) |
-| `TRUSTED_PROXY_HOPS` | Optional, default 0. Set to `1` only if the spoof test below shows `X-Forwarded-For` can be forged |
+| `TRUSTED_PROXY_HOPS` | Optional, default 0 (off). Render behind Cloudflare needs 3; see "Test whether X-Forwarded-For can be spoofed" below.
 
 **Frontend (Vercel)**
 
@@ -53,7 +53,13 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-all
 `--proxy-headers` makes uvicorn read the forwarded client address. Requests from the Next.js server are keyed
 by the signed IP it forwards, so this mostly matters for direct calls such as `/badge/*`.
 
-**Test whether `X-Forwarded-For` can be spoofed** (the badge limit is 600/minute, so send more than that):
+**Test whether `X-Forwarded-For` can be spoofed.** Use a route with a low limit, such as `/auth/github/login` (10/minute):
+```bash
+for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code} " -H "X-Forwarded-For: 10.0.0.$i" https://YOUR-API/auth/github/login; done; echo
+```
+If you never see a `429`, each fake address got its own bucket, so the header is forgeable. Set `TRUSTED_PROXY_HOPS` and run it again; you should now see `429`s after 10 requests.
+
+`TRUSTED_PROXY_HOPS` counts proxies from the right of `X-Forwarded-For`; the entry that many places from the end is treated as the visitor. On Render (which sits behind Cloudflare) the chain looks like `spoofed, visitor, cloudflare-edge, render-internal`, so the correct value is `3`. If you change host or add a proxy, recheck by temporarily echoing the header. If the chain is shorter than the configured value, the limiter falls back to the socket address, which is forgeable.
 ```bash
 for i in $(seq 1 700); do curl -s -o /dev/null -w "%{http_code} " -H "X-Forwarded-For: 10.0.0.$i" https://YOUR-API/badge/x; done
 ```
@@ -70,7 +76,5 @@ If you never see a `429`, each fake address got its own bucket, so the header is
 Without the variables the editor silently uses the bundled Steam list. IGDB cannot be tested over plain `http`.
 
 ## Cold starts
-Don't run a 24/7 keep-alive ping on Render's free plan: it uses almost all of the 750 monthly free hours. Before a
-launch or announcement, start a cron-job.org ping of `/health` (every 10 minutes) about 15 minutes ahead, and stop
-it afterwards.
+Render's free plan sleeps a service after about 15 minutes without traffic, and the next request waits for a boot. This deployment uses an UptimeRobot monitor on `GET /health` every 13 minutes to keep it awake. One always-on free service uses about 744 of the 750 monthly free hours, so this only works if the API is the only free web service in the workspace. Without a monitor, expect a 30-60 second first request after idle (the frontend shows a loading screen meanwhile).
 
