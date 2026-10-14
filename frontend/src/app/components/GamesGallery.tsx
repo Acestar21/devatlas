@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { GameEntry } from "@/types";
 import { proxyFetch } from "@/lib/api-client";
 import GameDetailCard from "./GameDetailCard";
@@ -24,8 +24,6 @@ export default function GamesGallery({
 }) {
 	const [orientation, setOrientation] = useState<Orientation>(initialOrientation);
 	const [filter, setFilter] = useState<Filter>("all");
-	const trackRef = useRef<HTMLDivElement>(null);
-	const [paused, setPaused] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
 
 	const changeOrientation = async (value: Orientation) => {
@@ -47,17 +45,6 @@ export default function GamesGallery({
 		() => games.filter((game) => filter === "all" || imageOrientation(game) === filter),
 		[filter, games],
 	);
-
-	useEffect(() => {
-		const track = trackRef.current;
-		if (!track || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-		const timer = window.setInterval(() => {
-			if (paused || track.scrollWidth <= track.clientWidth) return;
-			const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
-			track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + 1, behavior: "auto" });
-		}, 40);
-		return () => window.clearInterval(timer);
-	}, [paused, visibleGames.length]);
 
 	return (
 	<div className={`${styles.gallery}${orientation === "tall" ? ` ${styles.tall}` : ""}`}>
@@ -91,11 +78,6 @@ export default function GamesGallery({
 			{visibleGames.length > 0 ? (
 				<div
 					className={styles.track}
-					ref={trackRef}
-					onMouseEnter={() => setPaused(true)}
-					onMouseLeave={() => setPaused(false)}
-					onFocus={() => setPaused(true)}
-					onBlur={() => setPaused(false)}
 				>
 					{visibleGames.map((game, index) => (
 						<GameDetailCard key={`${game.name}-${index}`} game={game} orientation={orientation} />

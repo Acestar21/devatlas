@@ -64,12 +64,12 @@
 	display: flex;
 	overflow-x: auto;
 	gap: 0.9rem;
-	scroll-snap-type: x proximity;
 	padding-bottom: 0.3rem;
+	-webkit-overflow-scrolling: touch;
+	touch-action: pan-x;
 }
 .track > * {
 	flex: 0 0 min(30vw, 300px);
-	scroll-snap-align: start;
 }
 .tall .track > * {
 	flex-basis: min(23vw, 230px);
