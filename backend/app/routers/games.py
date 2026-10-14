@@ -28,7 +28,7 @@ MAX_ARTWORKS = 12
 MAX_SCREENSHOTS = 12
 
 
-def igdb_image_url(image_id: str, size: str = "t_screenshot_big") -> str:
+def igdb_image_url(image_id: str, size: str = "t_720p") -> str:
     return f"https://images.igdb.com/igdb/image/upload/{size}/{image_id}.jpg"
 
 
@@ -124,9 +124,9 @@ async def game_images(
                 "thumb": igdb_image_url(item["image_id"], thumb),
             })
 
-    add(game.get("cover"), "cover", "t_cover_big", "t_cover_big")
+    add(game.get("cover"), "cover", "t_cover_big_2x", "t_cover_big")
     for item in (game.get("artworks") or [])[:MAX_ARTWORKS]:
-        add(item, "artwork", "t_screenshot_big", "t_screenshot_med")
+        add(item, "artwork", "t_720p", "t_screenshot_med")
     for item in (game.get("screenshots") or [])[:MAX_SCREENSHOTS]:
-        add(item, "screenshot", "t_screenshot_big", "t_screenshot_med")
+        add(item, "screenshot", "t_720p", "t_screenshot_med")
     return {"options": options}

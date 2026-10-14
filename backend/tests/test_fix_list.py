@@ -66,7 +66,7 @@ class GameImagesTests(Base):
         self.assertEqual([o["kind"] for o in options], ["cover", "artwork", "artwork", "screenshot"])
         self.assertTrue(all(o["url"].startswith("https://images.igdb.com/igdb/image/upload/t_") for o in options))
         self.assertIn("t_cover_big", options[0]["url"])
-        self.assertIn("t_screenshot_big", options[1]["url"])
+        self.assertIn("t_720p", options[1]["url"])
 
     def test_not_configured_or_unknown_game_gives_no_options(self):
         with patch("app.routers.games._igdb_games", AsyncMock(return_value=None)):

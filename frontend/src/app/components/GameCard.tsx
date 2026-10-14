@@ -1,9 +1,10 @@
 import { GameEntry } from "@/types";
 import { gameArtUrl } from "@/lib/game-art";
 import styles from "./GameCard.module.css";
+import { sharpenIgdb } from "@/lib/igdb";
 
 export function gameArt(game: GameEntry): string | null {
-	return game.cover_url || gameArtUrl(game.name);
+	return game.cover_url ? sharpenIgdb(game.cover_url) : gameArtUrl(game.name);
 }
 
 /** Short chips shown on hover, e.g. "Diamond · 420h · 88%". */
