@@ -14,6 +14,15 @@ An open-source directory of developer profiles. Sign in with GitHub, add your st
 - Self-service account deletion that also revokes the GitHub authorization
 - Moderation: user reports, temporary suspensions, audit log, MFA-protected staff panel
 
+---
+
+## Media 
+![Preview-1](docs/preview-1.png)
+
+![Preview-2](docs/preview-2.png)
+
+---
+
 ## Tech stack
 
 | Layer | Tech |
